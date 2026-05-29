@@ -21,12 +21,12 @@ import {
 } from "@/components/ui/sidebar";
 
 const items = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Inventory", url: "/inventory", icon: Package },
-  { title: "Competitors", url: "/competitors", icon: TrendingUp },
-  { title: "Customers", url: "/customers", icon: Users },
-  { title: "AI Assistant", url: "/assistant", icon: MessageSquare },
-  { title: "About", url: "/about", icon: Info },
+  { title: "ড্যাশবোর্ড / Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "ইনভেন্টরি / Inventory", url: "/inventory", icon: Package },
+  { title: "প্রতিযোগী / Competitors", url: "/competitors", icon: TrendingUp },
+  { title: "গ্রাহক / Customers", url: "/customers", icon: Users },
+  { title: "এআই সহকারী / AI Assistant", url: "/assistant", icon: MessageSquare },
+  { title: "সম্পর্কে / About", url: "/about", icon: Info },
 ];
 
 export function AppSidebar() {
@@ -40,14 +40,14 @@ export function AppSidebar() {
             <BarChart3 className="h-4 w-4" />
           </div>
           <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-semibold">EasyBusiness</span>
-            <span className="text-xs text-muted-foreground">AI</span>
+            <span className="text-sm font-semibold">ইজিবিজনেস</span>
+            <span className="text-xs text-muted-foreground">EasyBusiness AI</span>
           </div>
         </Link>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Workspace</SidebarGroupLabel>
+          <SidebarGroupLabel>ওয়ার্কস্পেস / Workspace</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (

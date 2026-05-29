@@ -13,7 +13,7 @@ export function DashboardTopbar({ title }: { title: string }) {
         <div className="relative hidden md:block">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search products, SKUs..."
+            placeholder="পণ্য, SKU খুঁজুন... / Search products, SKUs..."
             className="h-9 w-64 pl-8"
           />
         </div>
