@@ -18,30 +18,30 @@ import { sentimentBreakdown, positiveTrends, complaints } from "@/lib/sample-dat
 import { ThumbsUp, MessageCircleWarning } from "lucide-react";
 
 export const Route = createFileRoute("/_app/customers")({
-  head: () => ({ meta: [{ title: "Customer Insights — EasyBusiness AI" }] }),
+  head: () => ({ meta: [{ title: "গ্রাহক / Customer Insights — EasyBusiness AI" }] }),
   component: CustomersPage,
 });
 
 const reviewVolume = [
-  { day: "Mon", reviews: 18 },
-  { day: "Tue", reviews: 22 },
-  { day: "Wed", reviews: 31 },
-  { day: "Thu", reviews: 27 },
-  { day: "Fri", reviews: 35 },
-  { day: "Sat", reviews: 42 },
-  { day: "Sun", reviews: 29 },
+  { day: "সোম / Mon", reviews: 18 },
+  { day: "মঙ্গল / Tue", reviews: 22 },
+  { day: "বুধ / Wed", reviews: 31 },
+  { day: "বৃহস্পতি / Thu", reviews: 27 },
+  { day: "শুক্র / Fri", reviews: 35 },
+  { day: "শনি / Sat", reviews: 42 },
+  { day: "রবি / Sun", reviews: 29 },
 ];
 
 function CustomersPage() {
   return (
     <>
-      <DashboardTopbar title="Customer Insights" />
+      <DashboardTopbar title="গ্রাহক অন্তর্দৃষ্টি / Customer Insights" />
       <main className="flex-1 space-y-4 p-4 md:p-6">
         <div className="grid gap-4 lg:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Review sentiment</CardTitle>
-              <CardDescription>Last 30 days breakdown</CardDescription>
+              <CardTitle className="text-base">রিভিউ সন্তুষ্টি / Review sentiment</CardTitle>
+              <CardDescription>গত ৩০ দিনের বিভাজন / Last 30 days breakdown</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-64 w-full">
@@ -76,15 +76,15 @@ function CustomersPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Review volume</CardTitle>
-              <CardDescription>This week</CardDescription>
+              <CardTitle className="text-base">রিভিউ ভলিউম / Review volume</CardTitle>
+              <CardDescription>এই সপ্তাহ / This week</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={reviewVolume} margin={{ left: -10, right: 8, top: 4 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                    <XAxis dataKey="day" stroke="var(--color-muted-foreground)" fontSize={12} />
+                    <XAxis dataKey="day" stroke="var(--color-muted-foreground)" fontSize={11} />
                     <YAxis stroke="var(--color-muted-foreground)" fontSize={12} />
                     <Tooltip
                       contentStyle={{
@@ -107,7 +107,7 @@ function CustomersPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <ThumbsUp className="h-4 w-4 text-success" />
-                <CardTitle className="text-base">Positive feedback trends</CardTitle>
+                <CardTitle className="text-base">ইতিবাচক ফিডব্যাক প্রবণতা / Positive feedback trends</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
@@ -126,7 +126,7 @@ function CustomersPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <MessageCircleWarning className="h-4 w-4 text-destructive" />
-                <CardTitle className="text-base">Common complaints</CardTitle>
+                <CardTitle className="text-base">সাধারণ অভিযোগ / Common complaints</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
