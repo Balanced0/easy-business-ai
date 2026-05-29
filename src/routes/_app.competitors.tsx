@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { competitorPrices } from "@/lib/sample-data";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { useT } from "@/hooks/use-language";
 
 export const Route = createFileRoute("/_app/competitors")({
   head: () => ({ meta: [{ title: "প্রতিযোগী / Competitors — EasyBusiness AI" }] }),
@@ -19,45 +20,46 @@ const trends = [
 ];
 
 function CompetitorsPage() {
+  const t = useT();
   return (
     <>
       <DashboardTopbar title="প্রতিযোগী ইন্টেলিজেন্স / Competitor Intelligence" />
       <main className="flex-1 space-y-4 p-4 md:p-6">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {trends.map((t) => (
-            <Card key={t.label}>
+          {trends.map((tr) => (
+            <Card key={tr.label}>
               <CardHeader className="pb-2">
-                <CardDescription className="text-xs uppercase">{t.label}</CardDescription>
+                <CardDescription className="text-xs uppercase">{t(tr.label)}</CardDescription>
                 <CardTitle className="flex items-center gap-2 text-base">
-                  {t.dir === "up" && <TrendingUp className="h-4 w-4 text-success" />}
-                  {t.dir === "down" && <TrendingDown className="h-4 w-4 text-destructive" />}
-                  {t.dir === "flat" && <Minus className="h-4 w-4 text-muted-foreground" />}
+                  {tr.dir === "up" && <TrendingUp className="h-4 w-4 text-success" />}
+                  {tr.dir === "down" && <TrendingDown className="h-4 w-4 text-destructive" />}
+                  {tr.dir === "flat" && <Minus className="h-4 w-4 text-muted-foreground" />}
                   <span className="capitalize">
-                    {t.dir === "flat" ? "স্থিতিশীল / Stable" : t.dir === "up" ? "ঊর্ধ্বমুখী / Up" : "নিম্নমুখী / Down"}
+                    {tr.dir === "flat" ? t("স্থিতিশীল / Stable") : tr.dir === "up" ? t("ঊর্ধ্বমুখী / Up") : t("নিম্নমুখী / Down")}
                   </span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-xs text-muted-foreground">{t.note}</CardContent>
+              <CardContent className="text-xs text-muted-foreground">{t(tr.note)}</CardContent>
             </Card>
           ))}
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">মূল্য ও রেটিং তুলনা / Price & rating comparison</CardTitle>
-            <CardDescription>আপনার দাম বনাম ৩ জন প্রতিযোগী / Your prices vs. 3 tracked competitors</CardDescription>
+            <CardTitle className="text-base">{t("মূল্য ও রেটিং তুলনা / Price & rating comparison")}</CardTitle>
+            <CardDescription>{t("আপনার দাম বনাম ৩ জন প্রতিযোগী / Your prices vs. 3 tracked competitors")}</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>পণ্য / Product</TableHead>
-                  <TableHead className="text-right">আপনার দাম / Your price</TableHead>
+                  <TableHead>{t("পণ্য / Product")}</TableHead>
+                  <TableHead className="text-right">{t("আপনার দাম / Your price")}</TableHead>
                   <TableHead className="text-right">Comp A</TableHead>
                   <TableHead className="text-right">Comp B</TableHead>
                   <TableHead className="text-right">Comp C</TableHead>
-                  <TableHead className="text-right">আপনার রেটিং / Your rating</TableHead>
-                  <TableHead>অবস্থান / Position</TableHead>
+                  <TableHead className="text-right">{t("আপনার রেটিং / Your rating")}</TableHead>
+                  <TableHead>{t("অবস্থান / Position")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -87,7 +89,7 @@ function CompetitorsPage() {
                               : "bg-warning/15 text-warning-foreground"
                           }
                         >
-                          {cheaper ? "গড়ের নিচে / Below avg" : "গড়ের উপরে / Above avg"}
+                          {cheaper ? t("গড়ের নিচে / Below avg") : t("গড়ের উপরে / Above avg")}
                         </Badge>
                       </TableCell>
                     </TableRow>

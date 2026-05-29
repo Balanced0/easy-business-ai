@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Sparkles, User } from "lucide-react";
+import { useLanguage, useT } from "@/hooks/use-language";
 
 export const Route = createFileRoute("/_app/assistant")({
   head: () => ({ meta: [{ title: "এআই সহকারী / AI Assistant — EasyBusiness AI" }] }),
@@ -23,6 +24,8 @@ const suggestions = [
 function AssistantPage() {
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { lang } = useLanguage();
+  const t = useT();
 
   const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({ api: "/api/chat" }),
@@ -41,6 +44,9 @@ function AssistantPage() {
     setInput("");
   };
 
+  const welcomeBn = "হাই! আমি আপনার এআই কমার্স সহকারী। ট্রেন্ড, ইনভেন্টরি, মূল্য বা গ্রাহক সন্তুষ্টি সম্পর্কে জিজ্ঞাসা করুন।";
+  const welcomeEn = "Hi! I'm your AI commerce assistant. Ask me about trends, inventory, pricing, or customer sentiment — I'll pull from your store data.";
+
   return (
     <>
       <DashboardTopbar title="এআই কমার্স সহকারী / AI Commerce Assistant" />
@@ -53,9 +59,9 @@ function AssistantPage() {
                   <Sparkles className="h-4 w-4" />
                 </div>
                 <div>
-                  <CardTitle className="text-base">কমার্স সহকারী / Commerce Assistant</CardTitle>
+                  <CardTitle className="text-base">{t("কমার্স সহকারী / Commerce Assistant")}</CardTitle>
                   <CardDescription className="text-xs">
-                    Gemini + আপনার স্টোর ডেটা দ্বারা চালিত / Powered by Gemini + your store data
+                    {t("Gemini + আপনার স্টোর ডেটা দ্বারা চালিত / Powered by Gemini + your store data")}
                   </CardDescription>
                 </div>
               </div>
@@ -68,11 +74,9 @@ function AssistantPage() {
                       <Sparkles className="h-3.5 w-3.5" />
                     </div>
                     <div className="flex-1 pt-0.5">
-                      <div className="text-xs font-medium">সহকারী / Assistant</div>
+                      <div className="text-xs font-medium">{t("সহকারী / Assistant")}</div>
                       <div className="mt-1 text-sm leading-relaxed text-foreground/90">
-                        হাই! আমি আপনার এআই কমার্স সহকারী। ট্রেন্ড, ইনভেন্টরি, মূল্য বা গ্রাহক সন্তুষ্টি সম্পর্কে জিজ্ঞাসা করুন।
-                        <br />
-                        Hi! I'm your AI commerce assistant. Ask me about trends, inventory, pricing, or customer sentiment — I'll pull from your store data.
+                        {lang === "bn" ? welcomeBn : welcomeEn}
                       </div>
                     </div>
                   </div>
@@ -98,7 +102,7 @@ function AssistantPage() {
                       </div>
                       <div className="flex-1 pt-0.5">
                         <div className="text-xs font-medium">
-                          {m.role === "assistant" ? "সহকারী / Assistant" : "আপনি / You"}
+                          {m.role === "assistant" ? t("সহকারী / Assistant") : t("আপনি / You")}
                         </div>
                         <div className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
                           {text}
@@ -113,13 +117,13 @@ function AssistantPage() {
                       <Sparkles className="h-3.5 w-3.5" />
                     </div>
                     <div className="flex-1 pt-1.5">
-                      <div className="text-sm text-muted-foreground">চিন্তা করছি… / Thinking…</div>
+                      <div className="text-sm text-muted-foreground">{t("চিন্তা করছি… / Thinking…")}</div>
                     </div>
                   </div>
                 )}
                 {error && (
                   <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-                    {error.message || "কিছু ভুল হয়েছে। আবার চেষ্টা করুন। / Something went wrong. Please try again."}
+                    {error.message || t("কিছু ভুল হয়েছে। আবার চেষ্টা করুন। / Something went wrong. Please try again.")}
                   </div>
                 )}
               </div>
@@ -141,7 +145,7 @@ function AssistantPage() {
                       send(input);
                     }
                   }}
-                  placeholder="আপনার স্টোর সম্পর্কে কিছু জিজ্ঞাসা করুন... / Ask anything about your store..."
+                  placeholder={t("আপনার স্টোর সম্পর্কে কিছু জিজ্ঞাসা করুন... / Ask anything about your store...")}
                   className="min-h-[42px] resize-none"
                   rows={1}
                   disabled={isLoading}
@@ -160,7 +164,7 @@ function AssistantPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">প্রস্তাবিত প্রশ্ন / Suggested questions</CardTitle>
+              <CardTitle className="text-base">{t("প্রস্তাবিত প্রশ্ন / Suggested questions")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {suggestions.map((s) => (
@@ -170,7 +174,7 @@ function AssistantPage() {
                   disabled={isLoading}
                   className="w-full rounded-md border bg-card p-3 text-left text-sm transition-colors hover:bg-accent disabled:opacity-50"
                 >
-                  {s}
+                  {t(s)}
                 </button>
               ))}
             </CardContent>
