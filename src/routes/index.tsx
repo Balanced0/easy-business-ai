@@ -12,6 +12,27 @@ import {
 } from "lucide-react";
 import { useLanguage, useT } from "@/hooks/use-language";
 
+function LanguageToggle() {
+  const { lang, toggleLang } = useLanguage();
+  return (
+    <button
+      onClick={toggleLang}
+      className="flex h-8 items-center overflow-hidden rounded-md border text-xs"
+    >
+      <span
+        className={`px-2 py-1 ${lang === "bn" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+      >
+        বাং
+      </span>
+      <span
+        className={`px-2 py-1 ${lang === "en" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+      >
+        En
+      </span>
+    </button>
+  );
+}
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -86,9 +107,12 @@ function LandingPage() {
             <a href="#how" className="hover:text-foreground">{t("কীভাবে কাজ করে / How it works")}</a>
             <Link to="/about" className="hover:text-foreground">{t("সম্পর্কে / About")}</Link>
           </nav>
-          <Button asChild size="sm">
-            <Link to="/dashboard">{t("ড্যাশবোর্ড / Open Dashboard")}</Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <LanguageToggle />
+            <Button asChild size="sm">
+              <Link to="/dashboard">{t("ড্যাশবোর্ড / Open Dashboard")}</Link>
+            </Button>
+          </div>
         </div>
       </header>
 
