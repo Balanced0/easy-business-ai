@@ -41,21 +41,21 @@ export const competitorPrices = [
 ];
 
 export const sentimentBreakdown = [
-  { name: "Positive", value: 64, color: "var(--color-chart-2)" },
-  { name: "Neutral", value: 22, color: "var(--color-chart-3)" },
-  { name: "Negative", value: 14, color: "var(--color-destructive)" },
+  { name: "ইতিবাচক / Positive", value: 64, color: "var(--color-chart-2)" },
+  { name: "নিরপেক্ষ / Neutral", value: 22, color: "var(--color-chart-3)" },
+  { name: "নেতিবাচক / Negative", value: 14, color: "var(--color-destructive)" },
 ];
 
 export const positiveTrends = [
-  "Fast shipping mentioned in 38% of recent reviews",
-  "Product quality praised across apparel category",
-  "Customer support response time rated 4.8/5",
+  "সাম্প্রতিক রিভিউয়ের ৩৮% এ দ্রুত ডেলিভারির প্রশংসা / Fast shipping mentioned in 38% of recent reviews",
+  "পোশাক ক্যাটাগরিতে পণ্যের মান প্রশংসিত / Product quality praised across apparel category",
+  "কাস্টমার সাপোর্টের সাড়া ৪.৮/৫ রেটেড / Customer support response time rated 4.8/5",
 ];
 
 export const complaints = [
-  "Sizing runs small on Runner Sneakers (12 mentions)",
-  "Packaging damage on glassware orders (8 mentions)",
-  "Delayed delivery in EU region last week (6 mentions)",
+  "Runner Sneakers এর সাইজ ছোট মনে হচ্ছে (১২ বার উল্লেখ) / Sizing runs small on Runner Sneakers (12 mentions)",
+  "গ্লাসওয়্যার অর্ডারে প্যাকেজিং ক্ষতি (৮ বার উল্লেখ) / Packaging damage on glassware orders (8 mentions)",
+  "গত সপ্তাহে EU অঞ্চলে ডেলিভারি বিলম্বিত (৬ বার উল্লেখ) / Delayed delivery in EU region last week (6 mentions)",
 ];
 
 export const trendingProducts = [
@@ -66,13 +66,12 @@ export const trendingProducts = [
 ];
 
 export const summaryCards = [
-  { label: "Total Sales", value: "$248,920", delta: "+12.4%", positive: true },
-  { label: "Revenue", value: "$182,540", delta: "+8.1%", positive: true },
-  { label: "Inventory Risk", value: "7 items", delta: "3 low · 4 overstock", positive: false },
-  { label: "Trending Products", value: "12", delta: "+4 this week", positive: true },
+  { label: "মোট বিক্রয় / Total Sales", value: "$248,920", delta: "+12.4%", positive: true },
+  { label: "রাজস্ব / Revenue", value: "$182,540", delta: "+8.1%", positive: true },
+  { label: "ইনভেন্টরি ঝুঁকি / Inventory Risk", value: "৭ items", delta: "৩ low · ৪ overstock", positive: false },
+  { label: "ট্রেন্ডিং পণ্য / Trending Products", value: "১২", delta: "+৪ এই সপ্তাহে / +4 this week", positive: true },
 ];
 
-export const aiSummary = `Sales are up 12.4% MoM, driven primarily by Runner Sneakers (+34%) and Canvas Tote Bags (+22%). 
-Inventory risk is moderate: 3 SKUs are below safe stock and likely to stock out within 7 days based on current demand. 
-Competitor B has reduced prices on headphones by 8% — consider a short-term promo to defend share. 
-Customer sentiment remains strongly positive (64%), though sizing complaints on sneakers warrant a product page update.`;
+export const aiSummary = `বিক্রয় মাসে ১২.৪% বৃদ্ধি পেয়েছে, প্রধানত Runner Sneakers (+৩৪%) এবং Canvas Tote Bag (+২২%) এর কারণে। ৩টি SKU সেফ স্টকের নিচে এবং ৭ দিনের মধ্যে স্টক আউট হতে পারে। Competitor B হেডফোনের দাম ৮% কমিয়েছে — শেয়ার রক্ষায় শর্ট-টার্ম প্রমো বিবেচনা করুন। গ্রাহক সন্তুষ্টি দৃঢ়ভাবে ইতিবাচক (৬৪%)।
+
+Sales are up 12.4% MoM, driven primarily by Runner Sneakers (+34%) and Canvas Tote Bags (+22%). Inventory risk is moderate: 3 SKUs are below safe stock and likely to stock out within 7 days. Competitor B has reduced prices on headphones by 8% — consider a short-term promo to defend share. Customer sentiment remains strongly positive (64%), though sizing complaints on sneakers warrant a product page update.`;

@@ -43,7 +43,7 @@ export const Route = createFileRoute("/_app/dashboard")({
 function DashboardPage() {
   return (
     <>
-      <DashboardTopbar title="Dashboard" />
+      <DashboardTopbar title="ড্যাশবোর্ড / Dashboard" />
       <main className="flex-1 space-y-4 p-4 md:p-6">
         {/* Summary cards */}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -80,8 +80,8 @@ function DashboardPage() {
               <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
                 <Sparkles className="h-4 w-4" />
               </div>
-              <CardTitle className="text-base">AI business summary</CardTitle>
-              <Badge variant="secondary" className="ml-auto text-xs">Updated 2 min ago</Badge>
+              <CardTitle className="text-base">এআই বিজনেস সারাংশ / AI business summary</CardTitle>
+              <Badge variant="secondary" className="ml-auto text-xs">২ মিনিট আগে আপডেট / Updated 2 min ago</Badge>
             </div>
           </CardHeader>
           <CardContent>
@@ -95,8 +95,8 @@ function DashboardPage() {
         <div className="grid gap-4 lg:grid-cols-3">
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle className="text-base">Sales trend</CardTitle>
-              <CardDescription>Monthly revenue, last 12 months</CardDescription>
+              <CardTitle className="text-base">বিক্রয় প্রবণতা / Sales trend</CardTitle>
+              <CardDescription>মাসিক রাজস্ব, গত ১২ মাস / Monthly revenue, last 12 months</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-64 w-full">
@@ -134,8 +134,8 @@ function DashboardPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Trending products</CardTitle>
-              <CardDescription>Top movers this week</CardDescription>
+              <CardTitle className="text-base">ট্রেন্ডিং পণ্য / Trending products</CardTitle>
+              <CardDescription>এই সপ্তাহের শীর্ষ / Top movers this week</CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="space-y-3">
@@ -156,8 +156,8 @@ function DashboardPage() {
         <div className="grid gap-4 lg:grid-cols-3">
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle className="text-base">Demand forecast</CardTitle>
-              <CardDescription>Actual vs. predicted units, next 4 weeks projected</CardDescription>
+              <CardTitle className="text-base">চাহিদা পূর্বাভাস / Demand forecast</CardTitle>
+              <CardDescription>প্রকৃত বনাম পূর্বাভাস, পরবর্তী ৪ সপ্তাহ / Actual vs. predicted units, next 4 weeks projected</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-60 w-full">
@@ -191,8 +191,8 @@ function DashboardPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Customer sentiment</CardTitle>
-              <CardDescription>Last 30 days reviews</CardDescription>
+              <CardTitle className="text-base">গ্রাহক সন্তুষ্টি / Customer sentiment</CardTitle>
+              <CardDescription>গত ৩০ দিনের রিভিউ / Last 30 days reviews</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-60 w-full">
@@ -230,8 +230,8 @@ function DashboardPage() {
         <div className="grid gap-4 lg:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Inventory alerts</CardTitle>
-              <CardDescription>Items needing attention</CardDescription>
+              <CardTitle className="text-base">ইনভেন্টরি সতর্কতা / Inventory alerts</CardTitle>
+              <CardDescription>মনোযোগ প্রয়োজন / Items needing attention</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               {inventoryAlerts.map((i) => (
@@ -242,7 +242,7 @@ function DashboardPage() {
                   <div>
                     <div className="text-sm font-medium">{i.name}</div>
                     <div className="text-xs text-muted-foreground">
-                      SKU {i.sku} · {i.stock} in stock
+                      SKU {i.sku} · {i.stock} স্টকে / in stock
                     </div>
                   </div>
                   <Badge
@@ -258,7 +258,7 @@ function DashboardPage() {
                     ) : (
                       <AlertTriangle className="mr-1 h-3 w-3" />
                     )}
-                    {i.status === "low" ? "Low stock" : "Overstock"}
+                    {i.status === "low" ? "কম স্টক / Low stock" : "অতিরিক্ত স্টক / Overstock"}
                   </Badge>
                 </div>
               ))}
@@ -267,15 +267,15 @@ function DashboardPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Competitor pricing</CardTitle>
-              <CardDescription>Compared to 3 tracked competitors</CardDescription>
+              <CardTitle className="text-base">প্রতিযোগী মূল্য / Competitor pricing</CardTitle>
+              <CardDescription>৩ জন প্রতিযোগীর সাথে তুলনা / Compared to 3 tracked competitors</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Product</TableHead>
-                    <TableHead className="text-right">You</TableHead>
+                    <TableHead>পণ্য / Product</TableHead>
+                    <TableHead className="text-right">আপনি / You</TableHead>
                     <TableHead className="text-right">A</TableHead>
                     <TableHead className="text-right">B</TableHead>
                     <TableHead className="text-right">C</TableHead>

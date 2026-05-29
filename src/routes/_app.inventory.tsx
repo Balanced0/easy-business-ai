@@ -8,7 +8,7 @@ import { inventoryAlerts } from "@/lib/sample-data";
 import { AlertTriangle, TrendingDown, Package } from "lucide-react";
 
 export const Route = createFileRoute("/_app/inventory")({
-  head: () => ({ meta: [{ title: "Inventory — EasyBusiness AI" }] }),
+  head: () => ({ meta: [{ title: "ইনভেন্টরি / Inventory — EasyBusiness AI" }] }),
   component: InventoryPage,
 });
 
@@ -18,53 +18,53 @@ function InventoryPage() {
 
   return (
     <>
-      <DashboardTopbar title="Inventory Intelligence" />
+      <DashboardTopbar title="ইনভেন্টরি ইন্টেলিজেন্স / Inventory Intelligence" />
       <main className="flex-1 space-y-4 p-4 md:p-6">
         <div className="grid gap-3 sm:grid-cols-3">
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription className="text-xs uppercase">Low stock</CardDescription>
+              <CardDescription className="text-xs uppercase">কম স্টক / Low stock</CardDescription>
               <CardTitle className="text-2xl text-destructive">{low.length}</CardTitle>
             </CardHeader>
             <CardContent className="text-xs text-muted-foreground">
-              Action needed within 7 days
+              ৭ দিনের মধ্যে ব্যবস্থা নিন / Action needed within 7 days
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription className="text-xs uppercase">Overstock</CardDescription>
+              <CardDescription className="text-xs uppercase">অতিরিক্ত স্টক / Overstock</CardDescription>
               <CardTitle className="text-2xl text-warning-foreground">{over.length}</CardTitle>
             </CardHeader>
             <CardContent className="text-xs text-muted-foreground">
-              Consider promo or bundle
+              প্রমো বা বান্ডেল বিবেচনা করুন / Consider promo or bundle
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription className="text-xs uppercase">Predicted demand (30d)</CardDescription>
-              <CardTitle className="text-2xl">4,280 units</CardTitle>
+              <CardDescription className="text-xs uppercase">পূর্বাভাসিত চাহিদা (৩০ দিন) / Predicted demand (30d)</CardDescription>
+              <CardTitle className="text-2xl">৪,২৮০ units</CardTitle>
             </CardHeader>
             <CardContent className="text-xs text-success">
-              +9% vs. last month
+              গত মাসের তুলনায় +৯% / +9% vs. last month
             </CardContent>
           </Card>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Inventory items</CardTitle>
-            <CardDescription>Stock health and AI recommended restock quantity</CardDescription>
+            <CardTitle className="text-base">ইনভেন্টরি আইটেম / Inventory items</CardTitle>
+            <CardDescription>স্টক স্বাস্থ্য ও এআই সুপারিশকৃত রিস্টক পরিমাণ / Stock health and AI recommended restock quantity</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Product</TableHead>
+                  <TableHead>পণ্য / Product</TableHead>
                   <TableHead>SKU</TableHead>
-                  <TableHead className="text-right">In stock</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Recommended restock</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+                  <TableHead className="text-right">স্টকে / In stock</TableHead>
+                  <TableHead>অবস্থা / Status</TableHead>
+                  <TableHead className="text-right">সুপারিশকৃত রিস্টক / Recommended restock</TableHead>
+                  <TableHead className="text-right">অ্যাকশন / Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -87,7 +87,7 @@ function InventoryPage() {
                         ) : (
                           <AlertTriangle className="mr-1 h-3 w-3" />
                         )}
-                        {i.status === "low" ? "Low" : "Overstock"}
+                        {i.status === "low" ? "কম / Low" : "অতিরিক্ত / Overstock"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -96,7 +96,7 @@ function InventoryPage() {
                     <TableCell className="text-right">
                       <Button size="sm" variant="outline">
                         <Package className="mr-1 h-3 w-3" />
-                        {i.status === "low" ? "Restock" : "Promote"}
+                        {i.status === "low" ? "রিস্টক / Restock" : "প্রমোট / Promote"}
                       </Button>
                     </TableCell>
                   </TableRow>
