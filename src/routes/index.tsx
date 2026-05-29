@@ -10,6 +10,7 @@ import {
   BarChart3,
   ArrowRight,
 } from "lucide-react";
+import { useLanguage, useT } from "@/hooks/use-language";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -60,12 +61,15 @@ const features = [
     icon: MessageSquare,
     titleBn: "এআই কমার্স সহকারী",
     title: "AI Commerce Assistant",
-    descBn: "‘বিক্রয় কেন কমছে?’ এর মতো সহজ প্রশ্ন করুন, উত্তর পান।",
+    descBn: "'বিক্রয় কেন কমছে?' এর মতো সহজ প্রশ্ন করুন, উত্তর পান।",
     desc: "Ask plain questions like 'why are sales dropping?' and get answers.",
   },
 ];
 
 function LandingPage() {
+  const { lang } = useLanguage();
+  const t = useT();
+
   return (
     <div className="min-h-screen bg-background">
       {/* Nav */}
@@ -75,15 +79,15 @@ function LandingPage() {
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
               <BarChart3 className="h-4 w-4" />
             </div>
-            <span className="text-sm font-semibold">ইজিবিজনেস / EasyBusiness AI</span>
+            <span className="text-sm font-semibold">{t("ইজিবিজনেস / EasyBusiness AI")}</span>
           </Link>
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-            <a href="#features" className="hover:text-foreground">ফিচার / Features</a>
-            <a href="#how" className="hover:text-foreground">কীভাবে কাজ করে / How it works</a>
-            <Link to="/about" className="hover:text-foreground">সম্পর্কে / About</Link>
+            <a href="#features" className="hover:text-foreground">{t("ফিচার / Features")}</a>
+            <a href="#how" className="hover:text-foreground">{t("কীভাবে কাজ করে / How it works")}</a>
+            <Link to="/about" className="hover:text-foreground">{t("সম্পর্কে / About")}</Link>
           </nav>
           <Button asChild size="sm">
-            <Link to="/dashboard">ড্যাশবোর্ড / Open Dashboard</Link>
+            <Link to="/dashboard">{t("ড্যাশবোর্ড / Open Dashboard")}</Link>
           </Button>
         </div>
       </header>
@@ -93,27 +97,27 @@ function LandingPage() {
         <div className="mx-auto max-w-2xl text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border bg-muted/50 px-3 py-1 text-xs text-muted-foreground">
             <span className="h-1.5 w-1.5 rounded-full bg-success" />
-            ছোট ইকমার্স টিমের জন্য তৈরি / Built for small ecommerce teams
+            {t("ছোট ইকমার্স টিমের জন্য তৈরি / Built for small ecommerce teams")}
           </div>
           <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
-            ছোট ব্যবসার জন্য এআই-চালিত কমার্স ইন্টেলিজেন্স
+            {lang === "bn" ? "ছোট ব্যবসার জন্য এআই-চালিত কমার্স ইন্টেলিজেন্স" : "AI-powered commerce intelligence for SMEs"}
           </h1>
           <h2 className="mt-2 text-xl font-medium tracking-tight text-muted-foreground md:text-2xl">
-            AI-powered commerce intelligence for SMEs
+            {lang === "bn" ? "AI-powered commerce intelligence for SMEs" : "ছোট ব্যবসার জন্য এআই-চালিত কমার্স ইন্টেলিজেন্স"}
           </h2>
           <p className="mt-4 text-base text-muted-foreground md:text-lg">
-            মার্কেট ট্রেন্ড, গ্রাহক আচরণ, ইনভেন্টরি ঝুঁকি এবং প্রতিযোগীর পদক্ষেপ বুঝুন — একটি সহজ ড্যাশবোর্ডে।
-            <br />
-            Understand market trends, customer behavior, inventory risks, and competitor moves — with clear AI-generated recommendations.
+            {lang === "bn"
+              ? "মার্কেট ট্রেন্ড, গ্রাহক আচরণ, ইনভেন্টরি ঝুঁকি এবং প্রতিযোগীর পদক্ষেপ বুঝুন — একটি সহজ ড্যাশবোর্ডে।"
+              : "Understand market trends, customer behavior, inventory risks, and competitor moves — with clear AI-generated recommendations."}
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Button asChild size="lg">
               <Link to="/dashboard">
-                শুরু করুন / Get Started <ArrowRight className="ml-1 h-4 w-4" />
+                {t("শুরু করুন / Get Started")} <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link to="/dashboard">ড্যাশবোর্ড দেখুন / View Dashboard</Link>
+              <Link to="/dashboard">{t("ড্যাশবোর্ড দেখুন / View Dashboard")}</Link>
             </Button>
           </div>
         </div>
@@ -129,7 +133,7 @@ function LandingPage() {
                 ["ট্রেন্ডিং / Trending", "১২ SKUs", "+৪ this wk"],
               ].map(([l, v, d]) => (
                 <div key={l} className="rounded-md border bg-card p-3 text-left">
-                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{l}</div>
+                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{t(l)}</div>
                   <div className="mt-1 text-lg font-semibold">{v}</div>
                   <div className="text-xs text-muted-foreground">{d}</div>
                 </div>
@@ -153,15 +157,15 @@ function LandingPage() {
         <div className="mx-auto max-w-6xl px-4 py-20">
           <div className="mb-10 max-w-2xl">
             <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-              স্মার্ট স্টোর চালানোর সব কিছু
+              {lang === "bn" ? "স্মার্ট স্টোর চালানোর সব কিছু" : "Everything you need to run a smarter store"}
             </h2>
             <h3 className="text-lg font-medium text-muted-foreground">
-              Everything you need to run a smarter store
+              {lang === "bn" ? "Everything you need to run a smarter store" : "স্মার্ট স্টোর চালানোর সব কিছু"}
             </h3>
             <p className="mt-2 text-muted-foreground">
-              বাজওয়ার্ড নয়, ব্যবহারিক টুল। দ্রুত উত্তর প্রয়োজন এমন SME টিমের জন্য ডিজাইন করা।
-              <br />
-              Practical tools, not buzzwords. Designed for SME teams who need answers fast.
+              {lang === "bn"
+                ? "বাজওয়ার্ড নয়, ব্যবহারিক টুল। দ্রুত উত্তর প্রয়োজন এমন SME টিমের জন্য ডিজাইন করা।"
+                : "Practical tools, not buzzwords. Designed for SME teams who need answers fast."}
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -172,12 +176,10 @@ function LandingPage() {
                     <f.icon className="h-4 w-4" />
                   </div>
                   <CardTitle className="text-base">
-                    {f.titleBn} <span className="text-muted-foreground font-normal">/ {f.title}</span>
+                    {lang === "bn" ? f.titleBn : f.title}
                   </CardTitle>
                   <CardDescription>
-                    {f.descBn}
-                    <br />
-                    <span className="text-xs opacity-80">{f.desc}</span>
+                    {lang === "bn" ? f.descBn : f.desc}
                   </CardDescription>
                 </CardHeader>
               </Card>
@@ -192,13 +194,15 @@ function LandingPage() {
           <div className="grid items-start gap-10 md:grid-cols-2">
             <div>
               <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                কীভাবে কাজ করে
+                {lang === "bn" ? "কীভাবে কাজ করে" : "How it works"}
               </h2>
-              <h3 className="text-lg font-medium text-muted-foreground">How it works</h3>
+              <h3 className="text-lg font-medium text-muted-foreground">
+                {lang === "bn" ? "How it works" : "কীভাবে কাজ করে"}
+              </h3>
               <p className="mt-2 text-muted-foreground">
-                আমরা আপনার স্টোরের সাথে সংযুক্ত হই, মার্কেট ডেটা দিয়ে সমৃদ্ধ করি, এবং RAG দ্বারা চালিত কার্যকর সুপারিশে অনুবাদ করি।
-                <br />
-                We connect to your store, enrich it with market data, and translate it into actionable recommendations powered by retrieval-augmented AI.
+                {lang === "bn"
+                  ? "আমরা আপনার স্টোরের সাথে সংযুক্ত হই, মার্কেট ডেটা দিয়ে সমৃদ্ধ করি, এবং RAG দ্বারা চালিত কার্যকর সুপারিশে অনুবাদ করি।"
+                  : "We connect to your store, enrich it with market data, and translate it into actionable recommendations powered by retrieval-augmented AI."}
               </p>
             </div>
             <ol className="space-y-3 text-sm">
@@ -213,8 +217,7 @@ function LandingPage() {
                     {i + 1}
                   </span>
                   <span>
-                    {bn}
-                    <span className="ml-1 text-xs text-muted-foreground">/ {en}</span>
+                    {lang === "bn" ? bn : en}
                   </span>
                 </li>
               ))}
@@ -227,16 +230,16 @@ function LandingPage() {
       <section className="border-t bg-muted/30">
         <div className="mx-auto max-w-3xl px-4 py-16 text-center">
           <h2 className="text-2xl font-semibold tracking-tight">
-            আপনার স্টোর স্পষ্টভাবে দেখতে প্রস্তুত?
+            {lang === "bn" ? "আপনার স্টোর স্পষ্টভাবে দেখতে প্রস্তুত?" : "Ready to see your store clearly?"}
           </h2>
           <h3 className="text-lg font-medium text-muted-foreground">
-            Ready to see your store clearly?
+            {lang === "bn" ? "Ready to see your store clearly?" : "আপনার স্টোর স্পষ্টভাবে দেখতে প্রস্তুত?"}
           </h3>
           <p className="mt-2 text-muted-foreground">
-            নমুনা ডেটা সহ ডেমো ড্যাশবোর্ডটি দেখুন। / Explore the demo dashboard with sample ecommerce data.
+            {t("নমুনা ডেটা সহ ডেমো ড্যাশবোর্ডটি দেখুন। / Explore the demo dashboard with sample ecommerce data.")}
           </p>
           <Button asChild size="lg" className="mt-6">
-            <Link to="/dashboard">ড্যাশবোর্ড খুলুন / Open the Dashboard</Link>
+            <Link to="/dashboard">{t("ড্যাশবোর্ড খুলুন / Open the Dashboard")}</Link>
           </Button>
         </div>
       </section>
@@ -244,7 +247,7 @@ function LandingPage() {
       <footer className="border-t">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground md:flex-row">
           <span>© {new Date().getFullYear()} EasyBusiness AI</span>
-          <span>SME-দের জন্য নির্মিত · ডেমো ডেটা / Built for SMEs · Demo data shown throughout</span>
+          <span>{t("SME-দের জন্য নির্মিত · ডেমো ডেটা / Built for SMEs · Demo data shown throughout")}</span>
         </div>
       </footer>
     </div>
