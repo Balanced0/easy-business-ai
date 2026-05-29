@@ -16,6 +16,7 @@ import {
 } from "recharts";
 import { sentimentBreakdown, positiveTrends, complaints } from "@/lib/sample-data";
 import { ThumbsUp, MessageCircleWarning } from "lucide-react";
+import { useT } from "@/hooks/use-language";
 
 export const Route = createFileRoute("/_app/customers")({
   head: () => ({ meta: [{ title: "গ্রাহক / Customer Insights — EasyBusiness AI" }] }),
@@ -33,6 +34,7 @@ const reviewVolume = [
 ];
 
 function CustomersPage() {
+  const t = useT();
   return (
     <>
       <DashboardTopbar title="গ্রাহক অন্তর্দৃষ্টি / Customer Insights" />
@@ -40,8 +42,8 @@ function CustomersPage() {
         <div className="grid gap-4 lg:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">রিভিউ সন্তুষ্টি / Review sentiment</CardTitle>
-              <CardDescription>গত ৩০ দিনের বিভাজন / Last 30 days breakdown</CardDescription>
+              <CardTitle className="text-base">{t("রিভিউ সন্তুষ্টি / Review sentiment")}</CardTitle>
+              <CardDescription>{t("গত ৩০ দিনের বিভাজন / Last 30 days breakdown")}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-64 w-full">
@@ -76,8 +78,8 @@ function CustomersPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">রিভিউ ভলিউম / Review volume</CardTitle>
-              <CardDescription>এই সপ্তাহ / This week</CardDescription>
+              <CardTitle className="text-base">{t("রিভিউ ভলিউম / Review volume")}</CardTitle>
+              <CardDescription>{t("এই সপ্তাহ / This week")}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-64 w-full">
@@ -107,7 +109,7 @@ function CustomersPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <ThumbsUp className="h-4 w-4 text-success" />
-                <CardTitle className="text-base">ইতিবাচক ফিডব্যাক প্রবণতা / Positive feedback trends</CardTitle>
+                <CardTitle className="text-base">{t("ইতিবাচক ফিডব্যাক প্রবণতা / Positive feedback trends")}</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
@@ -115,7 +117,7 @@ function CustomersPage() {
                 {positiveTrends.map((p) => (
                   <li key={p} className="flex gap-2 rounded-md border p-3">
                     <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-success" />
-                    <span>{p}</span>
+                    <span>{t(p)}</span>
                   </li>
                 ))}
               </ul>
@@ -126,7 +128,7 @@ function CustomersPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <MessageCircleWarning className="h-4 w-4 text-destructive" />
-                <CardTitle className="text-base">সাধারণ অভিযোগ / Common complaints</CardTitle>
+                <CardTitle className="text-base">{t("সাধারণ অভিযোগ / Common complaints")}</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
@@ -134,7 +136,7 @@ function CustomersPage() {
                 {complaints.map((p) => (
                   <li key={p} className="flex gap-2 rounded-md border p-3">
                     <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-destructive" />
-                    <span>{p}</span>
+                    <span>{t(p)}</span>
                   </li>
                 ))}
               </ul>
