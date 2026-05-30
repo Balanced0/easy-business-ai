@@ -70,7 +70,7 @@ export async function searchSimilar(
   const { data, error } = await supabaseAdmin.rpc("match_documents", {
     query_embedding: embedding as unknown as string,
     match_count: opts.matchCount ?? 6,
-    filter_source_types: opts.sourceTypes ?? null,
+    filter_source_types: (opts.sourceTypes ?? undefined) as unknown as string[],
   });
   if (error) throw new Error(`Similarity search failed: ${error.message}`);
   return (data ?? []) as MatchedDoc[];
