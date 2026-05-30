@@ -42,13 +42,13 @@ export async function upsertDocuments(docs: KnowledgeDoc[]) {
     source_type: d.source_type,
     title: d.title ?? null,
     content: d.content,
-    metadata: d.metadata ?? {},
-    embedding: embeddings[i] as unknown as string, // pgvector accepts JS array via PostgREST
+    metadata: (d.metadata ?? {}) as unknown as never,
+    embedding: embeddings[i] as unknown as string,
   }));
 
   const { error, count } = await supabaseAdmin
     .from("knowledge_documents")
-    .insert(rows, { count: "exact" });
+    .insert(rows as never, { count: "exact" });
   if (error) throw new Error(`Insert failed: ${error.message}`);
   return { inserted: count ?? rows.length };
 }
