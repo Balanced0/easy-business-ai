@@ -246,6 +246,7 @@ function AssistantPage() {
               </CardContent>
             </Card>
           </div>
+        </div>
       </main>
     </>
   );
