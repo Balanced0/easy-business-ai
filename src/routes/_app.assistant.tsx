@@ -195,24 +195,57 @@ function AssistantPage() {
             </div>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">{t("প্রস্তাবিত প্রশ্ন / Suggested questions")}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {suggestions.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => send(s)}
-                  disabled={isLoading}
-                  className="w-full rounded-md border bg-card p-3 text-left text-sm transition-colors hover:bg-accent disabled:opacity-50"
+          <div className="space-y-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Database className="h-4 w-4" />
+                  {t("নলেজ বেস / Knowledge base")}
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  {seedCount === null
+                    ? t("লোড হচ্ছে... / Loading...")
+                    : seedCount === 0
+                    ? t("খালি — সিড করুন / Empty — seed it")
+                    : `${seedCount} ${t("ডকুমেন্ট ইন্ডেক্স করা / documents indexed")}`}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={handleSeed}
+                  disabled={seeding}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
                 >
-                  {t(s)}
-                </button>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
+                  {seeding ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : null}
+                  {seedCount && seedCount > 0
+                    ? t("পুনরায় সিড / Re-seed")
+                    : t("নলেজ বেস তৈরি করুন / Build knowledge base")}
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{t("প্রস্তাবিত প্রশ্ন / Suggested questions")}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {suggestions.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => send(s)}
+                    disabled={isLoading}
+                    className="w-full rounded-md border bg-card p-3 text-left text-sm transition-colors hover:bg-accent disabled:opacity-50"
+                  >
+                    {t(s)}
+                  </button>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
       </main>
     </>
   );
