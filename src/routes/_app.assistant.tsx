@@ -6,8 +6,9 @@ import { DashboardTopbar } from "@/components/dashboard-topbar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Sparkles, User } from "lucide-react";
+import { Send, Sparkles, User, Database, Loader2 } from "lucide-react";
 import { useLanguage, useT } from "@/hooks/use-language";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/assistant")({
   head: () => ({ meta: [{ title: "এআই সহকারী / AI Assistant — EasyBusiness AI" }] }),
