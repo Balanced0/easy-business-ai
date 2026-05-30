@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiScrapeRouteImport } from './routes/api/scrape'
 import { Route as ApiEmbeddingsRouteImport } from './routes/api/embeddings'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiAnalyticsRouteImport } from './routes/api/analytics'
@@ -28,6 +29,11 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiScrapeRoute = ApiScrapeRouteImport.update({
+  id: '/api/scrape',
+  path: '/api/scrape',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiEmbeddingsRoute = ApiEmbeddingsRouteImport.update({
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/api/analytics': typeof ApiAnalyticsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/embeddings': typeof ApiEmbeddingsRoute
+  '/api/scrape': typeof ApiScrapeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/api/analytics': typeof ApiAnalyticsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/embeddings': typeof ApiEmbeddingsRoute
+  '/api/scrape': typeof ApiScrapeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/api/analytics': typeof ApiAnalyticsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/embeddings': typeof ApiEmbeddingsRoute
+  '/api/scrape': typeof ApiScrapeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/api/analytics'
     | '/api/chat'
     | '/api/embeddings'
+    | '/api/scrape'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/api/analytics'
     | '/api/chat'
     | '/api/embeddings'
+    | '/api/scrape'
   id:
     | '__root__'
     | '/'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/api/analytics'
     | '/api/chat'
     | '/api/embeddings'
+    | '/api/scrape'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -160,6 +172,7 @@ export interface RootRouteChildren {
   ApiAnalyticsRoute: typeof ApiAnalyticsRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiEmbeddingsRoute: typeof ApiEmbeddingsRoute
+  ApiScrapeRoute: typeof ApiScrapeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -176,6 +189,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/scrape': {
+      id: '/api/scrape'
+      path: '/api/scrape'
+      fullPath: '/api/scrape'
+      preLoaderRoute: typeof ApiScrapeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/embeddings': {
@@ -270,6 +290,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAnalyticsRoute: ApiAnalyticsRoute,
   ApiChatRoute: ApiChatRoute,
   ApiEmbeddingsRoute: ApiEmbeddingsRoute,
+  ApiScrapeRoute: ApiScrapeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
