@@ -13,6 +13,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiEmbeddingsRouteImport } from './routes/api/embeddings'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiAnalyticsRouteImport } from './routes/api/analytics'
 import { Route as AppInventoryRouteImport } from './routes/_app.inventory'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppCustomersRouteImport } from './routes/_app.customers'
@@ -37,6 +38,11 @@ const ApiEmbeddingsRoute = ApiEmbeddingsRouteImport.update({
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAnalyticsRoute = ApiAnalyticsRouteImport.update({
+  id: '/api/analytics',
+  path: '/api/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppInventoryRoute = AppInventoryRouteImport.update({
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/customers': typeof AppCustomersRoute
   '/dashboard': typeof AppDashboardRoute
   '/inventory': typeof AppInventoryRoute
+  '/api/analytics': typeof ApiAnalyticsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/embeddings': typeof ApiEmbeddingsRoute
 }
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/customers': typeof AppCustomersRoute
   '/dashboard': typeof AppDashboardRoute
   '/inventory': typeof AppInventoryRoute
+  '/api/analytics': typeof ApiAnalyticsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/embeddings': typeof ApiEmbeddingsRoute
 }
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/_app/customers': typeof AppCustomersRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/inventory': typeof AppInventoryRoute
+  '/api/analytics': typeof ApiAnalyticsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/embeddings': typeof ApiEmbeddingsRoute
 }
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/dashboard'
     | '/inventory'
+    | '/api/analytics'
     | '/api/chat'
     | '/api/embeddings'
   fileRoutesByTo: FileRoutesByTo
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/dashboard'
     | '/inventory'
+    | '/api/analytics'
     | '/api/chat'
     | '/api/embeddings'
   id:
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/_app/customers'
     | '/_app/dashboard'
     | '/_app/inventory'
+    | '/api/analytics'
     | '/api/chat'
     | '/api/embeddings'
   fileRoutesById: FileRoutesById
@@ -145,6 +157,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  ApiAnalyticsRoute: typeof ApiAnalyticsRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiEmbeddingsRoute: typeof ApiEmbeddingsRoute
 }
@@ -177,6 +190,13 @@ declare module '@tanstack/react-router' {
       path: '/api/chat'
       fullPath: '/api/chat'
       preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/analytics': {
+      id: '/api/analytics'
+      path: '/api/analytics'
+      fullPath: '/api/analytics'
+      preLoaderRoute: typeof ApiAnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/inventory': {
@@ -247,6 +267,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  ApiAnalyticsRoute: ApiAnalyticsRoute,
   ApiChatRoute: ApiChatRoute,
   ApiEmbeddingsRoute: ApiEmbeddingsRoute,
 }
