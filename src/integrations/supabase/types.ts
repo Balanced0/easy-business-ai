@@ -14,6 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
+      business_profiles: {
+        Row: {
+          business_name: string
+          created_at: string
+          description: string | null
+          id: string
+          industry: string | null
+          monthly_revenue: string | null
+          products: string | null
+          target_market: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_name: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          monthly_revenue?: string | null
+          products?: string | null
+          target_market?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_name?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          monthly_revenue?: string | null
+          products?: string | null
+          target_market?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      chat_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          language: string | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          language?: string | null
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          language?: string | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_documents: {
         Row: {
           content: string
@@ -23,6 +124,7 @@ export type Database = {
           metadata: Json
           source_type: string
           title: string | null
+          user_id: string | null
         }
         Insert: {
           content: string
@@ -32,6 +134,7 @@ export type Database = {
           metadata?: Json
           source_type: string
           title?: string | null
+          user_id?: string | null
         }
         Update: {
           content?: string
@@ -41,6 +144,34 @@ export type Database = {
           metadata?: Json
           source_type?: string
           title?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -49,21 +180,38 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      match_documents: {
-        Args: {
-          filter_source_types?: string[]
-          match_count?: number
-          query_embedding: string
-        }
-        Returns: {
-          content: string
-          id: string
-          metadata: Json
-          similarity: number
-          source_type: string
-          title: string
-        }[]
-      }
+      match_documents:
+        | {
+            Args: {
+              filter_source_types?: string[]
+              match_count?: number
+              query_embedding: string
+            }
+            Returns: {
+              content: string
+              id: string
+              metadata: Json
+              similarity: number
+              source_type: string
+              title: string
+            }[]
+          }
+        | {
+            Args: {
+              filter_source_types?: string[]
+              filter_user_id?: string
+              match_count?: number
+              query_embedding: string
+            }
+            Returns: {
+              content: string
+              id: string
+              metadata: Json
+              similarity: number
+              source_type: string
+              title: string
+            }[]
+          }
     }
     Enums: {
       [_ in never]: never
