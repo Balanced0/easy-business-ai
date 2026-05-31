@@ -6,6 +6,7 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { upsertDocuments } from "@/lib/embeddings.server";
+import { getAuthedUser } from "@/lib/auth-route.server";
 
 type Body = { url?: string; sourceType?: string; title?: string };
 
@@ -13,6 +14,8 @@ export const Route = createFileRoute("/api/scrape")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const authed = await getAuthedUser(request);
+        if (!authed) return new Response("Unauthorized", { status: 401 });
         const body = (await request.json().catch(() => ({}))) as Body;
         const url = body.url?.trim();
         if (!url || !/^https?:\/\//.test(url)) {
@@ -83,7 +86,7 @@ export const Route = createFileRoute("/api/scrape")({
             metadata: { url, chunk: i, total: chunks.length },
           }));
 
-          const result = await upsertDocuments(docs);
+          const result = await upsertDocuments(docs, authed.userId);
           return Response.json({ ok: true, url, ...result });
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);

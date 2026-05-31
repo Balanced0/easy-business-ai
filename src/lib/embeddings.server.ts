@@ -35,10 +35,11 @@ export type KnowledgeDoc = {
   metadata?: Record<string, unknown>;
 };
 
-export async function upsertDocuments(docs: KnowledgeDoc[]) {
+export async function upsertDocuments(docs: KnowledgeDoc[], userId: string) {
   if (docs.length === 0) return { inserted: 0 };
   const embeddings = await embedText(docs.map((d) => d.content));
   const rows = docs.map((d, i) => ({
+    user_id: userId,
     source_type: d.source_type,
     title: d.title ?? null,
     content: d.content,
@@ -64,6 +65,7 @@ export type MatchedDoc = {
 
 export async function searchSimilar(
   query: string,
+  userId: string,
   opts: { matchCount?: number; sourceTypes?: string[] } = {},
 ): Promise<MatchedDoc[]> {
   const [embedding] = await embedText(query);
@@ -71,6 +73,7 @@ export async function searchSimilar(
     query_embedding: embedding as unknown as string,
     match_count: opts.matchCount ?? 6,
     filter_source_types: (opts.sourceTypes ?? undefined) as unknown as string[],
+    filter_user_id: userId,
   });
   if (error) throw new Error(`Similarity search failed: ${error.message}`);
   return (data ?? []) as MatchedDoc[];
