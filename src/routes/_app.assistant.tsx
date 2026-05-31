@@ -8,7 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Sparkles, User, Database, Loader2 } from "lucide-react";
 import { useLanguage, useT } from "@/hooks/use-language";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+async function authHeaders(): Promise<Record<string, string>> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 export const Route = createFileRoute("/_app/assistant")({
   head: () => ({ meta: [{ title: "এআই সহকারী / AI Assistant — EasyBusiness AI" }] }),
@@ -31,18 +38,21 @@ function AssistantPage() {
   const t = useT();
 
   useEffect(() => {
-    fetch("/api/embeddings")
-      .then((r) => r.json())
-      .then((j) => setSeedCount(j.count ?? 0))
-      .catch(() => setSeedCount(0));
+    authHeaders().then((h) =>
+      fetch("/api/embeddings", { headers: h })
+        .then((r) => r.json())
+        .then((j) => setSeedCount(j.count ?? 0))
+        .catch(() => setSeedCount(0)),
+    );
   }, []);
 
   const handleSeed = async () => {
     setSeeding(true);
     try {
+      const h = await authHeaders();
       const res = await fetch("/api/embeddings", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...h },
         body: JSON.stringify({ seed: true, reset: true }),
       });
       const j = await res.json();
@@ -61,7 +71,13 @@ function AssistantPage() {
   };
 
   const { messages, sendMessage, status, error } = useChat({
-    transport: new DefaultChatTransport({ api: "/api/chat" }),
+    transport: new DefaultChatTransport({
+      api: "/api/chat",
+      prepareSendMessagesRequest: async ({ messages: ms, id }) => ({
+        body: { messages: ms, id, language: lang },
+        headers: await authHeaders(),
+      }),
+    }),
   });
 
   useEffect(() => {

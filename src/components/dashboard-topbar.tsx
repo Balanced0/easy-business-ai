@@ -1,13 +1,31 @@
-import { Search, Bell } from "lucide-react";
+import { Search, Bell, LogOut } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useLanguage, useT } from "@/hooks/use-language";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "@tanstack/react-router";
 
 export function DashboardTopbar({ title }: { title: string }) {
   const { lang, toggleLang } = useLanguage();
   const t = useT();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const initials = (user?.user_metadata?.full_name || user?.email || "U")
+    .split(/\s+/)
+    .map((p: string) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate({ to: "/login" });
+  };
+
   return (
     <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur">
       <SidebarTrigger />
@@ -24,23 +42,18 @@ export function DashboardTopbar({ title }: { title: string }) {
           onClick={toggleLang}
           className="flex h-8 items-center overflow-hidden rounded-md border text-xs"
         >
-          <span
-            className={`px-2 py-1 ${lang === "bn" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-          >
-            বাং
-          </span>
-          <span
-            className={`px-2 py-1 ${lang === "en" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-          >
-            En
-          </span>
+          <span className={`px-2 py-1 ${lang === "bn" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>বাং</span>
+          <span className={`px-2 py-1 ${lang === "en" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>En</span>
         </button>
         <Button variant="ghost" size="icon" className="h-9 w-9">
           <Bell className="h-4 w-4" />
         </Button>
         <Avatar className="h-8 w-8">
-          <AvatarFallback className="bg-primary text-primary-foreground text-xs">SM</AvatarFallback>
+          <AvatarFallback className="bg-primary text-primary-foreground text-xs">{initials}</AvatarFallback>
         </Avatar>
+        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleLogout} title={t("লগ আউট / Sign out")}>
+          <LogOut className="h-4 w-4" />
+        </Button>
       </div>
     </header>
   );
