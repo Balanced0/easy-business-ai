@@ -33,11 +33,11 @@ function AboutPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-3 md:grid-cols-5">
+            <div className="grid gap-3 md:grid-cols-5 items-stretch">
               {stages.map((s, i) => (
-                <div key={s.step} className="relative">
-                  <div className="rounded-md border bg-card p-4">
-                    <div className="mb-2 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                <div key={s.step} className="relative flex">
+                  <div className="flex h-full w-full flex-col rounded-md border bg-card p-4">
+                    <div className="mb-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
                       {s.step}
                     </div>
                     <div className="text-sm font-medium">{t(s.title)}</div>
