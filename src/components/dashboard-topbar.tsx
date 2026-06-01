@@ -1,15 +1,17 @@
-import { Search, Bell, LogOut } from "lucide-react";
+import { Search, Bell, LogOut, Moon, Sun } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useLanguage, useT } from "@/hooks/use-language";
+import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
 
 export function DashboardTopbar({ title }: { title: string }) {
   const { lang, toggleLang } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
   const t = useT();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -25,6 +27,8 @@ export function DashboardTopbar({ title }: { title: string }) {
     await supabase.auth.signOut();
     navigate({ to: "/login" });
   };
+
+  const goProfile = () => navigate({ to: "/profile" });
 
   return (
     <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur">
@@ -45,12 +49,30 @@ export function DashboardTopbar({ title }: { title: string }) {
           <span className={`px-2 py-1 ${lang === "bn" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>বাং</span>
           <span className={`px-2 py-1 ${lang === "en" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>En</span>
         </button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9"
+          onClick={toggleTheme}
+          title={t("থিম পরিবর্তন / Toggle theme")}
+          aria-label="Toggle theme"
+        >
+          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </Button>
         <Button variant="ghost" size="icon" className="h-9 w-9">
           <Bell className="h-4 w-4" />
         </Button>
-        <Avatar className="h-8 w-8">
-          <AvatarFallback className="bg-primary text-primary-foreground text-xs">{initials}</AvatarFallback>
-        </Avatar>
+        <button
+          type="button"
+          onClick={goProfile}
+          title={t("প্রোফাইল / Profile")}
+          aria-label={t("প্রোফাইল / Profile")}
+          className="rounded-full ring-offset-background transition hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
+        >
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="bg-primary text-primary-foreground text-xs">{initials}</AvatarFallback>
+          </Avatar>
+        </button>
         <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleLogout} title={t("লগ আউট / Sign out")}>
           <LogOut className="h-4 w-4" />
         </Button>
