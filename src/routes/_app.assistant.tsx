@@ -19,6 +19,7 @@ async function authHeaders(): Promise<Record<string, string>> {
 
 export const Route = createFileRoute("/_app/assistant")({
   head: () => ({ meta: [{ title: "এআই সহকারী / AI Assistant — EasyBusiness AI" }] }),
+  validateSearch: (s: Record<string, unknown>) => ({ q: typeof s.q === "string" ? s.q : undefined }),
   component: AssistantPage,
 });
 
@@ -83,6 +84,16 @@ function AssistantPage() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
+
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  useEffect(() => {
+    const q = search.q?.trim();
+    if (!q) return;
+    void sendMessage({ text: q });
+    navigate({ search: {}, replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.q]);
 
   const isLoading = status === "submitted" || status === "streaming";
 

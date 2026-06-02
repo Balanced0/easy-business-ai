@@ -8,6 +8,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
+import { useState, type KeyboardEvent } from "react";
 
 export function DashboardTopbar({ title }: { title: string }) {
   const { lang, toggleLang } = useLanguage();
@@ -15,6 +16,7 @@ export function DashboardTopbar({ title }: { title: string }) {
   const t = useT();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [query, setQuery] = useState("");
 
   const initials = (user?.user_metadata?.full_name || user?.email || "U")
     .split(/\s+/)
@@ -30,18 +32,43 @@ export function DashboardTopbar({ title }: { title: string }) {
 
   const goProfile = () => navigate({ to: "/profile" });
 
+  const runSearch = () => {
+    const q = query.trim();
+    if (!q) return;
+    navigate({ to: "/assistant", search: { q } });
+  };
+
+  const onSearchKey = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      runSearch();
+    }
+  };
+
+
   return (
     <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur">
       <SidebarTrigger />
       <h1 className="text-sm font-semibold">{t(title)}</h1>
       <div className="ml-auto flex items-center gap-2">
         <div className="relative hidden md:block">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <button
+            type="button"
+            onClick={runSearch}
+            className="absolute left-2.5 top-2.5 text-muted-foreground hover:text-foreground"
+            aria-label={t("খুঁজুন / Search")}
+          >
+            <Search className="h-4 w-4" />
+          </button>
           <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={onSearchKey}
             placeholder={t("পণ্য, SKU খুঁজুন... / Search products, SKUs...")}
             className="h-9 w-64 pl-8"
           />
         </div>
+
         <button
           onClick={toggleLang}
           className="flex h-8 items-center overflow-hidden rounded-md border text-xs"
