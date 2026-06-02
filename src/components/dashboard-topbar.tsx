@@ -52,12 +52,23 @@ export function DashboardTopbar({ title }: { title: string }) {
       <h1 className="text-sm font-semibold">{t(title)}</h1>
       <div className="ml-auto flex items-center gap-2">
         <div className="relative hidden md:block">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <button
+            type="button"
+            onClick={runSearch}
+            className="absolute left-2.5 top-2.5 text-muted-foreground hover:text-foreground"
+            aria-label={t("খুঁজুন / Search")}
+          >
+            <Search className="h-4 w-4" />
+          </button>
           <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={onSearchKey}
             placeholder={t("পণ্য, SKU খুঁজুন... / Search products, SKUs...")}
             className="h-9 w-64 pl-8"
           />
         </div>
+
         <button
           onClick={toggleLang}
           className="flex h-8 items-center overflow-hidden rounded-md border text-xs"
