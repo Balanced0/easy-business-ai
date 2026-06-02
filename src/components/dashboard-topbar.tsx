@@ -8,6 +8,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
+import { useState, type KeyboardEvent } from "react";
 
 export function DashboardTopbar({ title }: { title: string }) {
   const { lang, toggleLang } = useLanguage();
@@ -15,6 +16,7 @@ export function DashboardTopbar({ title }: { title: string }) {
   const t = useT();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [query, setQuery] = useState("");
 
   const initials = (user?.user_metadata?.full_name || user?.email || "U")
     .split(/\s+/)
@@ -29,6 +31,20 @@ export function DashboardTopbar({ title }: { title: string }) {
   };
 
   const goProfile = () => navigate({ to: "/profile" });
+
+  const runSearch = () => {
+    const q = query.trim();
+    if (!q) return;
+    navigate({ to: "/assistant", search: { q } });
+  };
+
+  const onSearchKey = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      runSearch();
+    }
+  };
+
 
   return (
     <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur">
