@@ -19,7 +19,10 @@ async function authHeaders(): Promise<Record<string, string>> {
 
 export const Route = createFileRoute("/_app/assistant")({
   head: () => ({ meta: [{ title: "এআই সহকারী / AI Assistant — EasyBusiness AI" }] }),
-  validateSearch: (s: Record<string, unknown>) => ({ q: typeof s.q === "string" ? s.q : undefined }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    q: typeof s.q === "string" ? s.q : undefined,
+    t: typeof s.t === "number" ? s.t : undefined,
+  }),
   component: AssistantPage,
 });
 
