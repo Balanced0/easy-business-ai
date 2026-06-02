@@ -85,6 +85,16 @@ function AssistantPage() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  useEffect(() => {
+    const q = search.q?.trim();
+    if (!q) return;
+    void sendMessage({ text: q });
+    navigate({ search: {}, replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.q]);
+
   const isLoading = status === "submitted" || status === "streaming";
 
   const send = (text: string) => {
