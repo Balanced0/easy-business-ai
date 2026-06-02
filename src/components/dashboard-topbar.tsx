@@ -34,8 +34,12 @@ export function DashboardTopbar({ title }: { title: string }) {
 
   const runSearch = () => {
     const q = query.trim();
+    console.log("[topbar] search submit:", q);
     if (!q) return;
-    navigate({ to: "/assistant", search: { q } });
+    // Include a timestamp so repeated identical queries still trigger the
+    // assistant's effect (search.q reference changes each time).
+    navigate({ to: "/assistant", search: { q, t: Date.now() } });
+    setQuery("");
   };
 
   const onSearchKey = (e: KeyboardEvent<HTMLInputElement>) => {

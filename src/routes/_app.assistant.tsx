@@ -19,7 +19,10 @@ async function authHeaders(): Promise<Record<string, string>> {
 
 export const Route = createFileRoute("/_app/assistant")({
   head: () => ({ meta: [{ title: "এআই সহকারী / AI Assistant — EasyBusiness AI" }] }),
-  validateSearch: (s: Record<string, unknown>) => ({ q: typeof s.q === "string" ? s.q : undefined }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    q: typeof s.q === "string" ? s.q : undefined,
+    t: typeof s.t === "number" ? s.t : undefined,
+  }),
   component: AssistantPage,
 });
 
@@ -87,13 +90,18 @@ function AssistantPage() {
 
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
+  const lastHandledKey = useRef<string | null>(null);
   useEffect(() => {
     const q = search.q?.trim();
     if (!q) return;
+    const key = `${q}|${search.t ?? ""}`;
+    if (lastHandledKey.current === key) return;
+    lastHandledKey.current = key;
+    console.log("[assistant] auto-send from search param:", q);
     void sendMessage({ text: q });
     navigate({ search: {}, replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search.q]);
+  }, [search.q, search.t]);
 
   const isLoading = status === "submitted" || status === "streaming";
 
