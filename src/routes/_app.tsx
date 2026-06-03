@@ -22,22 +22,19 @@ function AppLayout() {
       return;
     }
     // Ensure business profile exists; otherwise send to onboarding.
-    supabase
-      .from("business_profiles")
-      .select("id")
-      .eq("user_id", user.id)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (!active) return;
-        if (error || !data) {
-          navigate({ to: "/onboarding" });
-        } else {
-          setChecking(false);
-        }
-      })
-      .finally(() => {
-        if (active) setChecking(false);
-      });
+    void (async () => {
+      const { data, error } = await supabase
+        .from("business_profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!active) return;
+      if (error || !data) {
+        navigate({ to: "/onboarding" });
+      }
+      setChecking(false);
+    })();
 
     return () => {
       active = false;
