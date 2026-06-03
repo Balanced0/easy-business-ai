@@ -15,24 +15,30 @@ function AppLayout() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    let active = true;
     if (loading) return;
     if (!user) {
       navigate({ to: "/login" });
       return;
     }
     // Ensure business profile exists; otherwise send to onboarding.
-    supabase
-      .from("business_profiles")
-      .select("id")
-      .eq("user_id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!data) {
-          navigate({ to: "/onboarding" });
-        } else {
-          setChecking(false);
-        }
-      });
+    void (async () => {
+      const { data, error } = await supabase
+        .from("business_profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!active) return;
+      if (error || !data) {
+        navigate({ to: "/onboarding" });
+      }
+      setChecking(false);
+    })();
+
+    return () => {
+      active = false;
+    };
   }, [user, loading, navigate]);
 
   if (loading || checking) {
