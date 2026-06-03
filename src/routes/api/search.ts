@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { convertToModelMessages, generateText } from "ai";
+import { generateText } from "ai";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { getAuthedUser } from "@/lib/auth-route.server";
 import { searchSimilar } from "@/lib/embeddings.server";
@@ -87,7 +87,6 @@ export const Route = createFileRoute("/api/search")({
               const result = await generateText({
                 model: gateway("google/gemini-3-flash-preview"),
                 prompt: buildSearchPrompt(query, structuredSummary, retrieved, language),
-                messages: await convertToModelMessages([]),
               });
               aiSummary = result.text.trim() || null;
             }
