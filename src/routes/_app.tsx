@@ -15,6 +15,7 @@ function AppLayout() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    let active = true;
     if (loading) return;
     if (!user) {
       navigate({ to: "/login" });
@@ -26,13 +27,21 @@ function AppLayout() {
       .select("id")
       .eq("user_id", user.id)
       .maybeSingle()
-      .then(({ data }) => {
-        if (!data) {
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error || !data) {
           navigate({ to: "/onboarding" });
         } else {
           setChecking(false);
         }
+      })
+      .finally(() => {
+        if (active) setChecking(false);
       });
+
+    return () => {
+      active = false;
+    };
   }, [user, loading, navigate]);
 
   if (loading || checking) {
