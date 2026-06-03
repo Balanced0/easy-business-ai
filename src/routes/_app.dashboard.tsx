@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DashboardTopbar } from "@/components/dashboard-topbar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   Area,
@@ -28,8 +30,10 @@ import {
   aiSummary,
   trendingProducts,
 } from "@/lib/sample-data";
-import { Sparkles, TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
-import { useT } from "@/hooks/use-language";
+import { Sparkles, TrendingUp, TrendingDown, AlertTriangle, Loader2, Search, X } from "lucide-react";
+import { useLanguage, useT } from "@/hooks/use-language";
+import { supabase } from "@/integrations/supabase/client";
+import type { DashboardStructuredSearchResult } from "@/lib/dashboard-search";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
@@ -38,18 +42,211 @@ export const Route = createFileRoute("/_app/dashboard")({
       { name: "description", content: "Overview of sales, inventory, and AI insights." },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    q: typeof s.q === "string" ? s.q : undefined,
+    t: typeof s.t === "number" ? s.t : undefined,
+  }),
   component: DashboardPage,
 });
 
+type SearchResponse = {
+  query: string;
+  mode: "keyword" | "natural-language";
+  structured: DashboardStructuredSearchResult;
+  aiSummary: string | null;
+  ragMatches: Array<{ title: string | null; source_type: string; content: string }>;
+};
+
+async function authHeaders(): Promise<Record<string, string>> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 function DashboardPage() {
   const t = useT();
+  const { lang } = useLanguage();
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const [searchResult, setSearchResult] = useState<SearchResponse | null>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const lastHandledKey = useRef<string | null>(null);
+
+  useEffect(() => {
+    const q = search.q?.trim();
+    if (!q) {
+      setSearchLoading(false);
+      setSearchError(null);
+      setSearchResult(null);
+      return;
+    }
+
+    const key = `${q}|${search.t ?? ""}|${lang}`;
+    if (lastHandledKey.current === key) return;
+    lastHandledKey.current = key;
+
+    let cancelled = false;
+    const run = async () => {
+      setSearchLoading(true);
+      setSearchError(null);
+      try {
+        const headers = await authHeaders();
+        const res = await fetch("/api/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...headers },
+          body: JSON.stringify({ query: q, language: lang }),
+        });
+        const json = (await res.json()) as SearchResponse | { error?: string };
+        if (!res.ok) throw new Error("error" in json ? json.error || "Search failed" : "Search failed");
+        if (!cancelled) setSearchResult(json as SearchResponse);
+      } catch (error) {
+        if (!cancelled) {
+          setSearchResult(null);
+          setSearchError(error instanceof Error ? error.message : String(error));
+        }
+      } finally {
+        if (!cancelled) setSearchLoading(false);
+      }
+    };
+
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [search.q, search.t, lang]);
+
+  const clearSearch = () => {
+    lastHandledKey.current = null;
+    setSearchResult(null);
+    setSearchError(null);
+    setSearchLoading(false);
+    navigate({ search: {}, replace: true });
+  };
+
+  const visibleSummaryCards = searchResult?.structured.resultCards ?? summaryCards;
+  const visibleTrending = searchResult?.structured.matchedProducts.length
+    ? searchResult.structured.matchedProducts.slice(0, 4).map((item) => ({
+        name: item.name,
+        growth: item.source === "inventory" ? t("স্টক ম্যাচ / Stock match") : item.source === "competitor" ? t("মূল্য ম্যাচ / Price match") : t("ম্যাচ / Match"),
+      }))
+    : trendingProducts;
+  const visibleInventory = useMemo(() => {
+    if (!searchResult?.structured.matchedProducts.length) return inventoryAlerts;
+    const names = new Set(
+      searchResult.structured.matchedProducts
+        .filter((item) => item.source === "inventory")
+        .map((item) => item.name),
+    );
+    return names.size > 0 ? inventoryAlerts.filter((item) => names.has(item.name)) : inventoryAlerts;
+  }, [searchResult]);
+  const visibleCompetitors = useMemo(() => {
+    if (!searchResult?.structured.matchedProducts.length) return competitorPrices;
+    const names = new Set(
+      searchResult.structured.matchedProducts
+        .filter((item) => item.source === "competitor")
+        .map((item) => item.name),
+    );
+    return names.size > 0 ? competitorPrices.filter((item) => names.has(item.product)) : competitorPrices;
+  }, [searchResult]);
+  const visibleAiSummary = searchResult?.aiSummary || (searchResult ? searchResult.structured.matchedInsights.join("\n") : aiSummary);
+
   return (
     <>
       <DashboardTopbar title="ড্যাশবোর্ড / Dashboard" />
       <main className="flex-1 space-y-4 p-4 md:p-6">
+        {(search.q || searchLoading || searchResult || searchError) && (
+          <Card>
+            <CardHeader>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
+                  {searchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                </div>
+                <div>
+                  <CardTitle className="text-base">
+                    {t("সার্চ ফলাফল / Search results")}
+                    {search.q ? <span className="ml-2 text-muted-foreground">“{search.q}”</span> : null}
+                  </CardTitle>
+                  <CardDescription>
+                    {searchLoading
+                      ? t("ড্যাশবোর্ড আপডেট হচ্ছে... / Updating dashboard...")
+                      : searchResult
+                      ? `${searchResult.structured.totalMatches} ${t("ম্যাচ পাওয়া গেছে / matches found")}`
+                      : searchError
+                      ? searchError
+                      : t("সার্চ ক্লিয়ার করা হয়েছে / Search cleared")}
+                  </CardDescription>
+                </div>
+                {searchResult ? (
+                  <Badge variant="secondary" className="ml-auto text-xs">
+                    {searchResult.mode === "natural-language"
+                      ? t("AI + RAG")
+                      : t("স্ট্রাকচার্ড / Structured")}
+                  </Badge>
+                ) : null}
+                {(search.q || searchResult || searchError) && (
+                  <Button variant="outline" size="sm" onClick={clearSearch} className="gap-1">
+                    <X className="h-3.5 w-3.5" />
+                    {t("ক্লিয়ার / Clear")}
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            {searchResult ? (
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+                  <div className="space-y-3">
+                    <div>
+                      <div className="text-sm font-medium">{t("ম্যাচিং পণ্য / Matching products")}</div>
+                      <div className="mt-2 space-y-2">
+                        {searchResult.structured.matchedProducts.length > 0 ? (
+                          searchResult.structured.matchedProducts.slice(0, 5).map((item) => (
+                            <div key={`${item.source}-${item.name}`} className="rounded-md border p-3">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="text-sm font-medium">{item.name}</div>
+                                <Badge variant="secondary" className="text-xs">
+                                  {item.source}
+                                </Badge>
+                              </div>
+                              <div className="mt-1 text-xs text-muted-foreground">{item.detail}</div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="rounded-md border p-3 text-sm text-muted-foreground">
+                            {t("কোনও সরাসরি পণ্য ম্যাচ পাওয়া যায়নি / No direct product matches found")}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <div className="text-sm font-medium">{t("এআই সারাংশ / AI summary")}</div>
+                      <div className="mt-2 rounded-md border p-3 text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
+                        {visibleAiSummary}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium">{t("সম্পর্কিত ইনসাইট / Related insights")}</div>
+                      <div className="mt-2 space-y-2">
+                        {searchResult.structured.matchedInsights.slice(0, 4).map((item) => (
+                          <div key={item} className="rounded-md border p-3 text-sm text-muted-foreground">
+                            {t(item)}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            ) : null}
+          </Card>
+        )}
+
         {/* Summary cards */}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {summaryCards.map((c) => (
+          {visibleSummaryCards.map((c) => (
             <Card key={c.label}>
               <CardHeader className="pb-2">
                 <CardDescription className="text-xs uppercase tracking-wide">
@@ -83,12 +280,14 @@ function DashboardPage() {
                 <Sparkles className="h-4 w-4" />
               </div>
               <CardTitle className="text-base">{t("এআই বিজনেস সারাংশ / AI business summary")}</CardTitle>
-              <Badge variant="secondary" className="ml-auto text-xs">{t("২ মিনিট আগে আপডেট / Updated 2 min ago")}</Badge>
+              <Badge variant="secondary" className="ml-auto text-xs">
+                {searchResult ? t("সার্চ ভিত্তিক / Search based") : t("২ মিনিট আগে আপডেট / Updated 2 min ago")}
+              </Badge>
             </div>
           </CardHeader>
           <CardContent>
             <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
-              {t(aiSummary)}
+              {t(visibleAiSummary)}
             </p>
           </CardContent>
         </Card>
@@ -141,7 +340,7 @@ function DashboardPage() {
             </CardHeader>
             <CardContent>
               <ul className="space-y-3">
-                {trendingProducts.map((p) => (
+                {visibleTrending.map((p) => (
                   <li key={p.name} className="flex items-center justify-between">
                     <span className="text-sm">{p.name}</span>
                     <Badge variant="secondary" className="text-success bg-success/10">
@@ -235,8 +434,8 @@ function DashboardPage() {
               <CardTitle className="text-base">{t("ইনভেন্টরি সতর্কতা / Inventory alerts")}</CardTitle>
               <CardDescription>{t("মনোযোগ প্রয়োজন / Items needing attention")}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
-              {inventoryAlerts.map((i) => (
+              <CardContent className="space-y-2">
+               {visibleInventory.map((i) => (
                 <div
                   key={i.sku}
                   className="flex items-center justify-between rounded-md border p-3"
@@ -284,7 +483,7 @@ function DashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {competitorPrices.map((c) => (
+                  {visibleCompetitors.map((c) => (
                     <TableRow key={c.product}>
                       <TableCell className="font-medium">{c.product}</TableCell>
                       <TableCell className="text-right">${c.you.toFixed(2)}</TableCell>
