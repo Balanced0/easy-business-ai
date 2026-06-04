@@ -279,11 +279,20 @@ function classifyPage(
   const md = markdown.toLowerCase();
   const navHits = NAV_KEYWORDS.filter((k) => md.includes(k)).length;
   const prodHits = PRODUCT_KEYWORDS.filter((k) => md.includes(k)).length;
-  if (priceCount === 0 && navHits >= 3 && titleCount < 3) return "navigation_page";
-  if (priceCount === 0 && titleCount === 0) return "irrelevant_page";
-  if (PRODUCT_URL_RE.test(url) || prodHits >= 1) return "product_page";
-  if (CATEGORY_URL_RE.test(url)) return "category_page";
-  if (priceCount >= 1 && titleCount >= 1) return "category_page";
+
+  // Nav-dominant pages (login/help/seller/account-heavy shells)
+  if (navHits >= 3 && prodHits === 0 && priceCount < 2) return "navigation_page";
+
+  // HARD RULE — product page requires ALL of:
+  //   • visible price in markdown
+  //   • product action keyword ("add to cart" / "buy now" / "in stock" / ...)
+  //   • repeated product-card patterns (≥3 distinct titles)
+  // Otherwise the page is discarded (no category_page fallback).
+  const hasPrice = priceCount >= 1;
+  const hasAction = prodHits >= 1;
+  const hasRepeated = titleCount >= 3;
+  if (hasPrice && hasAction && hasRepeated) return "product_page";
+
   return "irrelevant_page";
 }
 
@@ -347,7 +356,7 @@ function extractNodes(
   const nodes: ProductNode[] = [];
   const repeated = titles.length >= 3; // "repeated product-like patterns"
 
-  if ((pageType === "product_page" || pageType === "category_page") && repeated) {
+  if (pageType === "product_page" && repeated) {
     const seen = new Set<string>();
     for (const t of titles.slice(0, 40)) {
       // Pair nearest price within 500 chars
@@ -358,7 +367,7 @@ function extractNodes(
         if (d < bestDist && d < 500) { bestDist = d; bestPrice = p; }
       }
       const hasPrice = !!bestPrice;
-      // STRICT: title must exist AND a price must exist on the page (paired or category-level)
+      // STRICT: title must be paired with a nearby price
       if (!hasPrice) continue;
       const url = t.url ?? `${seedUrl}#t-${t.index}`;
       if (t.url && NAV_URL_RE.test(t.url)) continue;
@@ -380,7 +389,6 @@ function extractNodes(
         pageType,
       });
 
-      // Discard very low-confidence noise
       if (confidence < 0.45) continue;
 
       nodes.push({
@@ -400,11 +408,9 @@ function extractNodes(
   const competitorStatus: DebugInfo["competitorStatus"] =
     md.length === 0
       ? "empty_response"
-      : pageType === "navigation_page" || pageType === "irrelevant_page"
-        ? "discarded"
-        : nodes.length > 0
-          ? "structured_data"
-          : "discarded";
+      : nodes.length > 0
+        ? "structured_data"
+        : "discarded";
 
   const note =
     md.length === 0
@@ -412,12 +418,14 @@ function extractNodes(
       : pageType === "navigation_page"
         ? "Navigation page — discarded"
         : pageType === "irrelevant_page"
-          ? "Irrelevant page — no product signals, discarded"
-          : !repeated
-            ? "No repeated product-like patterns — discarded"
-            : nodes.length === 0
-              ? "No valid product nodes (title + price required) — discarded"
-              : undefined;
+          ? "No product signals (price + action + repeated titles required) — discarded"
+          : pageType !== "product_page"
+            ? "Not a product page — discarded"
+            : !repeated
+              ? "No repeated product-card patterns — discarded"
+              : nodes.length === 0
+                ? "No title+price pairs found — discarded"
+                : undefined;
 
   return {
     nodes,
