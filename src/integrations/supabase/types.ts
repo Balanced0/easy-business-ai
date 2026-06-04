@@ -115,6 +115,48 @@ export type Database = {
           },
         ]
       }
+      inventory_items: {
+        Row: {
+          batch_id: string | null
+          cost: number | null
+          created_at: string
+          id: string
+          name: string | null
+          price: number | null
+          reorder_threshold: number
+          sku: string
+          stock: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          batch_id?: string | null
+          cost?: number | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          price?: number | null
+          reorder_threshold?: number
+          sku: string
+          stock?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          batch_id?: string | null
+          cost?: number | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          price?: number | null
+          reorder_threshold?: number
+          sku?: string
+          stock?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       knowledge_documents: {
         Row: {
           content: string
@@ -148,6 +190,75 @@ export type Database = {
         }
         Relationships: []
       }
+      order_records: {
+        Row: {
+          batch_id: string | null
+          created_at: string
+          customer: string | null
+          id: string
+          order_id: string | null
+          ordered_at: string | null
+          status: string | null
+          total: number
+          user_id: string
+        }
+        Insert: {
+          batch_id?: string | null
+          created_at?: string
+          customer?: string | null
+          id?: string
+          order_id?: string | null
+          ordered_at?: string | null
+          status?: string | null
+          total?: number
+          user_id: string
+        }
+        Update: {
+          batch_id?: string | null
+          created_at?: string
+          customer?: string | null
+          id?: string
+          order_id?: string | null
+          ordered_at?: string | null
+          status?: string | null
+          total?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      product_records: {
+        Row: {
+          batch_id: string | null
+          category: string | null
+          created_at: string
+          id: string
+          name: string | null
+          price: number | null
+          sku: string | null
+          user_id: string
+        }
+        Insert: {
+          batch_id?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          price?: number | null
+          sku?: string | null
+          user_id: string
+        }
+        Update: {
+          batch_id?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          price?: number | null
+          sku?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -171,6 +282,108 @@ export type Database = {
           full_name?: string | null
           id?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      review_records: {
+        Row: {
+          batch_id: string | null
+          content: string | null
+          created_at: string
+          id: string
+          product: string | null
+          rating: number | null
+          review_date: string | null
+          sentiment: string | null
+          user_id: string
+        }
+        Insert: {
+          batch_id?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          product?: string | null
+          rating?: number | null
+          review_date?: string | null
+          sentiment?: string | null
+          user_id: string
+        }
+        Update: {
+          batch_id?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          product?: string | null
+          rating?: number | null
+          review_date?: string | null
+          sentiment?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sales_records: {
+        Row: {
+          batch_id: string | null
+          channel: string | null
+          created_at: string
+          id: string
+          product_name: string | null
+          quantity: number
+          revenue: number
+          sale_date: string | null
+          sku: string | null
+          user_id: string
+        }
+        Insert: {
+          batch_id?: string | null
+          channel?: string | null
+          created_at?: string
+          id?: string
+          product_name?: string | null
+          quantity?: number
+          revenue?: number
+          sale_date?: string | null
+          sku?: string | null
+          user_id: string
+        }
+        Update: {
+          batch_id?: string | null
+          channel?: string | null
+          created_at?: string
+          id?: string
+          product_name?: string | null
+          quantity?: number
+          revenue?: number
+          sale_date?: string | null
+          sku?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      upload_batches: {
+        Row: {
+          created_at: string
+          filename: string | null
+          id: string
+          kind: string
+          row_count: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          filename?: string | null
+          id?: string
+          kind: string
+          row_count?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          filename?: string | null
+          id?: string
+          kind?: string
+          row_count?: number
           user_id?: string
         }
         Relationships: []

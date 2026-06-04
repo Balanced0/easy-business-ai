@@ -14,11 +14,13 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiUploadRouteImport } from './routes/api/upload'
 import { Route as ApiSearchRouteImport } from './routes/api/search'
 import { Route as ApiScrapeRouteImport } from './routes/api/scrape'
 import { Route as ApiEmbeddingsRouteImport } from './routes/api/embeddings'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiAnalyticsRouteImport } from './routes/api/analytics'
+import { Route as AppUploadRouteImport } from './routes/_app.upload'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppInventoryRouteImport } from './routes/_app.inventory'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
@@ -51,6 +53,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiUploadRoute = ApiUploadRouteImport.update({
+  id: '/api/upload',
+  path: '/api/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiSearchRoute = ApiSearchRouteImport.update({
   id: '/api/search',
   path: '/api/search',
@@ -75,6 +82,11 @@ const ApiAnalyticsRoute = ApiAnalyticsRouteImport.update({
   id: '/api/analytics',
   path: '/api/analytics',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppUploadRoute = AppUploadRouteImport.update({
+  id: '/upload',
+  path: '/upload',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
@@ -124,11 +136,13 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AppDashboardRoute
   '/inventory': typeof AppInventoryRoute
   '/profile': typeof AppProfileRoute
+  '/upload': typeof AppUploadRoute
   '/api/analytics': typeof ApiAnalyticsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/embeddings': typeof ApiEmbeddingsRoute
   '/api/scrape': typeof ApiScrapeRoute
   '/api/search': typeof ApiSearchRoute
+  '/api/upload': typeof ApiUploadRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -142,11 +156,13 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AppDashboardRoute
   '/inventory': typeof AppInventoryRoute
   '/profile': typeof AppProfileRoute
+  '/upload': typeof AppUploadRoute
   '/api/analytics': typeof ApiAnalyticsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/embeddings': typeof ApiEmbeddingsRoute
   '/api/scrape': typeof ApiScrapeRoute
   '/api/search': typeof ApiSearchRoute
+  '/api/upload': typeof ApiUploadRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -162,11 +178,13 @@ export interface FileRoutesById {
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/inventory': typeof AppInventoryRoute
   '/_app/profile': typeof AppProfileRoute
+  '/_app/upload': typeof AppUploadRoute
   '/api/analytics': typeof ApiAnalyticsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/embeddings': typeof ApiEmbeddingsRoute
   '/api/scrape': typeof ApiScrapeRoute
   '/api/search': typeof ApiSearchRoute
+  '/api/upload': typeof ApiUploadRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -182,11 +200,13 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/inventory'
     | '/profile'
+    | '/upload'
     | '/api/analytics'
     | '/api/chat'
     | '/api/embeddings'
     | '/api/scrape'
     | '/api/search'
+    | '/api/upload'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -200,11 +220,13 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/inventory'
     | '/profile'
+    | '/upload'
     | '/api/analytics'
     | '/api/chat'
     | '/api/embeddings'
     | '/api/scrape'
     | '/api/search'
+    | '/api/upload'
   id:
     | '__root__'
     | '/'
@@ -219,11 +241,13 @@ export interface FileRouteTypes {
     | '/_app/dashboard'
     | '/_app/inventory'
     | '/_app/profile'
+    | '/_app/upload'
     | '/api/analytics'
     | '/api/chat'
     | '/api/embeddings'
     | '/api/scrape'
     | '/api/search'
+    | '/api/upload'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -237,6 +261,7 @@ export interface RootRouteChildren {
   ApiEmbeddingsRoute: typeof ApiEmbeddingsRoute
   ApiScrapeRoute: typeof ApiScrapeRoute
   ApiSearchRoute: typeof ApiSearchRoute
+  ApiUploadRoute: typeof ApiUploadRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -276,6 +301,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/upload': {
+      id: '/api/upload'
+      path: '/api/upload'
+      fullPath: '/api/upload'
+      preLoaderRoute: typeof ApiUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/search': {
       id: '/api/search'
       path: '/api/search'
@@ -310,6 +342,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/analytics'
       preLoaderRoute: typeof ApiAnalyticsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/upload': {
+      id: '/_app/upload'
+      path: '/upload'
+      fullPath: '/upload'
+      preLoaderRoute: typeof AppUploadRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/profile': {
       id: '/_app/profile'
@@ -371,6 +410,7 @@ interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
   AppInventoryRoute: typeof AppInventoryRoute
   AppProfileRoute: typeof AppProfileRoute
+  AppUploadRoute: typeof AppUploadRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -381,6 +421,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
   AppInventoryRoute: AppInventoryRoute,
   AppProfileRoute: AppProfileRoute,
+  AppUploadRoute: AppUploadRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -396,6 +437,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiEmbeddingsRoute: ApiEmbeddingsRoute,
   ApiScrapeRoute: ApiScrapeRoute,
   ApiSearchRoute: ApiSearchRoute,
+  ApiUploadRoute: ApiUploadRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

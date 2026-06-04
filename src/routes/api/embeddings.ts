@@ -1,12 +1,11 @@
 // POST /api/embeddings  — authenticated, scoped to caller.
 // GET  /api/embeddings  — returns count for caller.
 import { createFileRoute } from "@tanstack/react-router";
-import { buildSeedDocuments } from "@/lib/seed-data";
 import { upsertDocuments, type KnowledgeDoc } from "@/lib/embeddings.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getAuthedUser } from "@/lib/auth-route.server";
 
-type Body = { documents?: KnowledgeDoc[]; seed?: boolean; reset?: boolean };
+type Body = { documents?: KnowledgeDoc[]; reset?: boolean };
 
 export const Route = createFileRoute("/api/embeddings")({
   server: {
@@ -23,9 +22,9 @@ export const Route = createFileRoute("/api/embeddings")({
           if (body.reset) {
             await supabaseAdmin.from("knowledge_documents").delete().eq("user_id", authed.userId);
           }
-          const docs = body.seed ? buildSeedDocuments() : (body.documents ?? []);
+          const docs = body.documents ?? [];
           if (docs.length === 0) {
-            return Response.json({ error: "No documents. Pass { seed: true } or documents[]." }, { status: 400 });
+            return Response.json({ error: "No documents. Upload a CSV/XLSX from the Upload page or pass documents[]." }, { status: 400 });
           }
           const result = await upsertDocuments(docs, authed.userId);
           return Response.json({ ok: true, ...result });
