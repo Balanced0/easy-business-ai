@@ -115,6 +115,104 @@ export type Database = {
           },
         ]
       }
+      competitor_products: {
+        Row: {
+          availability: string | null
+          competitor_id: string
+          created_at: string
+          currency: string | null
+          id: string
+          image_url: string | null
+          price: number | null
+          raw: Json
+          scraped_at: string
+          source_url: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          availability?: string | null
+          competitor_id: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          image_url?: string | null
+          price?: number | null
+          raw?: Json
+          scraped_at?: string
+          source_url: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          availability?: string | null
+          competitor_id?: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          image_url?: string | null
+          price?: number | null
+          raw?: Json
+          scraped_at?: string
+          source_url?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_products_competitor_id_fkey"
+            columns: ["competitor_id"]
+            isOneToOne: false
+            referencedRelation: "competitors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitors: {
+        Row: {
+          created_at: string
+          description: string | null
+          domain: string
+          id: string
+          last_scraped_at: string | null
+          name: string
+          query: string
+          source: string
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          domain: string
+          id?: string
+          last_scraped_at?: string | null
+          name: string
+          query: string
+          source?: string
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          domain?: string
+          id?: string
+          last_scraped_at?: string | null
+          name?: string
+          query?: string
+          source?: string
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       inventory_items: {
         Row: {
           batch_id: string | null
