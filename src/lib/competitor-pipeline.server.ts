@@ -251,11 +251,19 @@ function extractSignals(
   return {
     products,
     debug: {
+      firecrawlStatus: md.length > 0 ? "success" as const : "empty" as const,
       markdownLength: md.length,
       priceMatches: prices.length,
       productStrings: titles.length,
       rawLinkCount: page.links.length,
       sampleTitles: titles.slice(0, 5).map((t) => t.text),
+      markdownPreview: md.slice(0, 500),
+      productsExtracted: products.length,
+      note: products.length === 0
+        ? "No structured data found, showing raw scrape output"
+        : md.length === 0
+          ? "Scrape returned empty response"
+          : undefined,
     },
   };
 }
