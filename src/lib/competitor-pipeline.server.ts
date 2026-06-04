@@ -382,15 +382,18 @@ export async function discoverFromQuery(
   // ── Persist competitors ─────────────────────────────────
   const competitorRows = Array.from(productsByDomain.keys())
     .filter((d) => d.length > 0)
-    .map((domain) => ({
-      user_id: userId,
-      query,
-      name: nameFromHost(domain),
-      domain,
-      url: `https://${domain}`,
-      description: debug.find((d) => d.domain === domain)?.markdownPreview || null,
-      source: "firecrawl_scrape_query",
-    }));
+    .map((domain) => {
+      const domainDebug = debug.find((d) => d.domain === domain);
+      return {
+        user_id: userId,
+        query,
+        name: nameFromHost(domain),
+        domain,
+        url: `https://${domain}`,
+        description: domainDebug?.markdownPreview || null,
+        source: `firecrawl_scrape_query:${domainDebug?.competitorStatus ?? "structured_data"}`,
+      };
+    });
 
   let competitors: Array<Record<string, unknown> & { id: string; domain: string }> = [];
   if (competitorRows.length > 0) {
