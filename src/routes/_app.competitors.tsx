@@ -73,15 +73,34 @@ async function authedFetch(input: string, init: RequestInit = {}) {
   });
 }
 
+type SeedReport = {
+  source: string;
+  seedUrl: string;
+  ok: boolean;
+  error?: string;
+  finalUrl?: string;
+  status?: number;
+  markdownLength: number;
+  markdownPreview: string;
+  priceCount: number;
+  productCardCount: number;
+  productTitleCount: number;
+  navShellDetected: boolean;
+  verdict: "real_products" | "navigation_shell" | "empty" | "error";
+};
+
 function CompetitorsPage() {
   const t = useT();
   const [query, setQuery] = useState("");
   const [discovering, setDiscovering] = useState(false);
+  const [validating, setValidating] = useState(false);
   const [scrapingId, setScrapingId] = useState<string | null>(null);
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [debugInfo, setDebugInfo] = useState<DebugInfo[]>([]);
+  const [seedReports, setSeedReports] = useState<SeedReport[]>([]);
   const [lastTotals, setLastTotals] = useState<{ domains: number; products: number } | null>(null);
+
 
   const load = useCallback(async () => {
     const res = await authedFetch("/api/competitors/list");
