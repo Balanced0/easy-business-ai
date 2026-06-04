@@ -382,7 +382,7 @@ export async function discoverFromQuery(
 
   // ── Fallback: if nothing yet, hit a few known marketplace homepages
   if (totalProducts() === 0) {
-    for (const url of FALLBACK_DOMAINS) {
+    for (const url of FALLBACK_SEEDS) {
       const { page } = await safeScrape(url, {
         formats: ["markdown", "links"],
         waitFor: 2000,
