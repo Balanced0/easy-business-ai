@@ -60,11 +60,35 @@ type Graph = {
   }>;
 };
 
+type ScrapeStatus = {
+  url: string;
+  status: "success" | "failed" | "skipped";
+  message?: string;
+};
+
+type DebugInfo = {
+  seedUrl: string;
+  domain: string;
+  firecrawlStatus: "success" | "failed" | "empty";
+  competitorStatus?: "structured_data" | "unstructured_data" | "empty_response" | "failed" | "discarded";
+  pageType?: "product_page" | "category_page" | "navigation_page" | "irrelevant_page";
+  markdownLength: number;
+  priceMatches: number;
+  productStrings: number;
+  rawLinkCount: number;
+  sampleTitles: string[];
+  markdownPreview: string;
+  productsExtracted: number;
+  note?: string;
+};
+
 type DiscoverResponse = {
   ok: boolean;
   count: number;
   productsInserted: number;
   competitors: Competitor[];
+  statuses?: ScrapeStatus[];
+  debug?: DebugInfo[];
   totals?: { domains: number; products: number };
   category?: string;
   graph?: Graph;
@@ -138,6 +162,7 @@ function CompetitorsPage() {
 
   const competitors = result?.competitors ?? [];
   const graph = result?.graph;
+  const sourceDiagnostics = result?.debug ?? [];
 
   const competitorChartData = useMemo(
     () =>
@@ -167,6 +192,23 @@ function CompetitorsPage() {
   const avgProducts = competitors.length
     ? Math.round((totalProducts / competitors.length) * 10) / 10
     : 0;
+
+  const sourceSummary = useMemo(() => {
+    const summary = {
+      total: sourceDiagnostics.length,
+      usable: 0,
+      empty: 0,
+      failed: 0,
+    };
+
+    for (const item of sourceDiagnostics) {
+      if (item.productsExtracted > 0) summary.usable += 1;
+      else if (item.firecrawlStatus === "failed") summary.failed += 1;
+      else summary.empty += 1;
+    }
+
+    return summary;
+  }, [sourceDiagnostics]);
 
   return (
     <>
@@ -225,11 +267,59 @@ function CompetitorsPage() {
             <CardHeader>
               <CardTitle className="text-base">No competitors found</CardTitle>
               <CardDescription>
-                The scrape returned no valid product pages for{" "}
-                <span className="font-medium">{lastQuery}</span>. Try a more specific
-                product (e.g. "bluetooth earbuds" instead of "audio").
+                The current live run did not produce enough valid product listings for{" "}
+                <span className="font-medium">{lastQuery}</span>. Check the source diagnostics
+                below to see which sources returned usable listings and which returned weak pages.
               </CardDescription>
             </CardHeader>
+          </Card>
+        )}
+
+        {!discovering && result && sourceDiagnostics.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Live source diagnostics</CardTitle>
+              <CardDescription>
+                This run checked {sourceSummary.total} sources · {sourceSummary.usable} usable ·{" "}
+                {sourceSummary.empty} weak/empty · {sourceSummary.failed} failed
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid gap-3 md:grid-cols-2">
+                {sourceDiagnostics.map((item) => {
+                  const usable = item.productsExtracted > 0;
+                  return (
+                    <div key={item.seedUrl} className="rounded-md border p-3 text-sm">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="font-medium truncate">{item.domain}</div>
+                          <div className="text-xs text-muted-foreground truncate">{item.seedUrl}</div>
+                        </div>
+                        <Badge variant={usable ? "default" : "outline"} className="shrink-0">
+                          {usable ? "usable" : item.firecrawlStatus === "failed" ? "failed" : "discarded"}
+                        </Badge>
+                      </div>
+                      <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                        <div>Markdown: {item.markdownLength.toLocaleString()}</div>
+                        <div>Prices: {item.priceMatches}</div>
+                        <div>Titles: {item.productStrings}</div>
+                        <div>Products: {item.productsExtracted}</div>
+                      </div>
+                      {item.note && <p className="mt-2 text-xs text-muted-foreground">{item.note}</p>}
+                      {item.sampleTitles.length > 0 && (
+                        <ul className="mt-2 list-disc space-y-0.5 pl-4 text-xs text-muted-foreground">
+                          {item.sampleTitles.slice(0, 2).map((title, index) => (
+                            <li key={index} className="truncate">
+                              {title}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
           </Card>
         )}
 

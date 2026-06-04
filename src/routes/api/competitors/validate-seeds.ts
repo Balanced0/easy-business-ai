@@ -13,14 +13,13 @@ type Body = { query?: string };
 // so this endpoint stays a pure read-only probe and doesn't import or
 // perturb the pipeline.
 const SEED_TEMPLATES: Array<{ source: string; template: string }> = [
-  { source: "amazon", template: "https://www.amazon.com/s?k={q}" },
-  { source: "ebay", template: "https://www.ebay.com/sch/i.html?_nkw={q}" },
-  { source: "aliexpress", template: "https://www.aliexpress.com/w/wholesale-{q}.html" },
-  { source: "daraz", template: "https://www.daraz.com.bd/catalog/?q={q}" },
   { source: "walmart", template: "https://www.walmart.com/search?q={q}" },
+  { source: "target", template: "https://www.target.com/s?searchTerm={q}" },
   { source: "bestbuy", template: "https://www.bestbuy.com/site/searchpage.jsp?st={q}" },
+  { source: "newegg", template: "https://www.newegg.com/p/pl?d={q}" },
   { source: "etsy", template: "https://www.etsy.com/search?q={q}" },
-  { source: "zappos", template: "https://www.zappos.com/search?term={q}" },
+  { source: "kohls", template: "https://www.kohls.com/search.jsp?submit-search=web-regular&search={q}" },
+  { source: "macys", template: "https://www.macys.com/shop/featured/{q}" },
   { source: "sephora", template: "https://www.sephora.com/search?keyword={q}" },
   { source: "wayfair", template: "https://www.wayfair.com/keyword.php?keyword={q}" },
 ];

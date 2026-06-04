@@ -114,19 +114,31 @@ function expandQuery(query: string): QueryExpansion {
 
 // ───────────────────────── 2. Seed graph generation ─────────────────────────
 
+const SAFE_SEARCH_SEEDS = {
+  walmart: "https://www.walmart.com/search?q={q}",
+  target: "https://www.target.com/s?searchTerm={q}",
+  bestbuy: "https://www.bestbuy.com/site/searchpage.jsp?st={q}",
+  newegg: "https://www.newegg.com/p/pl?d={q}",
+  etsy: "https://www.etsy.com/search?q={q}",
+  kohls: "https://www.kohls.com/search.jsp?submit-search=web-regular&search={q}",
+  macys: "https://www.macys.com/shop/featured/{q}",
+  wayfair: "https://www.wayfair.com/keyword.php?keyword={q}",
+  sephora: "https://www.sephora.com/search?keyword={q}",
+} as const;
+
 const CATEGORY_SEEDS: Record<Category, string[]> = {
-  audio: ["https://www.daraz.com.bd/catalog/?q={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.ebay.com/sch/i.html?_nkw={q}", "https://www.amazon.com/s?k={q}"],
-  mobile: ["https://www.daraz.com.bd/catalog/?q={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.ebay.com/sch/i.html?_nkw={q}", "https://www.amazon.com/s?k={q}"],
-  computers: ["https://www.daraz.com.bd/catalog/?q={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.ebay.com/sch/i.html?_nkw={q}", "https://www.amazon.com/s?k={q}", "https://www.bestbuy.com/site/searchpage.jsp?st={q}"],
-  electronics: ["https://www.daraz.com.bd/catalog/?q={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.ebay.com/sch/i.html?_nkw={q}", "https://www.amazon.com/s?k={q}"],
-  footwear: ["https://www.daraz.com.bd/catalog/?q={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.ebay.com/sch/i.html?_nkw={q}", "https://www.amazon.com/s?k={q}", "https://www.zappos.com/search?term={q}"],
-  fashion: ["https://www.daraz.com.bd/catalog/?q={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.ebay.com/sch/i.html?_nkw={q}", "https://www.amazon.com/s?k={q}", "https://www.etsy.com/search?q={q}"],
-  beauty: ["https://www.daraz.com.bd/catalog/?q={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.amazon.com/s?k={q}", "https://www.sephora.com/search?keyword={q}"],
-  home: ["https://www.daraz.com.bd/catalog/?q={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.amazon.com/s?k={q}", "https://www.wayfair.com/keyword.php?keyword={q}"],
-  toys: ["https://www.daraz.com.bd/catalog/?q={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.amazon.com/s?k={q}", "https://www.ebay.com/sch/i.html?_nkw={q}"],
-  sports: ["https://www.daraz.com.bd/catalog/?q={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.amazon.com/s?k={q}", "https://www.ebay.com/sch/i.html?_nkw={q}"],
-  grocery: ["https://www.amazon.com/s?k={q}", "https://www.walmart.com/search?q={q}", "https://www.daraz.com.bd/catalog/?q={q}"],
-  general: ["https://www.amazon.com/s?k={q}", "https://www.ebay.com/sch/i.html?_nkw={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.daraz.com.bd/catalog/?q={q}"],
+  audio: [SAFE_SEARCH_SEEDS.walmart, SAFE_SEARCH_SEEDS.target, SAFE_SEARCH_SEEDS.bestbuy, SAFE_SEARCH_SEEDS.newegg],
+  mobile: [SAFE_SEARCH_SEEDS.walmart, SAFE_SEARCH_SEEDS.target, SAFE_SEARCH_SEEDS.bestbuy, SAFE_SEARCH_SEEDS.newegg],
+  computers: [SAFE_SEARCH_SEEDS.walmart, SAFE_SEARCH_SEEDS.target, SAFE_SEARCH_SEEDS.bestbuy, SAFE_SEARCH_SEEDS.newegg],
+  electronics: [SAFE_SEARCH_SEEDS.walmart, SAFE_SEARCH_SEEDS.target, SAFE_SEARCH_SEEDS.bestbuy, SAFE_SEARCH_SEEDS.newegg],
+  footwear: [SAFE_SEARCH_SEEDS.walmart, SAFE_SEARCH_SEEDS.target, SAFE_SEARCH_SEEDS.kohls, SAFE_SEARCH_SEEDS.macys, SAFE_SEARCH_SEEDS.etsy],
+  fashion: [SAFE_SEARCH_SEEDS.walmart, SAFE_SEARCH_SEEDS.target, SAFE_SEARCH_SEEDS.kohls, SAFE_SEARCH_SEEDS.macys, SAFE_SEARCH_SEEDS.etsy],
+  beauty: [SAFE_SEARCH_SEEDS.target, SAFE_SEARCH_SEEDS.walmart, SAFE_SEARCH_SEEDS.sephora, SAFE_SEARCH_SEEDS.etsy],
+  home: [SAFE_SEARCH_SEEDS.walmart, SAFE_SEARCH_SEEDS.target, SAFE_SEARCH_SEEDS.wayfair, SAFE_SEARCH_SEEDS.etsy],
+  toys: [SAFE_SEARCH_SEEDS.walmart, SAFE_SEARCH_SEEDS.target, SAFE_SEARCH_SEEDS.etsy],
+  sports: [SAFE_SEARCH_SEEDS.walmart, SAFE_SEARCH_SEEDS.target, SAFE_SEARCH_SEEDS.kohls, SAFE_SEARCH_SEEDS.etsy],
+  grocery: [SAFE_SEARCH_SEEDS.walmart, SAFE_SEARCH_SEEDS.target],
+  general: [SAFE_SEARCH_SEEDS.walmart, SAFE_SEARCH_SEEDS.target, SAFE_SEARCH_SEEDS.etsy, SAFE_SEARCH_SEEDS.macys],
 };
 
 function buildSeeds(exp: QueryExpansion): string[] {
@@ -213,9 +225,10 @@ const CURRENCY_TO_USD: Record<string, number> = {
 const NAV_URL_RE =
   /\/(login|signin|signup|register|account|help|support|seller|customer-service|contact|about|privacy|terms|shipping|returns?)(\/|$|\?)/i;
 const PRODUCT_URL_RE =
-  /\/(product|item|products|listing|dp|itm)\/|\/p\/|-i\.|\/itm\//i;
+  /\/(product|item|products|listing|dp|itm|ip)\/|\/p\/|-i\.|\/itm\/|\/A-\d+/i;
 const CATEGORY_URL_RE =
   /\/(catalog|category|categories|search|sch\/|w\/wholesale|searchpage|keyword)/i;
+const IMAGE_URL_RE = /\.(?:avif|gif|ico|jpe?g|png|svg|webp)(?:[?#].*)?$/i;
 const NAV_KEYWORDS = [
   "login", "sign in", "sign up", "register", "my account",
   "help center", "customer service", "seller center", "become a seller",
@@ -224,6 +237,8 @@ const NAV_KEYWORDS = [
 ];
 const PRODUCT_KEYWORDS = [
   "add to cart", "buy now", "add to bag", "in stock", "out of stock", "order now",
+  "view details", "see details", "choose options", "shop now", "same day delivery",
+  "pickup", "delivery",
 ];
 
 type PriceHit = { index: number; raw: string; price: number; currency: string };
@@ -241,14 +256,46 @@ function findPrices(md: string): PriceHit[] {
   return out;
 }
 
+function isLikelyProductTitle(text: string, url?: string): boolean {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  if (!normalized || normalized.startsWith("![")) return false;
+  if (normalized.length < 8 || normalized.length > 160) return false;
+  if (!/[a-z]/i.test(normalized)) return false;
+
+  const lc = normalized.toLowerCase();
+  const words = normalized.split(/\s+/);
+  if (words.length < 2 || words.length > 18) return false;
+  if (
+    NAV_KEYWORDS.some((k) => lc.includes(k)) ||
+    /(skip to|shop all|all departments|registry|wish list|wishlist|cart|pickup|delivery|sort by|filter by|deal of the day|today'?s top deals|walmart homepage|store locator|gift cards?|track your order|available for 3\+ day shipping)/i.test(
+      normalized,
+    )
+  ) {
+    return false;
+  }
+
+  if (url) {
+    if (IMAGE_URL_RE.test(url)) return false;
+    if (NAV_URL_RE.test(url)) return false;
+    if (/^https?:\/\/[^/]+\/?$/i.test(url)) return false;
+    if (CATEGORY_URL_RE.test(url) && words.length < 4) return false;
+  }
+
+  return true;
+}
+
+function isSameSiteLink(url: string, seedHost: string): boolean {
+  const host = hostFrom(url);
+  return !!host && (host === seedHost || host.endsWith(`.${seedHost}`));
+}
+
 function findTitles(md: string): TitleHit[] {
   const out: TitleHit[] = [];
   const linkRe = /\[([^\]\n]{4,200})\]\((https?:\/\/[^\s)]+)\)/g;
   let m: RegExpExecArray | null;
   while ((m = linkRe.exec(md)) !== null) {
     const text = m[1].replace(/\s+/g, " ").trim();
-    if (text.length < 4) continue;
-    if (/^(home|next|prev|more|see all|shop|click)$/i.test(text)) continue;
+    if (!isLikelyProductTitle(text, m[2])) continue;
     out.push({ index: m.index, text, url: m[2] });
   }
   if (out.length === 0) {
@@ -256,7 +303,7 @@ function findTitles(md: string): TitleHit[] {
       /(?:^|\n|\.\s+)((?:[A-Z][A-Za-z0-9'’&+./-]{1,40}\s+){2,7}[A-Z][A-Za-z0-9'’&+./-]{1,40})/g;
     while ((m = phraseRe.exec(md)) !== null) {
       const text = m[1].replace(/\s+/g, " ").trim();
-      if (text.length < 8 || text.length > 160) continue;
+      if (!isLikelyProductTitle(text)) continue;
       out.push({ index: m.index + (m[0].length - m[1].length), text });
     }
   }
@@ -371,6 +418,7 @@ function extractNodes(
       if (!hasPrice) continue;
       const url = t.url ?? `${seedUrl}#t-${t.index}`;
       if (t.url && NAV_URL_RE.test(t.url)) continue;
+      if (t.url && (!isSameSiteLink(t.url, seedHost) || IMAGE_URL_RE.test(t.url))) continue;
       if (seen.has(url)) continue;
       seen.add(url);
 
@@ -392,7 +440,7 @@ function extractNodes(
       if (confidence < 0.45) continue;
 
       nodes.push({
-        domain: t.url ? hostFrom(t.url) || seedHost : seedHost,
+        domain: seedHost,
         source_url: url,
         title: t.text,
         price: bestPrice?.price,
