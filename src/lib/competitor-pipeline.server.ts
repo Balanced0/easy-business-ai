@@ -324,7 +324,13 @@ export async function discoverFromQuery(
   const maxDomains = Math.min(Math.max(opts.maxDomains ?? 20, 1), 50);
   const maxProducts = Math.min(Math.max(opts.maxProducts ?? 50, 1), 200);
 
-  const seeds = buildSeedsForQuery(query);
+  const { category, seeds } = buildSeedsForQuery(query);
+  // Fallback seeds: always include the most reliable generic marketplaces
+  // so we never return 0 if any of them respond.
+  const FALLBACK_SEEDS = [
+    `https://www.amazon.com/s?k=${encodeURIComponent(query.trim())}`,
+    `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(query.trim())}`,
+  ];
   const statuses: ScrapeStatus[] = [];
   const debug: DebugInfo[] = [];
   const productsByDomain = new Map<string, DiscoveredProduct[]>();
