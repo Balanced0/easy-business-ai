@@ -99,12 +99,17 @@ export type ScrapeStatus = {
 
 export type DebugInfo = {
   seedUrl: string;
+  domain: string;
+  firecrawlStatus: "success" | "failed" | "empty";
+  errorMessage?: string;
   markdownLength: number;
   priceMatches: number;
   productStrings: number;
   rawLinkCount: number;
-  domain: string;
   sampleTitles: string[];
+  markdownPreview: string;
+  productsExtracted: number;
+  note?: string;
 };
 
 type DiscoveredProduct = {
