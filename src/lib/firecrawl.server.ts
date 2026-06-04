@@ -16,6 +16,7 @@ function keys() {
 export type ScrapedPage = {
   url: string;
   markdown: string;
+  html?: string;
   links: string[];
   metadata?: Record<string, unknown>;
   json?: Record<string, unknown>;
@@ -24,11 +25,13 @@ export type ScrapedPage = {
 type ScrapeResp = {
   data?: {
     markdown?: string;
+    html?: string;
     links?: string[];
     metadata?: Record<string, unknown>;
     json?: Record<string, unknown>;
   };
   markdown?: string;
+  html?: string;
   links?: string[];
   metadata?: Record<string, unknown>;
   json?: Record<string, unknown>;
@@ -39,6 +42,8 @@ export async function firecrawlScrape(
   opts: {
     extractSchema?: Record<string, unknown>;
     formats?: ("markdown" | "links" | "html")[];
+    waitFor?: number;
+    actions?: Array<Record<string, unknown>>;
   } = {},
 ): Promise<ScrapedPage> {
   const { lovableKey, fcKey } = keys();
@@ -48,6 +53,10 @@ export async function firecrawlScrape(
     formats.push({ type: "json", schema: opts.extractSchema });
   }
 
+  const body: Record<string, unknown> = { url, formats, onlyMainContent: false };
+  if (opts.waitFor) body.waitFor = opts.waitFor;
+  if (opts.actions) body.actions = opts.actions;
+
   const res = await fetch(`${GATEWAY_BASE}/scrape`, {
     method: "POST",
     headers: {
@@ -55,7 +64,7 @@ export async function firecrawlScrape(
       Authorization: `Bearer ${lovableKey}`,
       "X-Connection-Api-Key": fcKey,
     },
-    body: JSON.stringify({ url, formats, onlyMainContent: false }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) {
     const text = await res.text();
@@ -66,6 +75,7 @@ export async function firecrawlScrape(
   return {
     url,
     markdown: d.markdown ?? "",
+    html: d.html,
     links: Array.isArray(d.links) ? d.links : [],
     metadata: d.metadata,
     json: d.json,
