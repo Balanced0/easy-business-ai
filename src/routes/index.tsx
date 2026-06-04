@@ -271,7 +271,7 @@ function LandingPage() {
       <footer className="border-t">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground md:flex-row">
           <span>© {new Date().getFullYear()} EasyBusiness AI</span>
-          <span>{t("SME-দের জন্য নির্মিত · ডেমো ডেটা / Built for SMEs · Demo data shown throughout")}</span>
+          <span>{t("SME-দের জন্য নির্মিত / Built for SMEs")}</span>
         </div>
       </footer>
     </div>
