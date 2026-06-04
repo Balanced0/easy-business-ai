@@ -463,8 +463,12 @@ export async function scrapeCompetitorPage(
   }
   statuses.push({ url, status: "success" });
 
-  const { products } = extractSignals(page, url, seedHost);
-  if (products.length === 0) return { inserted: 0, statuses };
+  const { products, debug } = extractSignals(page, url, seedHost);
+  console.info(
+    `[rescrape] url=${url} status=success mdLen=${debug.markdownLength} ` +
+    `prices=${debug.priceMatches} titles=${debug.productStrings} links=${debug.rawLinkCount} ` +
+    `products=${debug.productsExtracted}`,
+  );
 
   const rows = products.slice(0, 30).map((p) => ({
     user_id: userId,
@@ -475,7 +479,11 @@ export async function scrapeCompetitorPage(
     currency: p.currency ?? null,
     availability: null,
     image_url: null,
-    raw: { rescrape: true } as unknown as never,
+    raw: {
+      rescrape: true,
+      status: p.status ?? "structured_data",
+      rawSnippet: p.rawSnippet ?? null,
+    } as unknown as never,
     scraped_at: new Date().toISOString(),
   }));
 
