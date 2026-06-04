@@ -1,12 +1,11 @@
 // POST /api/embeddings  — authenticated, scoped to caller.
 // GET  /api/embeddings  — returns count for caller.
 import { createFileRoute } from "@tanstack/react-router";
-import { buildSeedDocuments } from "@/lib/seed-data";
 import { upsertDocuments, type KnowledgeDoc } from "@/lib/embeddings.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getAuthedUser } from "@/lib/auth-route.server";
 
-type Body = { documents?: KnowledgeDoc[]; seed?: boolean; reset?: boolean };
+type Body = { documents?: KnowledgeDoc[]; reset?: boolean };
 
 export const Route = createFileRoute("/api/embeddings")({
   server: {
