@@ -489,6 +489,8 @@ export async function discoverFromQuery(
     statuses,
     debug,
     totals: { domains: productsByDomain.size, products: totalProducts() },
+    category,
+    seeds,
   };
 }
 
