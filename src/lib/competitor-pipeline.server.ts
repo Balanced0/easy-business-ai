@@ -318,20 +318,29 @@ export async function discoverFromQuery(
     });
     if (!page) {
       statuses.push({ url: seedUrl, status: "failed", message: error });
-      debug.push({
-        seedUrl, domain: seedHost, markdownLength: 0, priceMatches: 0,
-        productStrings: 0, rawLinkCount: 0, sampleTitles: [],
-      });
+      const dbg: DebugInfo = {
+        seedUrl, domain: seedHost,
+        firecrawlStatus: "failed",
+        errorMessage: error ?? "Scrape returned empty response",
+        markdownLength: 0, priceMatches: 0, productStrings: 0,
+        rawLinkCount: 0, sampleTitles: [], markdownPreview: "",
+        productsExtracted: 0,
+        note: "Scrape returned empty response",
+      };
+      debug.push(dbg);
+      console.error(`[discover] seed=${seedUrl} status=failed err=${error}`);
       continue;
     }
     statuses.push({ url: seedUrl, status: "success" });
-
-    // Always register the seed domain as a competitor — even if extraction
-    // yields nothing, we still record that the source was reachable.
     ensureDomain(seedHost);
 
     const { products, debug: d } = extractSignals(page, seedUrl, seedHost);
     debug.push({ seedUrl, domain: seedHost, ...d });
+    console.info(
+      `[discover] seed=${seedUrl} status=success mdLen=${d.markdownLength} ` +
+      `prices=${d.priceMatches} titles=${d.productStrings} links=${d.rawLinkCount} ` +
+      `products=${d.productsExtracted}`,
+    );
     for (const p of products) addProduct(p);
   }
 
