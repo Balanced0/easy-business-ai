@@ -286,6 +286,7 @@ function CompetitorsPage() {
           <div className="grid gap-3 md:grid-cols-2">
             {competitors.map((c) => {
               const cProducts = products.filter((p) => p.competitor_id === c.id);
+              const isUnstructured = c.status === "unstructured_data";
               return (
                 <Card key={c.id}>
                   <CardHeader className="pb-2">
@@ -310,10 +311,25 @@ function CompetitorsPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
+                    {isUnstructured && (
+                      <Badge variant="outline" className="w-fit">
+                        unstructured_data
+                      </Badge>
+                    )}
                     {c.description && (
                       <p className="text-xs text-muted-foreground line-clamp-2">
                         {c.description}
                       </p>
+                    )}
+                    {isUnstructured && c.raw_snippet && (
+                      <div className="space-y-1 rounded-md border bg-muted/30 p-2">
+                        <div className="text-[11px] font-medium text-muted-foreground">
+                          Raw snippet
+                        </div>
+                        <pre className="max-h-28 overflow-auto whitespace-pre-wrap break-words text-[11px]">
+                          {c.raw_snippet}
+                        </pre>
+                      </div>
                     )}
                     <div className="flex flex-wrap gap-2">
                       <Button
