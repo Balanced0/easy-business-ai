@@ -73,15 +73,34 @@ async function authedFetch(input: string, init: RequestInit = {}) {
   });
 }
 
+type SeedReport = {
+  source: string;
+  seedUrl: string;
+  ok: boolean;
+  error?: string;
+  finalUrl?: string;
+  status?: number;
+  markdownLength: number;
+  markdownPreview: string;
+  priceCount: number;
+  productCardCount: number;
+  productTitleCount: number;
+  navShellDetected: boolean;
+  verdict: "real_products" | "navigation_shell" | "empty" | "error";
+};
+
 function CompetitorsPage() {
   const t = useT();
   const [query, setQuery] = useState("");
   const [discovering, setDiscovering] = useState(false);
+  const [validating, setValidating] = useState(false);
   const [scrapingId, setScrapingId] = useState<string | null>(null);
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [debugInfo, setDebugInfo] = useState<DebugInfo[]>([]);
+  const [seedReports, setSeedReports] = useState<SeedReport[]>([]);
   const [lastTotals, setLastTotals] = useState<{ domains: number; products: number } | null>(null);
+
 
   const load = useCallback(async () => {
     const res = await authedFetch("/api/competitors/list");
@@ -143,6 +162,29 @@ function CompetitorsPage() {
     }
   };
 
+  const handleValidate = async () => {
+    if (!query.trim()) return;
+    setValidating(true);
+    setSeedReports([]);
+    try {
+      const res = await authedFetch("/api/competitors/validate-seeds", {
+        method: "POST",
+        body: JSON.stringify({ query: query.trim() }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "validation failed");
+      setSeedReports(json.reports ?? []);
+      const s = json.summary;
+      toast.success(
+        `Seeds: ${s.real_products} real · ${s.navigation_shell} shell · ${s.empty} empty · ${s.error} error`,
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Validation failed");
+    } finally {
+      setValidating(false);
+    }
+  };
+
   return (
     <>
       <DashboardTopbar title="প্রতিযোগী ইন্টেলিজেন্স / Competitor Intelligence" />
@@ -175,9 +217,88 @@ function CompetitorsPage() {
                 )}
                 {t("খুঁজুন / Discover")}
               </Button>
+              <Button
+                variant="outline"
+                onClick={handleValidate}
+                disabled={validating || !query.trim()}
+              >
+                {validating ? (
+                  <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Search className="mr-1 h-3.5 w-3.5" />
+                )}
+                {t("Validate seeds")}
+              </Button>
             </div>
           </CardContent>
         </Card>
+
+        {seedReports.length > 0 && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Seed validation</CardTitle>
+              <CardDescription>
+                Per-seed Firecrawl probe — identify which sources return real
+                product listings vs navigation / anti-bot shells.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {seedReports.map((r, i) => {
+                const verdictVariant =
+                  r.verdict === "real_products"
+                    ? "secondary"
+                    : r.verdict === "error"
+                      ? "destructive"
+                      : "outline";
+                return (
+                  <details
+                    key={`${r.seedUrl}-${i}`}
+                    className="rounded-md border bg-muted/30 p-2 text-xs"
+                  >
+                    <summary className="cursor-pointer select-none">
+                      <span className="font-medium">{r.source}</span>
+                      <Badge variant={verdictVariant} className="ml-2 text-[10px]">
+                        {r.verdict}
+                      </Badge>
+                      <span className="ml-2 text-muted-foreground">
+                        md:{r.markdownLength} · prices:{r.priceCount} · cards:
+                        {r.productCardCount} · titles:{r.productTitleCount}
+                        {r.navShellDetected ? " · ⚠ shell" : ""}
+                      </span>
+                    </summary>
+                    <div className="mt-2 space-y-2">
+                      <div className="font-mono break-all text-[11px]">
+                        seed: {r.seedUrl}
+                      </div>
+                      {r.finalUrl && r.finalUrl !== r.seedUrl && (
+                        <div className="font-mono break-all text-[11px]">
+                          final: {r.finalUrl}
+                        </div>
+                      )}
+                      {r.status != null && (
+                        <div className="text-[11px]">HTTP {r.status}</div>
+                      )}
+                      {r.error && (
+                        <div className="text-destructive">⚠ {r.error}</div>
+                      )}
+                      {r.markdownPreview && (
+                        <div>
+                          <div className="font-medium mb-1">
+                            First {r.markdownPreview.length} chars:
+                          </div>
+                          <pre className="whitespace-pre-wrap break-words rounded bg-background p-2 text-[11px] max-h-60 overflow-auto">
+                            {r.markdownPreview}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
+                  </details>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
+
 
         {debugInfo.length > 0 && (
           <Card>
