@@ -1,24 +1,16 @@
 // Query-driven competitor discovery using Firecrawl /scrape ONLY.
-// Flow:
-//   1. User submits a product query (e.g. "wireless earbuds")
-//   2. Generate seed search-style URLs against known ecommerce templates
-//   3. Scrape each seed, extract product links + titles + prices
-//   4. Group products by domain → infer competitors
-//   5. Expand: for each new competitor, scrape one more page (depth 2)
-//   6. Persist competitors + products, return confidence flags
 //
-// Hard limits: max 20 domains and max 50 products per run.
+// IMPORTANT: Firecrawl /scrape is treated as a RAW TEXT extractor. We do NOT
+// rely on structured JSON, /product URL conventions, or strict schemas. The
+// pipeline extracts best-effort signals (product-like strings + price-like
+// patterns) from the returned markdown and turns them into competitor +
+// product rows. A seed that returns any markdown MUST produce a competitor
+// and at least one product entry — even low-confidence data is stored.
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import {
-  firecrawlScrape,
-  PRODUCT_EXTRACT_SCHEMA,
-  type ScrapedPage,
-} from "./firecrawl.server";
+import { firecrawlScrape, type ScrapedPage } from "./firecrawl.server";
 
 // ───────────────────────── Category mapping + seed lists ─────────────────────────
-// Every query is mapped to a category, and each category has a FIXED seed
-// list of ecommerce entry points. No web search, no link-following discovery.
 
 type Category =
   | "audio" | "mobile" | "computers" | "electronics"
@@ -40,80 +32,18 @@ const CATEGORY_KEYWORDS: Array<{ cat: Category; words: string[] }> = [
 ];
 
 const CATEGORY_SEEDS: Record<Category, string[]> = {
-  audio: [
-    "https://www.daraz.com.bd/catalog/?q={q}",
-    "https://www.aliexpress.com/w/wholesale-{q}.html",
-    "https://www.ebay.com/sch/i.html?_nkw={q}",
-    "https://www.amazon.com/s?k={q}",
-  ],
-  mobile: [
-    "https://www.daraz.com.bd/catalog/?q={q}",
-    "https://www.aliexpress.com/w/wholesale-{q}.html",
-    "https://www.ebay.com/sch/i.html?_nkw={q}",
-    "https://www.amazon.com/s?k={q}",
-  ],
-  computers: [
-    "https://www.daraz.com.bd/catalog/?q={q}",
-    "https://www.aliexpress.com/w/wholesale-{q}.html",
-    "https://www.ebay.com/sch/i.html?_nkw={q}",
-    "https://www.amazon.com/s?k={q}",
-    "https://www.bestbuy.com/site/searchpage.jsp?st={q}",
-  ],
-  electronics: [
-    "https://www.daraz.com.bd/catalog/?q={q}",
-    "https://www.aliexpress.com/w/wholesale-{q}.html",
-    "https://www.ebay.com/sch/i.html?_nkw={q}",
-    "https://www.amazon.com/s?k={q}",
-  ],
-  footwear: [
-    "https://www.daraz.com.bd/catalog/?q={q}",
-    "https://www.aliexpress.com/w/wholesale-{q}.html",
-    "https://www.ebay.com/sch/i.html?_nkw={q}",
-    "https://www.amazon.com/s?k={q}",
-    "https://www.zappos.com/search?term={q}",
-  ],
-  fashion: [
-    "https://www.daraz.com.bd/catalog/?q={q}",
-    "https://www.aliexpress.com/w/wholesale-{q}.html",
-    "https://www.ebay.com/sch/i.html?_nkw={q}",
-    "https://www.amazon.com/s?k={q}",
-    "https://www.etsy.com/search?q={q}",
-  ],
-  beauty: [
-    "https://www.daraz.com.bd/catalog/?q={q}",
-    "https://www.aliexpress.com/w/wholesale-{q}.html",
-    "https://www.amazon.com/s?k={q}",
-    "https://www.sephora.com/search?keyword={q}",
-  ],
-  home: [
-    "https://www.daraz.com.bd/catalog/?q={q}",
-    "https://www.aliexpress.com/w/wholesale-{q}.html",
-    "https://www.amazon.com/s?k={q}",
-    "https://www.wayfair.com/keyword.php?keyword={q}",
-  ],
-  toys: [
-    "https://www.daraz.com.bd/catalog/?q={q}",
-    "https://www.aliexpress.com/w/wholesale-{q}.html",
-    "https://www.amazon.com/s?k={q}",
-    "https://www.ebay.com/sch/i.html?_nkw={q}",
-  ],
-  sports: [
-    "https://www.daraz.com.bd/catalog/?q={q}",
-    "https://www.aliexpress.com/w/wholesale-{q}.html",
-    "https://www.amazon.com/s?k={q}",
-    "https://www.ebay.com/sch/i.html?_nkw={q}",
-  ],
-  grocery: [
-    "https://www.amazon.com/s?k={q}",
-    "https://www.walmart.com/search?q={q}",
-    "https://www.daraz.com.bd/catalog/?q={q}",
-  ],
-  general: [
-    "https://www.amazon.com/s?k={q}",
-    "https://www.ebay.com/sch/i.html?_nkw={q}",
-    "https://www.aliexpress.com/w/wholesale-{q}.html",
-    "https://www.daraz.com.bd/catalog/?q={q}",
-  ],
+  audio: ["https://www.daraz.com.bd/catalog/?q={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.ebay.com/sch/i.html?_nkw={q}", "https://www.amazon.com/s?k={q}"],
+  mobile: ["https://www.daraz.com.bd/catalog/?q={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.ebay.com/sch/i.html?_nkw={q}", "https://www.amazon.com/s?k={q}"],
+  computers: ["https://www.daraz.com.bd/catalog/?q={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.ebay.com/sch/i.html?_nkw={q}", "https://www.amazon.com/s?k={q}", "https://www.bestbuy.com/site/searchpage.jsp?st={q}"],
+  electronics: ["https://www.daraz.com.bd/catalog/?q={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.ebay.com/sch/i.html?_nkw={q}", "https://www.amazon.com/s?k={q}"],
+  footwear: ["https://www.daraz.com.bd/catalog/?q={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.ebay.com/sch/i.html?_nkw={q}", "https://www.amazon.com/s?k={q}", "https://www.zappos.com/search?term={q}"],
+  fashion: ["https://www.daraz.com.bd/catalog/?q={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.ebay.com/sch/i.html?_nkw={q}", "https://www.amazon.com/s?k={q}", "https://www.etsy.com/search?q={q}"],
+  beauty: ["https://www.daraz.com.bd/catalog/?q={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.amazon.com/s?k={q}", "https://www.sephora.com/search?keyword={q}"],
+  home: ["https://www.daraz.com.bd/catalog/?q={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.amazon.com/s?k={q}", "https://www.wayfair.com/keyword.php?keyword={q}"],
+  toys: ["https://www.daraz.com.bd/catalog/?q={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.amazon.com/s?k={q}", "https://www.ebay.com/sch/i.html?_nkw={q}"],
+  sports: ["https://www.daraz.com.bd/catalog/?q={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.amazon.com/s?k={q}", "https://www.ebay.com/sch/i.html?_nkw={q}"],
+  grocery: ["https://www.amazon.com/s?k={q}", "https://www.walmart.com/search?q={q}", "https://www.daraz.com.bd/catalog/?q={q}"],
+  general: ["https://www.amazon.com/s?k={q}", "https://www.ebay.com/sch/i.html?_nkw={q}", "https://www.aliexpress.com/w/wholesale-{q}.html", "https://www.daraz.com.bd/catalog/?q={q}"],
 };
 
 function categorize(query: string): Category {
@@ -147,46 +77,6 @@ function nameFromHost(host: string): string {
   return base.charAt(0).toUpperCase() + base.slice(1);
 }
 
-const SOCIAL_BLOCK = [
-  "google.", "youtube.", "facebook.", "instagram.", "twitter.", "x.com",
-  "pinterest.", "tiktok.", "linkedin.", "whatsapp.", "t.me", "reddit.",
-  "wikipedia.", "cloudflare.", "gstatic.", "googleapis.", "doubleclick.",
-  "bing.", "yahoo.", "duckduckgo.",
-];
-
-function isJunkHost(host: string): boolean {
-  if (!host) return true;
-  if (host.endsWith(".gov") || host.endsWith(".edu")) return true;
-  return SOCIAL_BLOCK.some((s) => host.includes(s));
-}
-
-const PRODUCT_PATH_HINTS = [
-  "/products/", "/product/", "/-i", "/p-", "/item", "/items",
-  "/catalog", "/shop", "/store", "/collections/", "/dp/", "/sku",
-  "/listing", "/itm/", "/ip/",
-];
-
-function looksProductUrl(url: string): boolean {
-  try {
-    const u = new URL(url);
-    const path = u.pathname.toLowerCase();
-    if (path === "/" || path.length < 3) return false;
-    return PRODUCT_PATH_HINTS.some((h) => path.includes(h));
-  } catch {
-    return false;
-  }
-}
-
-function extractUrlsFromMarkdown(md: string): string[] {
-  const out = new Set<string>();
-  const re = /\((https?:\/\/[^\s)]+)\)/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(md)) !== null) out.add(m[1]);
-  const bare = /(?<![("])(https?:\/\/[^\s)<>"']+)/g;
-  while ((m = bare.exec(md)) !== null) out.add(m[1]);
-  return Array.from(out);
-}
-
 async function safeScrape(
   url: string,
   opts: Parameters<typeof firecrawlScrape>[1] = {},
@@ -209,11 +99,12 @@ export type ScrapeStatus = {
 
 export type DebugInfo = {
   seedUrl: string;
+  markdownLength: number;
+  priceMatches: number;
+  productStrings: number;
   rawLinkCount: number;
-  markdownFallbackUsed: boolean;
-  productLinksFound: number;
-  uniqueDomains: number;
-  firstLinks: string[];
+  domain: string;
+  sampleTitles: string[];
 };
 
 type DiscoveredProduct = {
@@ -222,90 +113,145 @@ type DiscoveredProduct = {
   title?: string;
   price?: number;
   currency?: string;
-  image_url?: string;
 };
 
-// ───────────────────────── Product extraction ─────────────────────────
+// ───────────────────────── Raw signal extraction ─────────────────────────
+// Treat markdown as noisy text. Extract:
+//   - product-like strings (markdown link texts, capitalized phrases)
+//   - price-like patterns (currency symbol + number)
+// Pair prices with nearest title by character offset.
 
-function parsePrice(raw: unknown): { price?: number; currency?: string } {
-  if (typeof raw === "number") return { price: raw };
-  if (typeof raw !== "string") return {};
-  const m = raw.match(/(USD|EUR|GBP|BDT|৳|\$|€|£|Rs\.?|₹|INR)?\s*([0-9][0-9.,]*)/i);
-  if (!m) return {};
-  const num = Number(m[2].replace(/,/g, ""));
-  return { price: Number.isFinite(num) ? num : undefined, currency: m[1] };
-}
+const PRICE_RE =
+  /(USD|EUR|GBP|BDT|INR|Rs\.?|৳|\$|€|£|₹)\s?([0-9]{1,3}(?:[,.\s][0-9]{3})*(?:\.[0-9]{1,2})?|[0-9]+(?:\.[0-9]{1,2})?)/g;
 
-function titleForLink(link: string, md: string): string | undefined {
-  try {
-    // Markdown link: [text](url)
-    const safe = link.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const re = new RegExp(`\\[([^\\]]{3,200})\\]\\(${safe}\\)`);
-    const m = md.match(re);
-    if (m) return m[1].replace(/\s+/g, " ").trim();
-  } catch {
-    /* noop */
-  }
-  return undefined;
-}
+type PriceHit = { index: number; raw: string; price: number; currency: string };
+type TitleHit = { index: number; text: string; url?: string };
 
-function extractProductsFromListPage(
-  page: ScrapedPage,
-  seedHost: string,
-): DiscoveredProduct[] {
-  let pool = page.links.slice();
-  if (pool.length === 0 && page.markdown) {
-    pool = extractUrlsFromMarkdown(page.markdown);
-  }
-  const out: DiscoveredProduct[] = [];
-  const seen = new Set<string>();
-  const md = page.markdown ?? "";
-  for (const link of pool) {
-    const host = hostFrom(link);
-    if (!host || isJunkHost(host)) continue;
-    if (!looksProductUrl(link)) continue;
-    if (seen.has(link)) continue;
-    seen.add(link);
-    // Try to grab a nearby price from the markdown using the anchor text region.
-    const title = titleForLink(link, md);
-    out.push({
-      domain: host || seedHost,
-      source_url: link,
-      title,
-    });
+function findPrices(md: string): PriceHit[] {
+  const out: PriceHit[] = [];
+  PRICE_RE.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = PRICE_RE.exec(md)) !== null) {
+    const num = Number(m[2].replace(/[,\s]/g, ""));
+    if (!Number.isFinite(num) || num <= 0) continue;
+    out.push({ index: m.index, raw: m[0], price: num, currency: m[1] });
   }
   return out;
 }
 
-function extractFromProductPage(p: ScrapedPage): {
-  title?: string;
-  price?: number;
-  currency?: string;
-  image_url?: string;
-} {
-  const j = (p.json ?? {}) as {
-    product_name?: string;
-    title?: string;
-    price?: unknown;
-    currency?: string;
-    image_url?: string;
-  };
-  if (j.product_name || j.title || j.price != null) {
-    const parsed = parsePrice(j.price);
-    return {
-      title: j.product_name ?? j.title,
-      price: parsed.price,
-      currency: j.currency ?? parsed.currency,
-      image_url: j.image_url,
-    };
+function findProductStrings(md: string): TitleHit[] {
+  const out: TitleHit[] = [];
+  // 1) Markdown links [text](url) — text is usually a product title.
+  const linkRe = /\[([^\]\n]{4,200})\]\((https?:\/\/[^\s)]+)\)/g;
+  let m: RegExpExecArray | null;
+  while ((m = linkRe.exec(md)) !== null) {
+    const text = m[1].replace(/\s+/g, " ").trim();
+    if (text.length < 4) continue;
+    if (/^(home|next|prev|more|see all|shop|click)$/i.test(text)) continue;
+    out.push({ index: m.index, text, url: m[2] });
   }
-  const md = p.markdown ?? "";
-  const h1 = md.match(/^#\s+(.+)$/m)?.[1]?.trim();
-  const priceMatch = md.match(/(?:USD|EUR|GBP|BDT|৳|\$|€|£|Rs\.?|₹|INR)\s*([0-9][0-9.,]*)/i);
+  // 2) Capitalized phrases (3+ words) — fallback when no markdown links.
+  if (out.length === 0) {
+    const phraseRe =
+      /(?:^|\n|\.\s+)((?:[A-Z][A-Za-z0-9'’&+./-]{1,40}\s+){2,7}[A-Z][A-Za-z0-9'’&+./-]{1,40})/g;
+    while ((m = phraseRe.exec(md)) !== null) {
+      const text = m[1].replace(/\s+/g, " ").trim();
+      if (text.length < 8 || text.length > 160) continue;
+      out.push({ index: m.index + (m[0].length - m[1].length), text });
+    }
+  }
+  // De-duplicate by text.
+  const seen = new Set<string>();
+  return out.filter((h) => {
+    const k = h.text.toLowerCase();
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+}
+
+function pairPrices(titles: TitleHit[], prices: PriceHit[]): TitleHit[] {
+  // For each title, find nearest price within 500 chars; attach to title.
+  return titles.map((t) => {
+    let best: PriceHit | undefined;
+    let bestDist = Infinity;
+    for (const p of prices) {
+      const d = Math.abs(p.index - t.index);
+      if (d < bestDist && d < 500) {
+        bestDist = d;
+        best = p;
+      }
+    }
+    return best
+      ? ({ ...t, price: best.price, currency: best.currency } as TitleHit & {
+          price?: number;
+          currency?: string;
+        })
+      : t;
+  });
+}
+
+function extractSignals(
+  page: ScrapedPage,
+  seedUrl: string,
+  seedHost: string,
+): { products: DiscoveredProduct[]; debug: Omit<DebugInfo, "seedUrl" | "domain"> } {
+  const md = page.markdown ?? "";
+  const prices = findPrices(md);
+  const titles = findProductStrings(md);
+  const paired = pairPrices(titles, prices) as Array<
+    TitleHit & { price?: number; currency?: string }
+  >;
+
+  const products: DiscoveredProduct[] = [];
+  const seen = new Set<string>();
+
+  for (const h of paired.slice(0, 30)) {
+    const url = h.url ?? `${seedUrl}#t-${h.index}`;
+    if (seen.has(url)) continue;
+    seen.add(url);
+    const host = h.url ? hostFrom(h.url) || seedHost : seedHost;
+    products.push({
+      domain: host,
+      source_url: url,
+      title: h.text,
+      price: h.price,
+      currency: h.currency,
+    });
+  }
+
+  // If we have prices but no titles, still emit price-only entries.
+  if (products.length === 0 && prices.length > 0) {
+    for (const [i, p] of prices.slice(0, 10).entries()) {
+      products.push({
+        domain: seedHost,
+        source_url: `${seedUrl}#p-${i}`,
+        title: `${nameFromHost(seedHost)} listing ${i + 1}`,
+        price: p.price,
+        currency: p.currency,
+      });
+    }
+  }
+
+  // Guarantee: if markdown exists, emit at least one placeholder product
+  // for the seed domain so the dataset is never empty.
+  if (products.length === 0 && md.length > 0) {
+    products.push({
+      domain: seedHost,
+      source_url: `${seedUrl}#raw`,
+      title: `${nameFromHost(seedHost)} search results`,
+    });
+  }
+
   return {
-    title: h1,
-    price: priceMatch ? Number(priceMatch[1].replace(/,/g, "")) : undefined,
-    currency: priceMatch?.[0].match(/USD|EUR|GBP|BDT|৳|\$|€|£|Rs\.?|₹|INR/i)?.[0],
+    products,
+    debug: {
+      markdownLength: md.length,
+      priceMatches: prices.length,
+      productStrings: titles.length,
+      rawLinkCount: page.links.length,
+      sampleTitles: titles.slice(0, 5).map((t) => t.text),
+    },
   };
 }
 
@@ -325,15 +271,12 @@ export async function discoverFromQuery(
   const maxProducts = Math.min(Math.max(opts.maxProducts ?? 50, 1), 200);
 
   const { category, seeds } = buildSeedsForQuery(query);
-  // Fallback seeds: always include the most reliable generic marketplaces
-  // so we never return 0 if any of them respond.
-  const FALLBACK_SEEDS = [
-    `https://www.amazon.com/s?k=${encodeURIComponent(query.trim())}`,
-    `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(query.trim())}`,
-  ];
   const statuses: ScrapeStatus[] = [];
   const debug: DebugInfo[] = [];
   const productsByDomain = new Map<string, DiscoveredProduct[]>();
+
+  const totalProducts = () =>
+    Array.from(productsByDomain.values()).reduce((s, l) => s + l.length, 0);
 
   const addProduct = (p: DiscoveredProduct) => {
     if (totalProducts() >= maxProducts) return;
@@ -343,10 +286,15 @@ export async function discoverFromQuery(
     list.push(p);
     productsByDomain.set(p.domain, list);
   };
-  const totalProducts = () =>
-    Array.from(productsByDomain.values()).reduce((s, l) => s + l.length, 0);
 
-  // ── Step 1+2: Scrape seed search pages ──────────────────────────
+  const ensureDomain = (domain: string) => {
+    if (!domain) return;
+    if (productsByDomain.has(domain)) return;
+    if (productsByDomain.size >= maxDomains) return;
+    productsByDomain.set(domain, []);
+  };
+
+  // ── Scrape seed search pages ──────────────────────────
   for (const seedUrl of seeds) {
     if (totalProducts() >= maxProducts) break;
     const seedHost = hostFrom(seedUrl);
@@ -358,82 +306,34 @@ export async function discoverFromQuery(
     if (!page) {
       statuses.push({ url: seedUrl, status: "failed", message: error });
       debug.push({
-        seedUrl, rawLinkCount: 0, markdownFallbackUsed: false,
-        productLinksFound: 0, uniqueDomains: 0, firstLinks: [],
+        seedUrl, domain: seedHost, markdownLength: 0, priceMatches: 0,
+        productStrings: 0, rawLinkCount: 0, sampleTitles: [],
       });
       continue;
     }
     statuses.push({ url: seedUrl, status: "success" });
 
-    const products = extractProductsFromListPage(page, seedHost);
-    const rawLinkCount = page.links.length || extractUrlsFromMarkdown(page.markdown ?? "").length;
-    const uniqueDomains = new Set(products.map((p) => p.domain)).size;
-    debug.push({
-      seedUrl,
-      rawLinkCount,
-      markdownFallbackUsed: page.links.length === 0,
-      productLinksFound: products.length,
-      uniqueDomains,
-      firstLinks: (page.links.length ? page.links : extractUrlsFromMarkdown(page.markdown ?? ""))
-        .slice(0, 5),
-    });
+    // Always register the seed domain as a competitor — even if extraction
+    // yields nothing, we still record that the source was reachable.
+    ensureDomain(seedHost);
+
+    const { products, debug: d } = extractSignals(page, seedUrl, seedHost);
+    debug.push({ seedUrl, domain: seedHost, ...d });
     for (const p of products) addProduct(p);
   }
 
-  // ── Fallback: if nothing yet, hit a few known marketplace homepages
-  if (totalProducts() === 0) {
-    for (const url of FALLBACK_SEEDS) {
-      const { page } = await safeScrape(url, {
-        formats: ["markdown", "links"],
-        waitFor: 2000,
-      });
-      if (!page) continue;
-      const seedHost = hostFrom(url);
-      for (const p of extractProductsFromListPage(page, seedHost)) addProduct(p);
-      if (totalProducts() > 0) break;
-    }
-  }
-
-  // ── Step 4: Expansion — scrape one extra page per new competitor
-  // (depth 2). Pick the first product URL we found per domain as the
-  // anchor and scrape it to enrich with title/price/image.
-  for (const [domain, list] of productsByDomain) {
-    if (totalProducts() >= maxProducts) break;
-    const anchor = list[0];
-    if (!anchor) continue;
-    const { page } = await safeScrape(anchor.source_url, {
-      formats: ["markdown", "links"],
-      extractSchema: PRODUCT_EXTRACT_SCHEMA,
-      waitFor: 2000,
-    });
-    if (!page) {
-      statuses.push({ url: anchor.source_url, status: "failed" });
-      continue;
-    }
-    statuses.push({ url: anchor.source_url, status: "success" });
-    const extracted = extractFromProductPage(page);
-    anchor.title = anchor.title ?? extracted.title;
-    anchor.price = extracted.price;
-    anchor.currency = extracted.currency;
-    anchor.image_url = extracted.image_url;
-
-    // Pick up a couple more product URLs from the same domain on this page.
-    const more = extractProductsFromListPage(page, domain).filter(
-      (p) => p.domain === domain,
-    );
-    for (const m of more.slice(0, 3)) addProduct(m);
-  }
-
-  // ── Step 6: Persist competitors + products
-  const competitorRows = Array.from(productsByDomain.keys()).map((domain) => ({
-    user_id: userId,
-    query,
-    name: nameFromHost(domain),
-    domain,
-    url: `https://${domain}`,
-    description: null,
-    source: "firecrawl_scrape_query",
-  }));
+  // ── Persist competitors ─────────────────────────────────
+  const competitorRows = Array.from(productsByDomain.keys())
+    .filter((d) => d.length > 0)
+    .map((domain) => ({
+      user_id: userId,
+      query,
+      name: nameFromHost(domain),
+      domain,
+      url: `https://${domain}`,
+      description: null,
+      source: "firecrawl_scrape_query",
+    }));
 
   let competitors: Array<Record<string, unknown> & { id: string; domain: string }> = [];
   if (competitorRows.length > 0) {
@@ -445,25 +345,23 @@ export async function discoverFromQuery(
     competitors = (data ?? []) as typeof competitors;
   }
 
+  // ── Persist products (any signal counts) ───────────────
   let productsInserted = 0;
   for (const [domain, list] of productsByDomain) {
     const comp = competitors.find((c) => c.domain === domain);
-    if (!comp) continue;
-    const rows = list
-      .filter((p) => p.title || typeof p.price === "number")
-      .map((p) => ({
-        user_id: userId,
-        competitor_id: comp.id,
-        source_url: p.source_url,
-        title: p.title ?? null,
-        price: typeof p.price === "number" ? p.price : null,
-        currency: p.currency ?? null,
-        availability: null,
-        image_url: p.image_url ?? null,
-        raw: { query, domain } as unknown as never,
-        scraped_at: new Date().toISOString(),
-      }));
-    if (rows.length === 0) continue;
+    if (!comp || list.length === 0) continue;
+    const rows = list.map((p) => ({
+      user_id: userId,
+      competitor_id: comp.id,
+      source_url: p.source_url,
+      title: p.title ?? null,
+      price: typeof p.price === "number" ? p.price : null,
+      currency: p.currency ?? null,
+      availability: null,
+      image_url: null,
+      raw: { query, domain, low_confidence: !p.price } as unknown as never,
+      scraped_at: new Date().toISOString(),
+    }));
     const { error, count } = await supabaseAdmin
       .from("competitor_products")
       .upsert(rows, { onConflict: "user_id,source_url", count: "exact" });
@@ -476,11 +374,12 @@ export async function discoverFromQuery(
       .eq("user_id", userId);
   }
 
-  // Confidence flag per competitor based on product volume.
   const competitorsWithConfidence = competitors.map((c) => {
-    const n = (productsByDomain.get(c.domain) ?? []).length;
-    const confidence = n >= 5 ? "high" : n >= 2 ? "medium" : "low";
-    return { ...c, product_count: n, confidence };
+    const list = productsByDomain.get(c.domain) ?? [];
+    const withPrice = list.filter((p) => typeof p.price === "number").length;
+    const confidence =
+      withPrice >= 3 ? "high" : withPrice >= 1 || list.length >= 3 ? "medium" : "low";
+    return { ...c, product_count: list.length, confidence };
   });
 
   return {
@@ -495,7 +394,6 @@ export async function discoverFromQuery(
 }
 
 // ───────────────────────── Single-competitor rescrape ─────────────────────────
-// Used by POST /api/competitors/scrape to refresh products for one competitor.
 
 export async function scrapeCompetitorPage(
   userId: string,
@@ -507,7 +405,6 @@ export async function scrapeCompetitorPage(
 
   const { page, error } = await safeScrape(url, {
     formats: ["markdown", "links"],
-    extractSchema: PRODUCT_EXTRACT_SCHEMA,
     waitFor: 3000,
     actions: [{ type: "wait", milliseconds: 3000 }],
   });
@@ -517,50 +414,21 @@ export async function scrapeCompetitorPage(
   }
   statuses.push({ url, status: "success" });
 
-  type Row = {
-    user_id: string;
-    competitor_id: string;
-    source_url: string;
-    title: string | null;
-    price: number | null;
-    currency: string | null;
-    availability: string | null;
-    image_url: string | null;
-    raw: never;
-    scraped_at: string;
-  };
-  const listed = extractProductsFromListPage(page, seedHost);
-  const rows: Row[] = listed.slice(0, 25).map((p) => ({
+  const { products } = extractSignals(page, url, seedHost);
+  if (products.length === 0) return { inserted: 0, statuses };
+
+  const rows = products.slice(0, 30).map((p) => ({
     user_id: userId,
     competitor_id: competitorId,
     source_url: p.source_url,
     title: p.title ?? null,
-    price: null,
-    currency: null,
+    price: typeof p.price === "number" ? p.price : null,
+    currency: p.currency ?? null,
     availability: null,
     image_url: null,
     raw: { rescrape: true } as unknown as never,
     scraped_at: new Date().toISOString(),
   }));
-
-  // Also try the page itself as a product page.
-  const single = extractFromProductPage(page);
-  if (single.title || typeof single.price === "number") {
-    rows.push({
-      user_id: userId,
-      competitor_id: competitorId,
-      source_url: url,
-      title: single.title ?? null,
-      price: typeof single.price === "number" ? single.price : null,
-      currency: single.currency ?? null,
-      availability: null,
-      image_url: single.image_url ?? null,
-      raw: { rescrape: true } as unknown as never,
-      scraped_at: new Date().toISOString(),
-    });
-  }
-
-  if (rows.length === 0) return { inserted: 0, statuses };
 
   const { error: upErr, count } = await supabaseAdmin
     .from("competitor_products")
