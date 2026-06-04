@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { DashboardTopbar } from "@/components/dashboard-topbar";
 import {
   Card,
@@ -11,10 +11,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, Globe, Download } from "lucide-react";
+import { Loader2, Search, Globe, TrendingUp, Package, Store } from "lucide-react";
 import { useT } from "@/hooks/use-language";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  Cell,
+} from "recharts";
 
 export const Route = createFileRoute("/_app/competitors")({
   head: () => ({ meta: [{ title: "প্রতিযোগী / Competitors — EasyBusiness AI" }] }),
@@ -23,41 +33,42 @@ export const Route = createFileRoute("/_app/competitors")({
 
 type Competitor = {
   id: string;
-  query: string;
   name: string;
   domain: string;
   url: string;
   description: string | null;
-  last_scraped_at: string | null;
-  status?: "structured_data" | "unstructured_data";
-  raw_snippet?: string | null;
+  product_count?: number;
+  confidence?: "high" | "medium" | "low";
 };
 
-type Product = {
-  id: string;
-  competitor_id: string;
-  source_url: string;
-  title: string | null;
-  price: number | null;
-  currency: string | null;
-  availability: string | null;
-  scraped_at: string;
+type PriceDist = Record<
+  "under_25" | "25_100" | "100_500" | "500_2000" | "over_2000" | "unknown",
+  number
+>;
+
+type Graph = {
+  priceDistribution: PriceDist;
+  topBrands: Array<{ brand: string; count: number }>;
+  clusters: Array<{
+    key: string;
+    brand?: string;
+    priceBucket: string;
+    category: string;
+    size: number;
+    domains: string[];
+    sampleTitles: string[];
+  }>;
 };
 
-type DebugInfo = {
-  seedUrl: string;
-  domain: string;
-  firecrawlStatus: "success" | "failed" | "empty";
-  errorMessage?: string;
-  competitorStatus?: "structured_data" | "unstructured_data" | "empty_response" | "failed";
-  markdownLength: number;
-  priceMatches: number;
-  productStrings: number;
-  rawLinkCount: number;
-  sampleTitles: string[];
-  markdownPreview: string;
-  productsExtracted: number;
-  note?: string;
+type DiscoverResponse = {
+  ok: boolean;
+  count: number;
+  productsInserted: number;
+  competitors: Competitor[];
+  totals?: { domains: number; products: number };
+  category?: string;
+  graph?: Graph;
+  error?: string;
 };
 
 async function authedFetch(input: string, init: RequestInit = {}) {
@@ -73,82 +84,51 @@ async function authedFetch(input: string, init: RequestInit = {}) {
   });
 }
 
-type SeedReport = {
-  source: string;
-  seedUrl: string;
-  ok: boolean;
-  error?: string;
-  finalUrl?: string;
-  status?: number;
-  markdownLength: number;
-  markdownPreview: string;
-  priceCount: number;
-  productCardCount: number;
-  productTitleCount: number;
-  navShellDetected: boolean;
-  verdict: "real_products" | "navigation_shell" | "empty" | "error";
+const PRICE_LABELS: Record<keyof PriceDist, string> = {
+  under_25: "<$25",
+  "25_100": "$25–100",
+  "100_500": "$100–500",
+  "500_2000": "$500–2k",
+  over_2000: ">$2k",
+  unknown: "Unknown",
 };
+
+const CHART_COLORS = [
+  "hsl(var(--primary))",
+  "hsl(var(--chart-2, 200 80% 55%))",
+  "hsl(var(--chart-3, 30 90% 55%))",
+  "hsl(var(--chart-4, 280 70% 60%))",
+  "hsl(var(--chart-5, 150 60% 50%))",
+  "hsl(var(--muted-foreground))",
+];
 
 function CompetitorsPage() {
   const t = useT();
   const [query, setQuery] = useState("");
   const [discovering, setDiscovering] = useState(false);
-  const [validating, setValidating] = useState(false);
-  const [scrapingId, setScrapingId] = useState<string | null>(null);
-  const [competitors, setCompetitors] = useState<Competitor[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [debugInfo, setDebugInfo] = useState<DebugInfo[]>([]);
-  const [seedReports, setSeedReports] = useState<SeedReport[]>([]);
-  const [lastTotals, setLastTotals] = useState<{ domains: number; products: number } | null>(null);
-  const [currentRunIds, setCurrentRunIds] = useState<Set<string>>(new Set());
-  const [currentRunCount, setCurrentRunCount] = useState<number | null>(null);
-  const [lastRunAt, setLastRunAt] = useState<string | null>(null);
-  const [dbLoadedAt, setDbLoadedAt] = useState<string | null>(null);
-
-
-  const load = useCallback(async () => {
-    const res = await authedFetch("/api/competitors/list");
-    if (!res.ok) return;
-    const json = await res.json();
-    setCompetitors(json.competitors ?? []);
-    setProducts(json.products ?? []);
-    setDbLoadedAt(new Date().toISOString());
-  }, []);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const [result, setResult] = useState<DiscoverResponse | null>(null);
+  const [lastQuery, setLastQuery] = useState<string>("");
 
   const handleDiscover = async () => {
     if (!query.trim()) return;
     setDiscovering(true);
-    setDebugInfo([]);
-    setCurrentRunIds(new Set());
-    setCurrentRunCount(null);
-    setLastRunAt(null);
+    setResult(null);
     try {
       const res = await authedFetch("/api/competitors/discover", {
         method: "POST",
         body: JSON.stringify({ query: query.trim() }),
       });
-      const json = await res.json();
+      const json = (await res.json()) as DiscoverResponse;
       if (!res.ok) throw new Error(json.error || "discovery failed");
-      setDebugInfo(json.debug ?? []);
-      setLastTotals(json.totals ?? null);
-      const returned: Array<{ id?: string }> = json.competitors ?? [];
-      const ids = new Set<string>(
-        returned
-          .map((c) => c.id)
-          .filter((id): id is string => typeof id === "string"),
-      );
-      setCurrentRunIds(ids);
-      setCurrentRunCount(typeof json.count === "number" ? json.count : returned.length);
-      setLastRunAt(new Date().toISOString());
-      toast.success(
-        `Discovered ${json.count} competitors (${json.productsInserted ?? 0} products)`,
-      );
-      await load();
-
+      setResult(json);
+      setLastQuery(query.trim());
+      if ((json.count ?? 0) === 0) {
+        toast.warning("No competitors found. Try a different product name.");
+      } else {
+        toast.success(
+          `Found ${json.count} competitors with ${json.totals?.products ?? 0} products`,
+        );
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Discovery failed");
     } finally {
@@ -156,59 +136,37 @@ function CompetitorsPage() {
     }
   };
 
-  const handleClearCurrentRun = () => {
-    setCurrentRunIds(new Set());
-    setCurrentRunCount(null);
-    setLastRunAt(null);
-    setDebugInfo([]);
-    setLastTotals(null);
-  };
+  const competitors = result?.competitors ?? [];
+  const graph = result?.graph;
 
-  const handleScrape = async (c: Competitor) => {
-    setScrapingId(c.id);
-    try {
-      const res = await authedFetch("/api/competitors/scrape", {
-        method: "POST",
-        body: JSON.stringify({ competitorId: c.id, paginationLimit: 5 }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "scrape failed");
-      const failed = (json.statuses ?? []).filter(
-        (s: { status: string }) => s.status === "failed",
-      ).length;
-      toast.success(
-        `Scraped ${c.domain}: ${json.inserted} products${failed ? ` (${failed} failed)` : ""}`,
-      );
-      await load();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Scrape failed");
-    } finally {
-      setScrapingId(null);
-    }
-  };
+  const competitorChartData = useMemo(
+    () =>
+      competitors
+        .slice(0, 10)
+        .map((c) => ({ name: c.domain, products: c.product_count ?? 0 })),
+    [competitors],
+  );
 
-  const handleValidate = async () => {
-    if (!query.trim()) return;
-    setValidating(true);
-    setSeedReports([]);
-    try {
-      const res = await authedFetch("/api/competitors/validate-seeds", {
-        method: "POST",
-        body: JSON.stringify({ query: query.trim() }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "validation failed");
-      setSeedReports(json.reports ?? []);
-      const s = json.summary;
-      toast.success(
-        `Seeds: ${s.real_products} real · ${s.navigation_shell} shell · ${s.empty} empty · ${s.error} error`,
-      );
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Validation failed");
-    } finally {
-      setValidating(false);
-    }
-  };
+  const priceChartData = useMemo(() => {
+    if (!graph?.priceDistribution) return [];
+    return (Object.keys(PRICE_LABELS) as Array<keyof PriceDist>)
+      .filter((k) => k !== "unknown" || graph.priceDistribution[k] > 0)
+      .map((k) => ({ bucket: PRICE_LABELS[k], count: graph.priceDistribution[k] }));
+  }, [graph]);
+
+  const brandChartData = useMemo(
+    () =>
+      (graph?.topBrands ?? [])
+        .slice(0, 8)
+        .map((b) => ({ brand: b.brand, count: b.count })),
+    [graph],
+  );
+
+  const totalProducts = result?.totals?.products ?? 0;
+  const totalDomains = result?.totals?.domains ?? competitors.length;
+  const avgProducts = competitors.length
+    ? Math.round((totalProducts / competitors.length) * 10) / 10
+    : 0;
 
   return (
     <>
@@ -221,7 +179,7 @@ function CompetitorsPage() {
             </CardTitle>
             <CardDescription>
               {t(
-                "একটি পণ্যের নাম লিখুন (যেমন: wireless earbuds); সিস্টেম স্বয়ংক্রিয়ভাবে প্রতিযোগী খুঁজে দেবে। / Enter a product name (e.g. wireless earbuds) — the system auto-discovers competitors by scraping known ecommerce sites.",
+                "একটি পণ্যের নাম লিখুন (যেমন: wireless earbuds); সিস্টেম স্বয়ংক্রিয়ভাবে প্রতিযোগী খুঁজে দেবে। / Enter a product name (e.g. wireless earbuds) — the system scrapes the web to find competitors and surface market insights.",
               )}
             </CardDescription>
           </CardHeader>
@@ -233,7 +191,6 @@ function CompetitorsPage() {
                 placeholder="wireless earbuds"
                 onKeyDown={(e) => e.key === "Enter" && handleDiscover()}
               />
-
               <Button onClick={handleDiscover} disabled={discovering || !query.trim()}>
                 {discovering ? (
                   <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
@@ -242,361 +199,263 @@ function CompetitorsPage() {
                 )}
                 {t("খুঁজুন / Discover")}
               </Button>
-              <Button
-                variant="outline"
-                onClick={handleValidate}
-                disabled={validating || !query.trim()}
-              >
-                {validating ? (
-                  <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Search className="mr-1 h-3.5 w-3.5" />
-                )}
-                {t("Validate seeds")}
-              </Button>
             </div>
           </CardContent>
         </Card>
 
-        {seedReports.length > 0 && (
+        {discovering && (
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Seed validation</CardTitle>
-              <CardDescription>
-                Per-seed Firecrawl probe — identify which sources return real
-                product listings vs navigation / anti-bot shells.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {seedReports.map((r, i) => {
-                const verdictVariant =
-                  r.verdict === "real_products"
-                    ? "secondary"
-                    : r.verdict === "error"
-                      ? "destructive"
-                      : "outline";
-                return (
-                  <details
-                    key={`${r.seedUrl}-${i}`}
-                    className="rounded-md border bg-muted/30 p-2 text-xs"
-                  >
-                    <summary className="cursor-pointer select-none">
-                      <span className="font-medium">{r.source}</span>
-                      <Badge variant={verdictVariant} className="ml-2 text-[10px]">
-                        {r.verdict}
-                      </Badge>
-                      <span className="ml-2 text-muted-foreground">
-                        md:{r.markdownLength} · prices:{r.priceCount} · cards:
-                        {r.productCardCount} · titles:{r.productTitleCount}
-                        {r.navShellDetected ? " · ⚠ shell" : ""}
-                      </span>
-                    </summary>
-                    <div className="mt-2 space-y-2">
-                      <div className="font-mono break-all text-[11px]">
-                        seed: {r.seedUrl}
-                      </div>
-                      {r.finalUrl && r.finalUrl !== r.seedUrl && (
-                        <div className="font-mono break-all text-[11px]">
-                          final: {r.finalUrl}
-                        </div>
-                      )}
-                      {r.status != null && (
-                        <div className="text-[11px]">HTTP {r.status}</div>
-                      )}
-                      {r.error && (
-                        <div className="text-destructive">⚠ {r.error}</div>
-                      )}
-                      {r.markdownPreview && (
-                        <div>
-                          <div className="font-medium mb-1">
-                            First {r.markdownPreview.length} chars:
-                          </div>
-                          <pre className="whitespace-pre-wrap break-words rounded bg-background p-2 text-[11px] max-h-60 overflow-auto">
-                            {r.markdownPreview}
-                          </pre>
-                        </div>
-                      )}
-                    </div>
-                  </details>
-                );
-              })}
+            <CardContent className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Scraping the web for competitors…
             </CardContent>
           </Card>
         )}
 
-
-        {debugInfo.length > 0 && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">
-                {t("স্ক্রেপ ডায়াগনস্টিক্স / Scrape diagnostics")}
-              </CardTitle>
-              <CardDescription>
-                {lastTotals
-                  ? `${lastTotals.domains} domains · ${lastTotals.products} products extracted across ${debugInfo.length} seeds`
-                  : `${debugInfo.length} seeds`}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {debugInfo.map((d, i) => {
-                const isOk = d.firecrawlStatus === "success";
-                const isEmpty = d.firecrawlStatus === "empty" || d.markdownLength === 0;
-                const isUnstructured = d.competitorStatus === "unstructured_data";
-                return (
-                  <details
-                    key={`${d.seedUrl}-${i}`}
-                    className="rounded-md border bg-muted/30 p-2 text-xs"
-                  >
-                    <summary className="cursor-pointer select-none">
-                      <span className="font-mono break-all">{d.seedUrl}</span>
-                      <span className="ml-2">
-                        <Badge
-                          variant={isOk ? "secondary" : "destructive"}
-                          className="text-[10px]"
-                        >
-                          {d.firecrawlStatus}
-                        </Badge>
-                        {d.competitorStatus && d.competitorStatus !== "failed" && (
-                          <Badge variant="outline" className="ml-1 text-[10px]">
-                            {d.competitorStatus}
-                          </Badge>
-                        )}
-                      </span>
-                      <span className="ml-2 text-muted-foreground">
-                        md:{d.markdownLength} · links:{d.rawLinkCount} · prices:
-                        {d.priceMatches} · titles:{d.productStrings} · products:
-                        {d.productsExtracted}
-                      </span>
-                    </summary>
-                    <div className="mt-2 space-y-2">
-                      {d.errorMessage && (
-                        <div className="text-destructive">
-                          ⚠ {d.errorMessage}
-                        </div>
-                      )}
-                      {d.note && (
-                        <div className="text-muted-foreground italic">{d.note}</div>
-                      )}
-                      {isUnstructured && (
-                        <div className="text-muted-foreground italic">
-                          {t("No products detected; competitor kept as unstructured data.")}
-                        </div>
-                      )}
-                      {isEmpty && !d.errorMessage && (
-                        <div className="text-destructive">
-                          {t("Scrape returned empty response")}
-                        </div>
-                      )}
-                      {d.sampleTitles.length > 0 && (
-                        <div>
-                          <div className="font-medium mb-1">Sample titles:</div>
-                          <ul className="list-disc pl-4 space-y-0.5">
-                            {d.sampleTitles.map((s, j) => (
-                              <li key={j} className="truncate">{s}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      {d.markdownPreview && (
-                        <div>
-                          <div className="font-medium mb-1">
-                            Raw page data viewer (first {d.markdownPreview.length} chars):
-                          </div>
-                          <pre className="whitespace-pre-wrap break-words rounded bg-background p-2 text-[11px] max-h-48 overflow-auto">
-                            {d.markdownPreview}
-                          </pre>
-                        </div>
-                      )}
-                    </div>
-                  </details>
-                );
-              })}
+        {!discovering && !result && (
+          <Card className="border-dashed">
+            <CardContent className="py-12 text-center text-sm text-muted-foreground">
+              Enter a product name above to discover competitors and market insights.
             </CardContent>
           </Card>
         )}
 
-
-
-        {(currentRunCount !== null || dbLoadedAt) && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Result diagnostics</CardTitle>
-              <CardDescription className="space-y-0.5 text-xs">
-                <div>
-                  Loaded from database: <strong>{competitors.length}</strong> competitors,{" "}
-                  <strong>{products.length}</strong> products
-                  {dbLoadedAt && (
-                    <span className="text-muted-foreground"> · at {new Date(dbLoadedAt).toLocaleTimeString()}</span>
-                  )}
-                </div>
-                {currentRunCount !== null && (
-                  <div>
-                    Returned by current discovery run:{" "}
-                    <strong>{currentRunCount}</strong> competitors,{" "}
-                    <strong>{lastTotals?.products ?? 0}</strong> products
-                    {lastRunAt && (
-                      <span className="text-muted-foreground"> · at {new Date(lastRunAt).toLocaleTimeString()}</span>
-                    )}
-                  </div>
-                )}
-                {currentRunCount === 0 && (
-                  <div className="text-warning">
-                    ⚠ Current run produced 0 competitors. Cards below are historical records from previous runs.
-                  </div>
-                )}
-              </CardDescription>
-            </CardHeader>
-            {currentRunIds.size > 0 && (
-              <CardContent className="pt-0">
-                <Button size="sm" variant="outline" onClick={handleClearCurrentRun}>
-                  Clear current run view
-                </Button>
-              </CardContent>
-            )}
-          </Card>
-        )}
-
-        {competitors.length === 0 ? (
+        {!discovering && result && competitors.length === 0 && (
           <Card className="border-warning/40 bg-warning/[0.04]">
             <CardHeader>
-              <CardTitle className="text-base">
-                {t("কোনো প্রতিযোগী এখনো নেই / No competitors yet")}
-              </CardTitle>
+              <CardTitle className="text-base">No competitors found</CardTitle>
               <CardDescription>
-                {t("উপরে একটি ক্যোয়ারি দিয়ে শুরু করুন। / Run a discovery query above to get started.")}
+                The scrape returned no valid product pages for{" "}
+                <span className="font-medium">{lastQuery}</span>. Try a more specific
+                product (e.g. "bluetooth earbuds" instead of "audio").
               </CardDescription>
             </CardHeader>
           </Card>
-        ) : (
-          (() => {
-            const hasCurrentRun = currentRunIds.size > 0;
-            const current = hasCurrentRun
-              ? competitors.filter((c) => currentRunIds.has(c.id))
-              : [];
-            const historical = hasCurrentRun
-              ? competitors.filter((c) => !currentRunIds.has(c.id))
-              : competitors;
+        )}
 
-            const renderCard = (c: Competitor) => {
-              const cProducts = products.filter((p) => p.competitor_id === c.id);
-              const isUnstructured = c.status === "unstructured_data";
-              return (
-                <Card key={c.id}>
+        {!discovering && result && competitors.length > 0 && (
+          <>
+            {/* KPI tiles */}
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="flex items-center gap-1.5">
+                    <Store className="h-3.5 w-3.5" /> Competitors
+                  </CardDescription>
+                  <CardTitle className="text-2xl">{totalDomains}</CardTitle>
+                </CardHeader>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="flex items-center gap-1.5">
+                    <Package className="h-3.5 w-3.5" /> Products extracted
+                  </CardDescription>
+                  <CardTitle className="text-2xl">{totalProducts}</CardTitle>
+                </CardHeader>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="flex items-center gap-1.5">
+                    <TrendingUp className="h-3.5 w-3.5" /> Avg products / competitor
+                  </CardDescription>
+                  <CardTitle className="text-2xl">{avgProducts}</CardTitle>
+                </CardHeader>
+              </Card>
+            </div>
+
+            {/* Charts row */}
+            <div className="grid gap-3 lg:grid-cols-2">
+              {competitorChartData.length > 0 && (
+                <Card>
                   <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <CardTitle className="text-base truncate">{c.name}</CardTitle>
-                        <CardDescription className="flex items-center gap-1 truncate">
-                          <Globe className="h-3 w-3 shrink-0" />
-                          <a href={c.url} target="_blank" rel="noreferrer" className="hover:underline truncate">
-                            {c.domain}
-                          </a>
-                        </CardDescription>
-                      </div>
-                      <Badge variant="secondary" className="shrink-0">
-                        {cProducts.length} {t("পণ্য / products")}
-                      </Badge>
-                    </div>
+                    <CardTitle className="text-base">Top competitors by product volume</CardTitle>
+                    <CardDescription>
+                      Domains ranked by number of products found for "{lastQuery}"
+                    </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    {c.last_scraped_at && (
-                      <div className="text-[11px] text-muted-foreground">
-                        Last scraped: {new Date(c.last_scraped_at).toLocaleString()}
-                      </div>
-                    )}
-                    {isUnstructured && (
-                      <Badge variant="outline" className="w-fit">unstructured_data</Badge>
-                    )}
-                    {c.description && (
-                      <p className="text-xs text-muted-foreground line-clamp-2">{c.description}</p>
-                    )}
-                    {isUnstructured && c.raw_snippet && (
-                      <div className="space-y-1 rounded-md border bg-muted/30 p-2">
-                        <div className="text-[11px] font-medium text-muted-foreground">Raw snippet</div>
-                        <pre className="max-h-28 overflow-auto whitespace-pre-wrap break-words text-[11px]">
-                          {c.raw_snippet}
-                        </pre>
-                      </div>
-                    )}
-                    <div className="flex flex-wrap gap-2">
-                      <Button size="sm" onClick={() => handleScrape(c)} disabled={scrapingId === c.id}>
-                        {scrapingId === c.id ? (
-                          <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Download className="mr-1 h-3.5 w-3.5" />
-                        )}
-                        {t("পণ্য স্ক্রেপ / Scrape products")}
-                      </Button>
-                    </div>
-                    {cProducts.length > 0 && (
-                      <div className="space-y-1 border-t pt-2">
-                        {cProducts.slice(0, 5).map((p) => (
-                          <div key={p.id} className="flex items-center justify-between gap-2 text-xs">
-                            <a href={p.source_url} target="_blank" rel="noreferrer" className="truncate hover:underline">
-                              {p.title || p.source_url}
-                            </a>
-                            {p.price != null && (
-                              <span className="shrink-0 font-medium">
-                                {p.currency ?? ""}
-                                {p.price}
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={260}>
+                      <BarChart data={competitorChartData} layout="vertical" margin={{ left: 8 }}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                        <XAxis type="number" allowDecimals={false} fontSize={11} />
+                        <YAxis
+                          type="category"
+                          dataKey="name"
+                          width={120}
+                          fontSize={11}
+                          tickFormatter={(v: string) => (v.length > 18 ? v.slice(0, 17) + "…" : v)}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            background: "hsl(var(--popover))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: 6,
+                            fontSize: 12,
+                          }}
+                        />
+                        <Bar dataKey="products" radius={[0, 4, 4, 0]}>
+                          {competitorChartData.map((_, i) => (
+                            <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
                   </CardContent>
                 </Card>
-              );
-            };
+              )}
 
-            return (
-              <div className="space-y-4">
-                {hasCurrentRun && (
-                  <section className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-sm font-semibold">Current discovery results</h2>
-                      <Badge variant="secondary">{current.length}</Badge>
-                      {lastRunAt && (
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(lastRunAt).toLocaleTimeString()}
-                        </span>
-                      )}
-                    </div>
-                    {current.length === 0 ? (
-                      <Card className="border-warning/40 bg-warning/[0.04]">
-                        <CardHeader>
-                          <CardDescription>
-                            Current run returned no competitors matching this query.
-                          </CardDescription>
-                        </CardHeader>
-                      </Card>
-                    ) : (
-                      <div className="grid gap-3 md:grid-cols-2">{current.map(renderCard)}</div>
-                    )}
-                  </section>
-                )}
-                {historical.length > 0 && (
-                  <section className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-sm font-semibold text-muted-foreground">
-                        {hasCurrentRun ? "Previously stored competitors" : "Stored competitors"}
-                      </h2>
-                      <Badge variant="outline">{historical.length}</Badge>
-                      {hasCurrentRun && (
-                        <span className="text-xs text-muted-foreground">
-                          Not part of the current run
-                        </span>
-                      )}
-                    </div>
-                    <div className="grid gap-3 md:grid-cols-2 opacity-90">
-                      {historical.map(renderCard)}
-                    </div>
-                  </section>
+              {priceChartData.some((d) => d.count > 0) && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Price distribution</CardTitle>
+                    <CardDescription>
+                      How products in this market are priced (USD-normalized)
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={260}>
+                      <BarChart data={priceChartData}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                        <XAxis dataKey="bucket" fontSize={11} />
+                        <YAxis allowDecimals={false} fontSize={11} />
+                        <Tooltip
+                          contentStyle={{
+                            background: "hsl(var(--popover))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: 6,
+                            fontSize: 12,
+                          }}
+                        />
+                        <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              )}
+
+              {brandChartData.length > 0 && (
+                <Card className="lg:col-span-2">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Top brands</CardTitle>
+                    <CardDescription>Most-mentioned brands across competitor catalogs</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={240}>
+                      <BarChart data={brandChartData}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                        <XAxis dataKey="brand" fontSize={11} />
+                        <YAxis allowDecimals={false} fontSize={11} />
+                        <Tooltip
+                          contentStyle={{
+                            background: "hsl(var(--popover))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: 6,
+                            fontSize: 12,
+                          }}
+                        />
+                        <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {/* Competitor cards */}
+            <section className="space-y-2">
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-semibold">Competitors</h2>
+                <Badge variant="secondary">{competitors.length}</Badge>
+                {result.category && (
+                  <Badge variant="outline" className="text-[10px]">
+                    {result.category}
+                  </Badge>
                 )}
               </div>
-            );
-          })()
+              <div className="grid gap-3 md:grid-cols-2">
+                {competitors.map((c) => (
+                  <Card key={c.id}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <CardTitle className="text-base truncate">{c.name}</CardTitle>
+                          <CardDescription className="flex items-center gap-1 truncate">
+                            <Globe className="h-3 w-3 shrink-0" />
+                            <a
+                              href={c.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="hover:underline truncate"
+                            >
+                              {c.domain}
+                            </a>
+                          </CardDescription>
+                        </div>
+                        <Badge variant="secondary" className="shrink-0">
+                          {c.product_count ?? 0} products
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {c.confidence && (
+                        <Badge
+                          variant={c.confidence === "high" ? "default" : "outline"}
+                          className="text-[10px]"
+                        >
+                          {c.confidence} confidence
+                        </Badge>
+                      )}
+                      {c.description && (
+                        <p className="text-xs text-muted-foreground line-clamp-2">
+                          {c.description}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </section>
+
+            {/* Product clusters insight */}
+            {graph?.clusters && graph.clusters.length > 0 && (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Product clusters</CardTitle>
+                  <CardDescription>
+                    Groups of similar products by brand, price band, and category
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {graph.clusters.slice(0, 8).map((cl) => (
+                    <div
+                      key={cl.key}
+                      className="rounded-md border bg-muted/30 p-2 text-xs"
+                    >
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Badge variant="secondary">{cl.brand ?? "unknown brand"}</Badge>
+                        <Badge variant="outline">
+                          {PRICE_LABELS[cl.priceBucket as keyof PriceDist] ?? cl.priceBucket}
+                        </Badge>
+                        <Badge variant="outline">{cl.category}</Badge>
+                        <span className="ml-auto text-muted-foreground">
+                          {cl.size} products · {cl.domains.length} domains
+                        </span>
+                      </div>
+                      {cl.sampleTitles.length > 0 && (
+                        <ul className="mt-1.5 list-disc pl-4 space-y-0.5 text-muted-foreground">
+                          {cl.sampleTitles.slice(0, 3).map((s, i) => (
+                            <li key={i} className="truncate">
+                              {s}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
       </main>
     </>

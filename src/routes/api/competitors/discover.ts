@@ -41,7 +41,10 @@ export const Route = createFileRoute("/api/competitors/discover")({
             statuses: result.statuses,
             debug: result.debug,
             totals: result.totals,
+            category: result.category,
+            graph: result.graph,
           });
+
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           console.error("[/api/competitors/discover]", msg);
