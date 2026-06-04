@@ -195,6 +195,7 @@ function CompetitorsPage() {
               {debugInfo.map((d, i) => {
                 const isOk = d.firecrawlStatus === "success";
                 const isEmpty = d.firecrawlStatus === "empty" || d.markdownLength === 0;
+                const isUnstructured = d.competitorStatus === "unstructured_data";
                 return (
                   <details
                     key={`${d.seedUrl}-${i}`}
@@ -209,6 +210,11 @@ function CompetitorsPage() {
                         >
                           {d.firecrawlStatus}
                         </Badge>
+                        {d.competitorStatus && d.competitorStatus !== "failed" && (
+                          <Badge variant="outline" className="ml-1 text-[10px]">
+                            {d.competitorStatus}
+                          </Badge>
+                        )}
                       </span>
                       <span className="ml-2 text-muted-foreground">
                         md:{d.markdownLength} · links:{d.rawLinkCount} · prices:
@@ -224,6 +230,11 @@ function CompetitorsPage() {
                       )}
                       {d.note && (
                         <div className="text-muted-foreground italic">{d.note}</div>
+                      )}
+                      {isUnstructured && (
+                        <div className="text-muted-foreground italic">
+                          {t("No products detected; competitor kept as unstructured data.")}
+                        </div>
                       )}
                       {isEmpty && !d.errorMessage && (
                         <div className="text-destructive">
