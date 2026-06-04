@@ -356,7 +356,7 @@ function extractNodes(
   const nodes: ProductNode[] = [];
   const repeated = titles.length >= 3; // "repeated product-like patterns"
 
-  if ((pageType === "product_page" || pageType === "category_page") && repeated) {
+  if (pageType === "product_page" && repeated) {
     const seen = new Set<string>();
     for (const t of titles.slice(0, 40)) {
       // Pair nearest price within 500 chars
@@ -367,7 +367,7 @@ function extractNodes(
         if (d < bestDist && d < 500) { bestDist = d; bestPrice = p; }
       }
       const hasPrice = !!bestPrice;
-      // STRICT: title must exist AND a price must exist on the page (paired or category-level)
+      // STRICT: title must be paired with a nearby price
       if (!hasPrice) continue;
       const url = t.url ?? `${seedUrl}#t-${t.index}`;
       if (t.url && NAV_URL_RE.test(t.url)) continue;
@@ -389,7 +389,6 @@ function extractNodes(
         pageType,
       });
 
-      // Discard very low-confidence noise
       if (confidence < 0.45) continue;
 
       nodes.push({
@@ -409,11 +408,9 @@ function extractNodes(
   const competitorStatus: DebugInfo["competitorStatus"] =
     md.length === 0
       ? "empty_response"
-      : pageType === "navigation_page" || pageType === "irrelevant_page"
-        ? "discarded"
-        : nodes.length > 0
-          ? "structured_data"
-          : "discarded";
+      : nodes.length > 0
+        ? "structured_data"
+        : "discarded";
 
   const note =
     md.length === 0
@@ -421,12 +418,14 @@ function extractNodes(
       : pageType === "navigation_page"
         ? "Navigation page — discarded"
         : pageType === "irrelevant_page"
-          ? "Irrelevant page — no product signals, discarded"
-          : !repeated
-            ? "No repeated product-like patterns — discarded"
-            : nodes.length === 0
-              ? "No valid product nodes (title + price required) — discarded"
-              : undefined;
+          ? "No product signals (price + action + repeated titles required) — discarded"
+          : pageType !== "product_page"
+            ? "Not a product page — discarded"
+            : !repeated
+              ? "No repeated product-card patterns — discarded"
+              : nodes.length === 0
+                ? "No title+price pairs found — discarded"
+                : undefined;
 
   return {
     nodes,
