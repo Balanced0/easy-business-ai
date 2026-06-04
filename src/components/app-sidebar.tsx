@@ -7,6 +7,7 @@ import {
   MessageSquare,
   Info,
   BarChart3,
+  Upload,
 } from "lucide-react";
 import {
   Sidebar,
