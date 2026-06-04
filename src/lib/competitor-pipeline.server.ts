@@ -16,35 +16,120 @@ import {
   type ScrapedPage,
 } from "./firecrawl.server";
 
-// ───────────────────────── Seed templates ─────────────────────────
+// ───────────────────────── Category mapping + seed lists ─────────────────────────
+// Every query is mapped to a category, and each category has a FIXED seed
+// list of ecommerce entry points. No web search, no link-following discovery.
 
-// Generic ecommerce search-style URL templates. {q} is the URL-encoded query.
-// These are reusable across queries and require no external search API.
-const SEED_TEMPLATES = [
-  "https://www.amazon.com/s?k={q}",
-  "https://www.ebay.com/sch/i.html?_nkw={q}",
-  "https://www.walmart.com/search?q={q}",
-  "https://www.etsy.com/search?q={q}",
-  "https://www.aliexpress.com/wholesale?SearchText={q}",
-  "https://www.target.com/s?searchTerm={q}",
-  "https://www.bestbuy.com/site/searchpage.jsp?st={q}",
-  "https://www.daraz.com.bd/catalog/?q={q}",
-  "https://www.flipkart.com/search?q={q}",
-  "https://shopee.com/search?keyword={q}",
+type Category =
+  | "audio" | "mobile" | "computers" | "electronics"
+  | "footwear" | "fashion" | "beauty" | "home"
+  | "toys" | "sports" | "grocery" | "general";
+
+const CATEGORY_KEYWORDS: Array<{ cat: Category; words: string[] }> = [
+  { cat: "audio", words: ["earbud", "earphone", "headphone", "headset", "speaker", "airpod", "soundbar"] },
+  { cat: "mobile", words: ["phone", "smartphone", "iphone", "android", "mobile", "tablet", "ipad"] },
+  { cat: "computers", words: ["laptop", "notebook", "macbook", "desktop", "monitor", "keyboard", "mouse", "ssd", "gpu", "ram"] },
+  { cat: "footwear", words: ["shoe", "sneaker", "boot", "sandal", "heel", "loafer", "trainer"] },
+  { cat: "fashion", words: ["shirt", "tshirt", "t-shirt", "jeans", "dress", "jacket", "coat", "hoodie", "watch", "bag", "wallet", "fashion"] },
+  { cat: "beauty", words: ["lipstick", "makeup", "cosmetic", "skincare", "perfume", "shampoo", "cream", "serum"] },
+  { cat: "home", words: ["sofa", "chair", "table", "lamp", "kitchen", "cookware", "bedding", "pillow", "mattress", "furniture"] },
+  { cat: "toys", words: ["toy", "lego", "doll", "puzzle", "board game"] },
+  { cat: "sports", words: ["bike", "bicycle", "yoga", "fitness", "dumbbell", "treadmill", "football", "cricket", "tennis"] },
+  { cat: "grocery", words: ["snack", "tea", "coffee", "spice", "rice", "oil", "grocery"] },
+  { cat: "electronics", words: ["camera", "drone", "tv", "console", "playstation", "xbox", "gadget", "electronic"] },
 ];
 
-// Fallback list of known ecommerce homepages, used when seed scrapes return
-// nothing useful (e.g. all blocked / JS-walled).
-const FALLBACK_DOMAINS = [
-  "https://www.amazon.com",
-  "https://www.ebay.com",
-  "https://www.walmart.com",
-  "https://www.etsy.com",
-];
+const CATEGORY_SEEDS: Record<Category, string[]> = {
+  audio: [
+    "https://www.daraz.com.bd/catalog/?q={q}",
+    "https://www.aliexpress.com/w/wholesale-{q}.html",
+    "https://www.ebay.com/sch/i.html?_nkw={q}",
+    "https://www.amazon.com/s?k={q}",
+  ],
+  mobile: [
+    "https://www.daraz.com.bd/catalog/?q={q}",
+    "https://www.aliexpress.com/w/wholesale-{q}.html",
+    "https://www.ebay.com/sch/i.html?_nkw={q}",
+    "https://www.amazon.com/s?k={q}",
+  ],
+  computers: [
+    "https://www.daraz.com.bd/catalog/?q={q}",
+    "https://www.aliexpress.com/w/wholesale-{q}.html",
+    "https://www.ebay.com/sch/i.html?_nkw={q}",
+    "https://www.amazon.com/s?k={q}",
+    "https://www.bestbuy.com/site/searchpage.jsp?st={q}",
+  ],
+  electronics: [
+    "https://www.daraz.com.bd/catalog/?q={q}",
+    "https://www.aliexpress.com/w/wholesale-{q}.html",
+    "https://www.ebay.com/sch/i.html?_nkw={q}",
+    "https://www.amazon.com/s?k={q}",
+  ],
+  footwear: [
+    "https://www.daraz.com.bd/catalog/?q={q}",
+    "https://www.aliexpress.com/w/wholesale-{q}.html",
+    "https://www.ebay.com/sch/i.html?_nkw={q}",
+    "https://www.amazon.com/s?k={q}",
+    "https://www.zappos.com/search?term={q}",
+  ],
+  fashion: [
+    "https://www.daraz.com.bd/catalog/?q={q}",
+    "https://www.aliexpress.com/w/wholesale-{q}.html",
+    "https://www.ebay.com/sch/i.html?_nkw={q}",
+    "https://www.amazon.com/s?k={q}",
+    "https://www.etsy.com/search?q={q}",
+  ],
+  beauty: [
+    "https://www.daraz.com.bd/catalog/?q={q}",
+    "https://www.aliexpress.com/w/wholesale-{q}.html",
+    "https://www.amazon.com/s?k={q}",
+    "https://www.sephora.com/search?keyword={q}",
+  ],
+  home: [
+    "https://www.daraz.com.bd/catalog/?q={q}",
+    "https://www.aliexpress.com/w/wholesale-{q}.html",
+    "https://www.amazon.com/s?k={q}",
+    "https://www.wayfair.com/keyword.php?keyword={q}",
+  ],
+  toys: [
+    "https://www.daraz.com.bd/catalog/?q={q}",
+    "https://www.aliexpress.com/w/wholesale-{q}.html",
+    "https://www.amazon.com/s?k={q}",
+    "https://www.ebay.com/sch/i.html?_nkw={q}",
+  ],
+  sports: [
+    "https://www.daraz.com.bd/catalog/?q={q}",
+    "https://www.aliexpress.com/w/wholesale-{q}.html",
+    "https://www.amazon.com/s?k={q}",
+    "https://www.ebay.com/sch/i.html?_nkw={q}",
+  ],
+  grocery: [
+    "https://www.amazon.com/s?k={q}",
+    "https://www.walmart.com/search?q={q}",
+    "https://www.daraz.com.bd/catalog/?q={q}",
+  ],
+  general: [
+    "https://www.amazon.com/s?k={q}",
+    "https://www.ebay.com/sch/i.html?_nkw={q}",
+    "https://www.aliexpress.com/w/wholesale-{q}.html",
+    "https://www.daraz.com.bd/catalog/?q={q}",
+  ],
+};
 
-function buildSeedsForQuery(query: string): string[] {
-  const q = encodeURIComponent(query.trim());
-  return SEED_TEMPLATES.map((t) => t.replace("{q}", q));
+function categorize(query: string): Category {
+  const q = query.toLowerCase();
+  for (const { cat, words } of CATEGORY_KEYWORDS) {
+    if (words.some((w) => q.includes(w))) return cat;
+  }
+  return "general";
+}
+
+function buildSeedsForQuery(query: string): { category: Category; seeds: string[] } {
+  const trimmed = query.trim();
+  const enc = encodeURIComponent(trimmed);
+  const category = categorize(trimmed);
+  const seeds = CATEGORY_SEEDS[category].map((t) => t.replace(/\{q\}/g, enc));
+  return { category, seeds };
 }
 
 // ───────────────────────── Helpers ─────────────────────────
