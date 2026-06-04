@@ -337,6 +337,7 @@ export async function discoverFromQuery(
       const dbg: DebugInfo = {
         seedUrl, domain: seedHost,
         firecrawlStatus: "failed",
+        competitorStatus: "failed",
         errorMessage: error ?? "Scrape returned empty response",
         markdownLength: 0, priceMatches: 0, productStrings: 0,
         rawLinkCount: 0, sampleTitles: [], markdownPreview: "",
@@ -369,7 +370,7 @@ export async function discoverFromQuery(
       name: nameFromHost(domain),
       domain,
       url: `https://${domain}`,
-      description: null,
+      description: debug.find((d) => d.domain === domain)?.markdownPreview || null,
       source: "firecrawl_scrape_query",
     }));
 
@@ -397,7 +398,13 @@ export async function discoverFromQuery(
       currency: p.currency ?? null,
       availability: null,
       image_url: null,
-      raw: { query, domain, low_confidence: !p.price } as unknown as never,
+      raw: {
+        query,
+        domain,
+        low_confidence: !p.price,
+        status: p.status ?? "structured_data",
+        rawSnippet: p.rawSnippet ?? null,
+      } as unknown as never,
       scraped_at: new Date().toISOString(),
     }));
     const { error, count } = await supabaseAdmin
@@ -414,10 +421,14 @@ export async function discoverFromQuery(
 
   const competitorsWithConfidence = competitors.map((c) => {
     const list = productsByDomain.get(c.domain) ?? [];
-    const withPrice = list.filter((p) => typeof p.price === "number").length;
-    const confidence =
-      withPrice >= 3 ? "high" : withPrice >= 1 || list.length >= 3 ? "medium" : "low";
-    return { ...c, product_count: list.length, confidence };
+    const hasUnstructured = list.some((p) => p.status === "unstructured_data");
+    return {
+      ...c,
+      product_count: list.length,
+      confidence: hasUnstructured ? "low" : "medium",
+      status: hasUnstructured ? "unstructured_data" : "structured_data",
+      raw_snippet: debug.find((d) => d.domain === c.domain)?.markdownPreview ?? c.description,
+    };
   });
 
   return {
