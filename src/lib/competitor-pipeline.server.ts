@@ -199,14 +199,33 @@ function pairPrices(titles: TitleHit[], prices: PriceHit[]): TitleHit[] {
   });
 }
 
+function buildRawSource(page: ScrapedPage): string {
+  const markdown = page.markdown?.trim() ?? "";
+  if (markdown.length > 0) return markdown;
+
+  const html = page.html?.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() ?? "";
+  if (html.length > 0) return html;
+
+  const links = Array.isArray(page.links) ? page.links.slice(0, 20).join("\n") : "";
+  if (links.length > 0) return links;
+
+  if (page.metadata && Object.keys(page.metadata).length > 0) {
+    return JSON.stringify(page.metadata);
+  }
+
+  return "";
+}
+
 function extractSignals(
   page: ScrapedPage,
   seedUrl: string,
   seedHost: string,
 ): { products: DiscoveredProduct[]; debug: Omit<DebugInfo, "seedUrl" | "domain"> } {
   const md = page.markdown ?? "";
-  const prices = findPrices(md);
-  const titles = findProductStrings(md);
+  const rawSource = buildRawSource(page);
+  const preview = rawSource.slice(0, 500);
+  const prices = findPrices(rawSource);
+  const titles = findProductStrings(rawSource);
   const paired = pairPrices(titles, prices) as Array<
     TitleHit & { price?: number; currency?: string }
   >;
@@ -243,27 +262,27 @@ function extractSignals(
 
   // Guarantee: if markdown exists, emit at least one placeholder product
   // for the seed domain so the dataset is never empty.
-  if (products.length === 0 && md.length > 0) {
+  if (products.length === 0 && rawSource.length > 0) {
     products.push({
       domain: seedHost,
       source_url: `${seedUrl}#raw`,
       title: `${nameFromHost(seedHost)} search results`,
-      rawSnippet: md.slice(0, 500),
+      rawSnippet: preview,
       status: "unstructured_data",
     });
   }
 
   const normalizedProducts = products.map((p) => ({
     ...p,
-    rawSnippet: p.rawSnippet ?? md.slice(0, 500),
+    rawSnippet: p.rawSnippet ?? preview,
     status: p.status ?? "structured_data",
   }));
 
   return {
     products: normalizedProducts,
     debug: {
-      firecrawlStatus: md.length > 0 ? "success" as const : "empty" as const,
-      competitorStatus: md.length === 0
+      firecrawlStatus: rawSource.length > 0 ? "success" as const : "empty" as const,
+      competitorStatus: rawSource.length === 0
         ? "empty_response"
         : normalizedProducts.some((p) => p.status === "unstructured_data")
           ? "unstructured_data"
@@ -273,9 +292,9 @@ function extractSignals(
       productStrings: titles.length,
       rawLinkCount: page.links.length,
       sampleTitles: titles.slice(0, 5).map((t) => t.text),
-      markdownPreview: md.slice(0, 500),
+      markdownPreview: preview,
       productsExtracted: normalizedProducts.length,
-      note: md.length === 0
+      note: rawSource.length === 0
           ? "Scrape returned empty response"
           : normalizedProducts.some((p) => p.status === "unstructured_data")
             ? "No structured data found, showing raw scrape output"
@@ -319,7 +338,6 @@ export async function discoverFromQuery(
   const ensureDomain = (domain: string) => {
     if (!domain) return;
     if (productsByDomain.has(domain)) return;
-    if (productsByDomain.size >= maxDomains) return;
     productsByDomain.set(domain, []);
   };
 
