@@ -1,9 +1,10 @@
-// Modular competitor discovery + product extraction pipeline.
-// Designed to be called from API routes today and a cron scheduler later.
+// Crawl-only competitor discovery + product extraction pipeline.
+// No Firecrawl /search anywhere — discovery starts from seed URLs, crawls
+// them, extracts product-like pages + outbound domains, and expands the
+// competitor list from there. Idempotent (upserts) and scheduler-friendly.
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
-  firecrawlSearch,
   firecrawlScrape,
   firecrawlCrawl,
   PRODUCT_EXTRACT_SCHEMA,
@@ -15,7 +16,7 @@ function hostFrom(url: string): string {
   try {
     return new URL(url).hostname.replace(/^www\./, "");
   } catch {
-    return url;
+    return "";
   }
 }
 
@@ -24,44 +25,128 @@ function nameFromHost(host: string): string {
   return base.charAt(0).toUpperCase() + base.slice(1);
 }
 
-// 1. Discover competitors from a product/category query via Firecrawl /search.
-export async function discoverCompetitors(
-  userId: string,
-  query: string,
-  limit = 10,
-) {
-  const q = `${query} buy online store`;
-  const results = await firecrawlSearch(q, { limit });
+// Heuristic: looks like an individual product/listing URL.
+function looksLikeProductUrl(url: string): boolean {
+  return /\/(product|products|p|item|items|shop|listing|dp|sku)\//i.test(url);
+}
 
-  // One competitor per unique domain.
-  const byDomain = new Map<string, { url: string; title?: string; description?: string }>();
-  for (const r of results) {
-    if (!r.url) continue;
-    const host = hostFrom(r.url);
-    if (!host || host.includes("google.") || host.includes("youtube.")) continue;
-    if (!byDomain.has(host)) {
-      byDomain.set(host, { url: r.url, title: r.title, description: r.description });
+// Pull every absolute URL out of a markdown blob (links, images, bare URLs).
+function extractUrlsFromMarkdown(md: string): string[] {
+  const out = new Set<string>();
+  const re = /https?:\/\/[^\s)\]"'<>]+/g;
+  for (const m of md.matchAll(re)) out.add(m[0].replace(/[.,)\]]+$/, ""));
+  return [...out];
+}
+
+type DiscoveryOptions = {
+  limit?: number; // pages crawled per seed
+  includePaths?: string[];
+  excludePaths?: string[];
+};
+
+// 1. Crawl seed URL(s), discover competitor domains from outbound links,
+//    persist competitor rows, and persist any product-like pages found in
+//    the same crawl (avoiding a second round-trip).
+export async function discoverFromSeeds(
+  userId: string,
+  seedUrls: string[],
+  opts: DiscoveryOptions = {},
+) {
+  const limit = Math.min(Math.max(opts.limit ?? 25, 1), 100);
+  const allCompetitors: Record<string, unknown>[] = [];
+  let productsInserted = 0;
+
+  for (const seedUrl of seedUrls) {
+    const seedHost = hostFrom(seedUrl);
+    if (!seedHost) continue;
+
+    const pages = await firecrawlCrawl(seedUrl, {
+      limit,
+      includePaths: opts.includePaths,
+      excludePaths: opts.excludePaths,
+      extractSchema: PRODUCT_EXTRACT_SCHEMA,
+    });
+
+    // a) Aggregate outbound domains discovered across crawled pages.
+    const byDomain = new Map<
+      string,
+      { url: string; title?: string; description?: string }
+    >();
+    // Seed itself is always a competitor.
+    byDomain.set(seedHost, { url: seedUrl });
+
+    for (const p of pages) {
+      const urls = [
+        ...extractUrlsFromMarkdown(p.markdown ?? ""),
+        ...(Array.isArray((p.metadata as { links?: unknown })?.links)
+          ? ((p.metadata as { links: string[] }).links ?? [])
+          : []),
+      ];
+      for (const u of urls) {
+        const host = hostFrom(u);
+        if (!host) continue;
+        if (
+          host.includes("google.") ||
+          host.includes("youtube.") ||
+          host.includes("facebook.") ||
+          host.includes("instagram.") ||
+          host.includes("twitter.") ||
+          host.includes("x.com") ||
+          host.includes("pinterest.") ||
+          host.includes("tiktok.") ||
+          host.includes("linkedin.") ||
+          host.endsWith(".gov") ||
+          host.endsWith(".edu")
+        )
+          continue;
+        if (!byDomain.has(host)) byDomain.set(host, { url: u });
+      }
+    }
+
+    const rows = Array.from(byDomain.entries()).map(([domain, r]) => ({
+      user_id: userId,
+      query: seedUrl,
+      name: nameFromHost(domain),
+      domain,
+      url: r.url,
+      description: null,
+      source: "firecrawl_crawl",
+    }));
+
+    if (rows.length > 0) {
+      const { data, error } = await supabaseAdmin
+        .from("competitors")
+        .upsert(rows, { onConflict: "user_id,domain,query" })
+        .select("*");
+      if (error) throw new Error(`competitors upsert failed: ${error.message}`);
+      if (data) allCompetitors.push(...data);
+    }
+
+    // b) For the seed domain's own competitor row, persist any product pages
+    //    found in this crawl (product-like URL OR JSON had a price/title).
+    const seedComp = (allCompetitors as Array<{ id: string; domain: string }>).find(
+      (c) => c.domain === seedHost,
+    );
+    if (seedComp) {
+      const productPages = pages.filter((p) => {
+        const j = p.json as { title?: unknown; price?: unknown } | undefined;
+        return (
+          looksLikeProductUrl(p.url) ||
+          (j && (typeof j.title === "string" || typeof j.price === "number"))
+        );
+      });
+      if (productPages.length > 0) {
+        const { inserted } = await persistProducts(
+          userId,
+          seedComp.id,
+          productPages,
+        );
+        productsInserted += inserted;
+      }
     }
   }
 
-  const rows = Array.from(byDomain.entries()).map(([domain, r]) => ({
-    user_id: userId,
-    query,
-    name: r.title?.split(/[|\-–]/)[0]?.trim() || nameFromHost(domain),
-    domain,
-    url: r.url,
-    description: r.description ?? null,
-    source: "firecrawl_search",
-  }));
-
-  if (rows.length === 0) return [];
-
-  const { data, error } = await supabaseAdmin
-    .from("competitors")
-    .upsert(rows, { onConflict: "user_id,domain,query" })
-    .select("*");
-  if (error) throw new Error(`competitors upsert failed: ${error.message}`);
-  return data ?? [];
+  return { competitors: allCompetitors, productsInserted };
 }
 
 type ProductExtract = {
@@ -75,8 +160,6 @@ type ProductExtract = {
 function extractFromPage(p: ScrapedPage | CrawlPage): ProductExtract {
   const j = (p.json ?? {}) as ProductExtract;
   if (j.title || typeof j.price === "number") return j;
-
-  // Markdown fallback: title from first H1, price by regex.
   const md = p.markdown ?? "";
   const h1 = md.match(/^#\s+(.+)$/m)?.[1]?.trim();
   const priceMatch = md.match(/(?:USD|EUR|GBP|BDT|৳|\$|€|£)\s*([0-9][0-9.,]*)/i);
@@ -87,7 +170,7 @@ function extractFromPage(p: ScrapedPage | CrawlPage): ProductExtract {
   };
 }
 
-// 2a. Single-page product scrape.
+// 2a. Single-page product scrape (on-demand from UI).
 export async function scrapeCompetitorPage(
   userId: string,
   competitorId: string,
@@ -97,7 +180,7 @@ export async function scrapeCompetitorPage(
   return persistProducts(userId, competitorId, [page]);
 }
 
-// 2b. Multi-page crawl (paginated product extraction).
+// 2b. Crawl an existing competitor for paginated product extraction.
 export async function crawlCompetitor(
   userId: string,
   competitorId: string,
