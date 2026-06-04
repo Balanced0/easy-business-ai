@@ -102,6 +102,7 @@ export type DebugInfo = {
   domain: string;
   firecrawlStatus: "success" | "failed" | "empty";
   errorMessage?: string;
+  competitorStatus?: "structured_data" | "unstructured_data" | "empty_response" | "failed";
   markdownLength: number;
   priceMatches: number;
   productStrings: number;
@@ -118,6 +119,8 @@ type DiscoveredProduct = {
   title?: string;
   price?: number;
   currency?: string;
+  rawSnippet?: string;
+  status?: "structured_data" | "unstructured_data";
 };
 
 // ───────────────────────── Raw signal extraction ─────────────────────────
@@ -245,24 +248,37 @@ function extractSignals(
       domain: seedHost,
       source_url: `${seedUrl}#raw`,
       title: `${nameFromHost(seedHost)} search results`,
+      rawSnippet: md.slice(0, 500),
+      status: "unstructured_data",
     });
   }
 
+  const normalizedProducts = products.map((p) => ({
+    ...p,
+    rawSnippet: p.rawSnippet ?? md.slice(0, 500),
+    status: p.status ?? "structured_data",
+  }));
+
   return {
-    products,
+    products: normalizedProducts,
     debug: {
       firecrawlStatus: md.length > 0 ? "success" as const : "empty" as const,
+      competitorStatus: md.length === 0
+        ? "empty_response"
+        : normalizedProducts.some((p) => p.status === "unstructured_data")
+          ? "unstructured_data"
+          : "structured_data",
       markdownLength: md.length,
       priceMatches: prices.length,
       productStrings: titles.length,
       rawLinkCount: page.links.length,
       sampleTitles: titles.slice(0, 5).map((t) => t.text),
       markdownPreview: md.slice(0, 500),
-      productsExtracted: products.length,
-      note: products.length === 0
-        ? "No structured data found, showing raw scrape output"
-        : md.length === 0
+      productsExtracted: normalizedProducts.length,
+      note: md.length === 0
           ? "Scrape returned empty response"
+          : normalizedProducts.some((p) => p.status === "unstructured_data")
+            ? "No structured data found, showing raw scrape output"
           : undefined,
     },
   };
