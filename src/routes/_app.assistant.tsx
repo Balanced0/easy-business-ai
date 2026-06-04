@@ -34,8 +34,7 @@ const suggestions = [
 
 function AssistantPage() {
   const [input, setInput] = useState("");
-  const [seedCount, setSeedCount] = useState<number | null>(null);
-  const [seeding, setSeeding] = useState(false);
+  const [docCount, setDocCount] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { lang } = useLanguage();
   const t = useT();
@@ -44,34 +43,10 @@ function AssistantPage() {
     authHeaders().then((h) =>
       fetch("/api/embeddings", { headers: h })
         .then((r) => r.json())
-        .then((j) => setSeedCount(j.count ?? 0))
-        .catch(() => setSeedCount(0)),
+        .then((j) => setDocCount(j.count ?? 0))
+        .catch(() => setDocCount(0)),
     );
   }, []);
-
-  const handleSeed = async () => {
-    setSeeding(true);
-    try {
-      const h = await authHeaders();
-      const res = await fetch("/api/embeddings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...h },
-        body: JSON.stringify({ seed: true, reset: true }),
-      });
-      const j = await res.json();
-      if (!res.ok) throw new Error(j.error || "Seed failed");
-      toast.success(
-        lang === "bn"
-          ? `নলেজ বেস তৈরি হয়েছে (${j.inserted} ডকুমেন্ট)`
-          : `Knowledge base built (${j.inserted} documents)`,
-      );
-      setSeedCount(j.inserted);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : String(err));
-    } finally {
-      setSeeding(false);
-    }
-  };
 
   const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({
