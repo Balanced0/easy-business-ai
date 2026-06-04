@@ -29,6 +29,8 @@ type Competitor = {
   url: string;
   description: string | null;
   last_scraped_at: string | null;
+  status?: "structured_data" | "unstructured_data";
+  raw_snippet?: string | null;
 };
 
 type Product = {
@@ -47,6 +49,7 @@ type DebugInfo = {
   domain: string;
   firecrawlStatus: "success" | "failed" | "empty";
   errorMessage?: string;
+  competitorStatus?: "structured_data" | "unstructured_data" | "empty_response" | "failed";
   markdownLength: number;
   priceMatches: number;
   productStrings: number;
