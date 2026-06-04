@@ -274,7 +274,11 @@ function extractSignals(
   page: ScrapedPage,
   seedUrl: string,
   seedHost: string,
-): { products: DiscoveredProduct[]; debug: Omit<DebugInfo, "seedUrl" | "domain"> } {
+): {
+  products: DiscoveredProduct[];
+  pageType: PageType;
+  debug: Omit<DebugInfo, "seedUrl" | "domain">;
+} {
   const md = page.markdown ?? "";
   const rawSource = buildRawSource(page);
   const preview = rawSource.slice(0, 500);
@@ -284,75 +288,70 @@ function extractSignals(
     TitleHit & { price?: number; currency?: string }
   >;
 
+  const pageType = classifyPage(seedUrl, rawSource, prices.length, titles.length);
+
   const products: DiscoveredProduct[] = [];
-  const seen = new Set<string>();
 
-  for (const h of paired.slice(0, 30)) {
-    const url = h.url ?? `${seedUrl}#t-${h.index}`;
-    if (seen.has(url)) continue;
-    seen.add(url);
-    const host = h.url ? hostFrom(h.url) || seedHost : seedHost;
-    products.push({
-      domain: host,
-      source_url: url,
-      title: h.text,
-      price: h.price,
-      currency: h.currency,
-    });
-  }
+  // Only product/category pages produce product entries.
+  if (pageType === "product_page" || pageType === "category_page") {
+    const seen = new Set<string>();
+    for (const h of paired.slice(0, 30)) {
+      // A valid product must have either a real price or a product-like link URL.
+      const hasPrice = typeof h.price === "number";
+      const linkUrl = h.url;
+      if (!hasPrice && (!linkUrl || isNavUrl(linkUrl))) continue;
+      if (linkUrl && isNavUrl(linkUrl)) continue;
 
-  // If we have prices but no titles, still emit price-only entries.
-  if (products.length === 0 && prices.length > 0) {
-    for (const [i, p] of prices.slice(0, 10).entries()) {
+      const url = linkUrl ?? `${seedUrl}#t-${h.index}`;
+      if (seen.has(url)) continue;
+      seen.add(url);
+      const host = linkUrl ? hostFrom(linkUrl) || seedHost : seedHost;
       products.push({
-        domain: seedHost,
-        source_url: `${seedUrl}#p-${i}`,
-        title: `${nameFromHost(seedHost)} listing ${i + 1}`,
-        price: p.price,
-        currency: p.currency,
+        domain: host,
+        source_url: url,
+        title: h.text,
+        price: h.price,
+        currency: h.currency,
+        status: "structured_data",
       });
     }
   }
 
-  // Guarantee: if markdown exists, emit at least one placeholder product
-  // for the seed domain so the dataset is never empty.
-  if (products.length === 0 && rawSource.length > 0) {
-    products.push({
-      domain: seedHost,
-      source_url: `${seedUrl}#raw`,
-      title: `${nameFromHost(seedHost)} search results`,
-      rawSnippet: preview,
-      status: "unstructured_data",
-    });
-  }
+  const competitorStatus: DebugInfo["competitorStatus"] =
+    rawSource.length === 0
+      ? "empty_response"
+      : pageType === "navigation_page" || pageType === "irrelevant_page"
+        ? "discarded"
+        : products.length > 0
+          ? "structured_data"
+          : "discarded";
 
-  const normalizedProducts = products.map((p) => ({
-    ...p,
-    rawSnippet: p.rawSnippet ?? preview,
-    status: p.status ?? "structured_data",
-  }));
+  const note =
+    rawSource.length === 0
+      ? "Scrape returned empty response"
+      : pageType === "navigation_page"
+        ? "Navigation page — discarded"
+        : pageType === "irrelevant_page"
+          ? "Irrelevant page — no product signals, discarded"
+          : products.length === 0
+            ? "No valid products extracted — discarded"
+            : undefined;
 
   return {
-    products: normalizedProducts,
+    products,
+    pageType,
     debug: {
-      firecrawlStatus: rawSource.length > 0 ? "success" as const : "empty" as const,
-      competitorStatus: rawSource.length === 0
-        ? "empty_response"
-        : normalizedProducts.some((p) => p.status === "unstructured_data")
-          ? "unstructured_data"
-          : "structured_data",
+      firecrawlStatus: rawSource.length > 0 ? ("success" as const) : ("empty" as const),
+      competitorStatus,
+      pageType,
       markdownLength: md.length,
       priceMatches: prices.length,
       productStrings: titles.length,
       rawLinkCount: page.links.length,
-      sampleTitles: titles.slice(0, 5).map((t) => t.text),
+      sampleTitles: products.slice(0, 5).map((p) => p.title ?? ""),
       markdownPreview: preview,
-      productsExtracted: normalizedProducts.length,
-      note: rawSource.length === 0
-          ? "Scrape returned empty response"
-          : normalizedProducts.some((p) => p.status === "unstructured_data")
-            ? "No structured data found, showing raw scrape output"
-          : undefined,
+      productsExtracted: products.length,
+      note,
     },
   };
 }
