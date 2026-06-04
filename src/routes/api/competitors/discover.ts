@@ -47,16 +47,17 @@ export const Route = createFileRoute("/api/competitors/discover")({
           );
         }
         try {
-          const { competitors, productsInserted } = await discoverFromSeeds(
-            authed.userId,
-            seeds,
-            { limit: Math.min(Math.max(body.limit ?? 25, 1), 100) },
-          );
+          const { competitors, productsInserted, statuses, debug } =
+            await discoverFromSeeds(authed.userId, seeds, {
+              limit: Math.min(Math.max(body.limit ?? 25, 1), 100),
+            });
           return Response.json({
             ok: true,
             count: competitors.length,
             productsInserted,
             competitors,
+            statuses,
+            debug,
           });
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
