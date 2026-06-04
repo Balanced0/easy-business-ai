@@ -19,6 +19,8 @@ type BusinessProfile = {
 function buildSystemPrompt(
   retrieved: string,
   business: BusinessProfile | null,
+  analyticsFacts: string,
+  hasData: boolean,
   language: "bn" | "en",
 ) {
   const langRule =
@@ -27,29 +29,35 @@ function buildSystemPrompt(
       : `LANGUAGE RULE (CRITICAL): Reply ONLY in English. Do NOT include Bangla translations. Use clear, conversational English.`;
 
   const businessBlock = business
-    ? `BUSINESS PROFILE (the user owns this business — tailor every recommendation to it):
+    ? `BUSINESS PROFILE:
 - Name: ${business.business_name ?? "(unknown)"}
 - Industry: ${business.industry ?? "(not specified)"}
 - Description: ${business.description ?? "(not specified)"}
 - Products: ${business.products ?? "(not specified)"}
-- Target market: ${business.target_market ?? "(not specified)"}
-- Monthly revenue: ${business.monthly_revenue ?? "(not specified)"}`
-    : `BUSINESS PROFILE: (not yet provided — answer generically and suggest completing onboarding)`;
+- Target market: ${business.target_market ?? "(not specified)"}`
+    : `BUSINESS PROFILE: (not yet provided)`;
 
-  return `You are EasyBusiness AI — a friendly, practical AI commerce assistant for a small ecommerce store owner.
+  const noDataRule = hasData
+    ? ""
+    : `\nCRITICAL DATA RULE: The user has NOT uploaded any business data yet. You MUST NOT fabricate revenue, sales trends, inventory risks, customer sentiment, forecasts, competitor data, or trending products. For any question that requires business analytics, reply briefly with: "${language === "bn" ? "এই মুহূর্তে আমার কাছে আপনার ব্যবসার ডেটা নেই। বিশ্লেষণ পেতে অনুগ্রহ করে Upload পেজ থেকে আপনার sales/inventory/products/reviews/orders ফাইল আপলোড করুন।" : "I do not currently have business data available for analysis. Please upload your sales/inventory/products/reviews/orders files from the Upload page to activate analytics."}". Greetings, definitions, and generic how-to questions are still fine to answer.`;
+
+  return `You are EasyBusiness AI — a practical AI commerce assistant for a small ecommerce store owner.
 
 ${langRule}
 
-PERSONALITY:
-- Warm and conversational. For greetings / small talk, respond naturally; do NOT force store data into the reply.
-- For business / analytics questions, ground every claim in the BUSINESS PROFILE and RETRIEVED CONTEXT below. Cite specific numbers, SKUs, or product names when available.
-- If the data does not cover the question, say so briefly and suggest what to track next.
-- Keep answers concise. Short paragraphs or compact bullets. Never invent figures.
+GROUNDING RULES (CRITICAL):
+- Ground every analytics claim in the ANALYTICS FACTS and RETRIEVED CONTEXT below.
+- Never invent revenue, units, SKUs, sentiment percentages, or trend numbers.
+- If data is missing for the question, say so explicitly. Do not hedge with made-up estimates.
+${noDataRule}
 
 ${businessBlock}
 
-RETRIEVED CONTEXT (top semantic matches from this user's knowledge base):
-${retrieved || "(no relevant documents found for this query — the user may need to seed their knowledge base from the assistant page)"}`;
+ANALYTICS FACTS (computed from this user's uploaded data):
+${analyticsFacts || "(no analytics available — user has not uploaded data)"}
+
+RETRIEVED CONTEXT (top semantic matches from this user's uploaded data):
+${retrieved || "(no relevant documents found — user may not have uploaded relevant data)"}`;
 }
 
 export const Route = createFileRoute("/api/chat")({
