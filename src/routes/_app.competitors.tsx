@@ -77,6 +77,8 @@ function CompetitorsPage() {
   const [scrapingId, setScrapingId] = useState<string | null>(null);
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [debugInfo, setDebugInfo] = useState<DebugInfo[]>([]);
+  const [lastTotals, setLastTotals] = useState<{ domains: number; products: number } | null>(null);
 
   const load = useCallback(async () => {
     const res = await authedFetch("/api/competitors/list");
@@ -93,6 +95,7 @@ function CompetitorsPage() {
   const handleDiscover = async () => {
     if (!query.trim()) return;
     setDiscovering(true);
+    setDebugInfo([]);
     try {
       const res = await authedFetch("/api/competitors/discover", {
         method: "POST",
@@ -100,6 +103,8 @@ function CompetitorsPage() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "discovery failed");
+      setDebugInfo(json.debug ?? []);
+      setLastTotals(json.totals ?? null);
       toast.success(
         `Discovered ${json.count} competitors (${json.productsInserted ?? 0} products)`,
       );
