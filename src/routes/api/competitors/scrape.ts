@@ -1,23 +1,16 @@
 // POST /api/competitors/scrape
-//   { competitorId: string, mode?: "scrape"|"crawl", url?: string, limit?: number,
-//     includePaths?: string[], excludePaths?: string[] }
-// Extracts product/pricing data via Firecrawl /scrape (single page) or
-// /crawl (multi-page pagination).
+//   { competitorId: string, url?: string, paginationLimit?: number }
+// Scrape-only product extraction: scrapes the start URL with Firecrawl /scrape
+// (links + json), then follows up to N paginated URLs from the same host.
 import { createFileRoute } from "@tanstack/react-router";
 import { getAuthedUser } from "@/lib/auth-route.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import {
-  scrapeCompetitorPage,
-  crawlCompetitor,
-} from "@/lib/competitor-pipeline.server";
+import { scrapeCompetitorPage } from "@/lib/competitor-pipeline.server";
 
 type Body = {
   competitorId?: string;
-  mode?: "scrape" | "crawl";
   url?: string;
-  limit?: number;
-  includePaths?: string[];
-  excludePaths?: string[];
+  paginationLimit?: number;
 };
 
 export const Route = createFileRoute("/api/competitors/scrape")({
@@ -31,7 +24,6 @@ export const Route = createFileRoute("/api/competitors/scrape")({
           return Response.json({ error: "competitorId required" }, { status: 400 });
         }
 
-        // Verify ownership and resolve start URL.
         const { data: comp, error } = await supabaseAdmin
           .from("competitors")
           .select("id, url, user_id")
@@ -43,18 +35,15 @@ export const Route = createFileRoute("/api/competitors/scrape")({
         }
 
         const startUrl = body.url ?? comp.url;
-        const mode = body.mode ?? "crawl";
 
         try {
-          const result =
-            mode === "scrape"
-              ? await scrapeCompetitorPage(authed.userId, comp.id, startUrl)
-              : await crawlCompetitor(authed.userId, comp.id, startUrl, {
-                  limit: Math.min(Math.max(body.limit ?? 15, 1), 50),
-                  includePaths: body.includePaths,
-                  excludePaths: body.excludePaths,
-                });
-          return Response.json({ ok: true, mode, ...result });
+          const result = await scrapeCompetitorPage(
+            authed.userId,
+            comp.id,
+            startUrl,
+            { paginationLimit: body.paginationLimit ?? 5 },
+          );
+          return Response.json({ ok: true, ...result });
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           console.error("[/api/competitors/scrape]", msg);

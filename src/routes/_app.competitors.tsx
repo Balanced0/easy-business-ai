@@ -97,16 +97,21 @@ function CompetitorsPage() {
     }
   };
 
-  const handleScrape = async (c: Competitor, mode: "scrape" | "crawl") => {
+  const handleScrape = async (c: Competitor) => {
     setScrapingId(c.id);
     try {
       const res = await authedFetch("/api/competitors/scrape", {
         method: "POST",
-        body: JSON.stringify({ competitorId: c.id, mode, limit: 15 }),
+        body: JSON.stringify({ competitorId: c.id, paginationLimit: 5 }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "scrape failed");
-      toast.success(`${mode === "crawl" ? "Crawled" : "Scraped"} ${c.domain}: ${json.inserted} products`);
+      const failed = (json.statuses ?? []).filter(
+        (s: { status: string }) => s.status === "failed",
+      ).length;
+      toast.success(
+        `Scraped ${c.domain}: ${json.inserted} products${failed ? ` (${failed} failed)` : ""}`,
+      );
       await load();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Scrape failed");
@@ -198,8 +203,7 @@ function CompetitorsPage() {
                     <div className="flex flex-wrap gap-2">
                       <Button
                         size="sm"
-                        variant="outline"
-                        onClick={() => handleScrape(c, "scrape")}
+                        onClick={() => handleScrape(c)}
                         disabled={scrapingId === c.id}
                       >
                         {scrapingId === c.id ? (
@@ -207,19 +211,7 @@ function CompetitorsPage() {
                         ) : (
                           <Download className="mr-1 h-3.5 w-3.5" />
                         )}
-                        {t("পেজ স্ক্রেপ / Scrape page")}
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => handleScrape(c, "crawl")}
-                        disabled={scrapingId === c.id}
-                      >
-                        {scrapingId === c.id ? (
-                          <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Download className="mr-1 h-3.5 w-3.5" />
-                        )}
-                        {t("ক্রল / Crawl site")}
+                        {t("পণ্য স্ক্রেপ / Scrape products")}
                       </Button>
                     </div>
                     {cProducts.length > 0 && (
