@@ -42,6 +42,21 @@ type Product = {
   scraped_at: string;
 };
 
+type DebugInfo = {
+  seedUrl: string;
+  domain: string;
+  firecrawlStatus: "success" | "failed" | "empty";
+  errorMessage?: string;
+  markdownLength: number;
+  priceMatches: number;
+  productStrings: number;
+  rawLinkCount: number;
+  sampleTitles: string[];
+  markdownPreview: string;
+  productsExtracted: number;
+  note?: string;
+};
+
 async function authedFetch(input: string, init: RequestInit = {}) {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
@@ -62,6 +77,8 @@ function CompetitorsPage() {
   const [scrapingId, setScrapingId] = useState<string | null>(null);
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [debugInfo, setDebugInfo] = useState<DebugInfo[]>([]);
+  const [lastTotals, setLastTotals] = useState<{ domains: number; products: number } | null>(null);
 
   const load = useCallback(async () => {
     const res = await authedFetch("/api/competitors/list");
@@ -78,6 +95,7 @@ function CompetitorsPage() {
   const handleDiscover = async () => {
     if (!query.trim()) return;
     setDiscovering(true);
+    setDebugInfo([]);
     try {
       const res = await authedFetch("/api/competitors/discover", {
         method: "POST",
@@ -85,6 +103,8 @@ function CompetitorsPage() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "discovery failed");
+      setDebugInfo(json.debug ?? []);
+      setLastTotals(json.totals ?? null);
       toast.success(
         `Discovered ${json.count} competitors (${json.productsInserted ?? 0} products)`,
       );
@@ -155,6 +175,87 @@ function CompetitorsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {debugInfo.length > 0 && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">
+                {t("স্ক্রেপ ডায়াগনস্টিক্স / Scrape diagnostics")}
+              </CardTitle>
+              <CardDescription>
+                {lastTotals
+                  ? `${lastTotals.domains} domains · ${lastTotals.products} products extracted across ${debugInfo.length} seeds`
+                  : `${debugInfo.length} seeds`}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {debugInfo.map((d, i) => {
+                const isOk = d.firecrawlStatus === "success";
+                const isEmpty = d.firecrawlStatus === "empty" || d.markdownLength === 0;
+                return (
+                  <details
+                    key={`${d.seedUrl}-${i}`}
+                    className="rounded-md border bg-muted/30 p-2 text-xs"
+                  >
+                    <summary className="cursor-pointer select-none">
+                      <span className="font-mono break-all">{d.seedUrl}</span>
+                      <span className="ml-2">
+                        <Badge
+                          variant={isOk ? "secondary" : "destructive"}
+                          className="text-[10px]"
+                        >
+                          {d.firecrawlStatus}
+                        </Badge>
+                      </span>
+                      <span className="ml-2 text-muted-foreground">
+                        md:{d.markdownLength} · links:{d.rawLinkCount} · prices:
+                        {d.priceMatches} · titles:{d.productStrings} · products:
+                        {d.productsExtracted}
+                      </span>
+                    </summary>
+                    <div className="mt-2 space-y-2">
+                      {d.errorMessage && (
+                        <div className="text-destructive">
+                          ⚠ {d.errorMessage}
+                        </div>
+                      )}
+                      {d.note && (
+                        <div className="text-muted-foreground italic">{d.note}</div>
+                      )}
+                      {isEmpty && !d.errorMessage && (
+                        <div className="text-destructive">
+                          {t("Scrape returned empty response")}
+                        </div>
+                      )}
+                      {d.sampleTitles.length > 0 && (
+                        <div>
+                          <div className="font-medium mb-1">Sample titles:</div>
+                          <ul className="list-disc pl-4 space-y-0.5">
+                            {d.sampleTitles.map((s, j) => (
+                              <li key={j} className="truncate">{s}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {d.markdownPreview && (
+                        <div>
+                          <div className="font-medium mb-1">
+                            Raw page data viewer (first {d.markdownPreview.length} chars):
+                          </div>
+                          <pre className="whitespace-pre-wrap break-words rounded bg-background p-2 text-[11px] max-h-48 overflow-auto">
+                            {d.markdownPreview}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
+                  </details>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
+
+
 
         {competitors.length === 0 ? (
           <Card className="border-warning/40 bg-warning/[0.04]">
