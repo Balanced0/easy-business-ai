@@ -1,16 +1,13 @@
 // Server-only Firecrawl client — SCRAPE ONLY.
-// /search and /crawl are not available in this environment (connector_not_found),
-// so the entire pipeline is built on /scrape with formats: ["links","markdown"]
-// and optional JSON extraction for product data.
+// This project uses a DIRECT Firecrawl connector (no Lovable connector gateway).
+// We call https://api.firecrawl.dev/v2 directly with the FIRECRAWL_API_KEY.
 
-const GATEWAY_BASE = "https://connector-gateway.lovable.dev/firecrawl/v2";
+const FIRECRAWL_BASE = "https://api.firecrawl.dev/v2";
 
-function keys() {
-  const lovableKey = process.env.LOVABLE_API_KEY;
-  const fcKey = process.env.FIRECRAWL_API_KEY;
-  if (!lovableKey) throw new Error("LOVABLE_API_KEY missing");
-  if (!fcKey) throw new Error("Firecrawl connector not configured (FIRECRAWL_API_KEY missing)");
-  return { lovableKey, fcKey };
+function getKey(): string {
+  const key = process.env.FIRECRAWL_API_KEY;
+  if (!key) throw new Error("FIRECRAWL_API_KEY missing — connect Firecrawl in Connectors");
+  return key;
 }
 
 export type ScrapedPage = {
@@ -46,7 +43,7 @@ export async function firecrawlScrape(
     actions?: Array<Record<string, unknown>>;
   } = {},
 ): Promise<ScrapedPage> {
-  const { lovableKey, fcKey } = keys();
+  const key = getKey();
   const baseFormats = opts.formats ?? ["markdown", "links"];
   const formats: unknown[] = [...baseFormats];
   if (opts.extractSchema) {
@@ -57,12 +54,11 @@ export async function firecrawlScrape(
   if (opts.waitFor) body.waitFor = opts.waitFor;
   if (opts.actions) body.actions = opts.actions;
 
-  const res = await fetch(`${GATEWAY_BASE}/scrape`, {
+  const res = await fetch(`${FIRECRAWL_BASE}/scrape`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${lovableKey}`,
-      "X-Connection-Api-Key": fcKey,
+      Authorization: `Bearer ${key}`,
     },
     body: JSON.stringify(body),
   });
