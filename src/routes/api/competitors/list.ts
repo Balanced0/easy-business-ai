@@ -28,10 +28,9 @@ export const Route = createFileRoute("/api/competitors/list")({
         return Response.json({
           competitors: (competitors ?? []).map((competitor) => ({
             ...competitor,
-            status:
-              typeof competitor.description === "string" && competitor.description.length > 0
-                ? "unstructured_data"
-                : "structured_data",
+            status: competitor.source?.includes(":unstructured_data")
+              ? "unstructured_data"
+              : "structured_data",
             raw_snippet: competitor.description,
           })),
           products: products ?? [],
