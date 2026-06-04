@@ -1,6 +1,13 @@
-// Scrape-only competitor discovery + product extraction pipeline.
-// Handles JS-rendered ecommerce sites by using Firecrawl waitFor + actions
-// and falling back to markdown URL parsing when the links array is empty.
+// Query-driven competitor discovery using Firecrawl /scrape ONLY.
+// Flow:
+//   1. User submits a product query (e.g. "wireless earbuds")
+//   2. Generate seed search-style URLs against known ecommerce templates
+//   3. Scrape each seed, extract product links + titles + prices
+//   4. Group products by domain → infer competitors
+//   5. Expand: for each new competitor, scrape one more page (depth 2)
+//   6. Persist competitors + products, return confidence flags
+//
+// Hard limits: max 20 domains and max 50 products per run.
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
@@ -8,6 +15,39 @@ import {
   PRODUCT_EXTRACT_SCHEMA,
   type ScrapedPage,
 } from "./firecrawl.server";
+
+// ───────────────────────── Seed templates ─────────────────────────
+
+// Generic ecommerce search-style URL templates. {q} is the URL-encoded query.
+// These are reusable across queries and require no external search API.
+const SEED_TEMPLATES = [
+  "https://www.amazon.com/s?k={q}",
+  "https://www.ebay.com/sch/i.html?_nkw={q}",
+  "https://www.walmart.com/search?q={q}",
+  "https://www.etsy.com/search?q={q}",
+  "https://www.aliexpress.com/wholesale?SearchText={q}",
+  "https://www.target.com/s?searchTerm={q}",
+  "https://www.bestbuy.com/site/searchpage.jsp?st={q}",
+  "https://www.daraz.com.bd/catalog/?q={q}",
+  "https://www.flipkart.com/search?q={q}",
+  "https://shopee.com/search?keyword={q}",
+];
+
+// Fallback list of known ecommerce homepages, used when seed scrapes return
+// nothing useful (e.g. all blocked / JS-walled).
+const FALLBACK_DOMAINS = [
+  "https://www.amazon.com",
+  "https://www.ebay.com",
+  "https://www.walmart.com",
+  "https://www.etsy.com",
+];
+
+function buildSeedsForQuery(query: string): string[] {
+  const q = encodeURIComponent(query.trim());
+  return SEED_TEMPLATES.map((t) => t.replace("{q}", q));
+}
+
+// ───────────────────────── Helpers ─────────────────────────
 
 function hostFrom(url: string): string {
   try {
@@ -25,7 +65,8 @@ function nameFromHost(host: string): string {
 const SOCIAL_BLOCK = [
   "google.", "youtube.", "facebook.", "instagram.", "twitter.", "x.com",
   "pinterest.", "tiktok.", "linkedin.", "whatsapp.", "t.me", "reddit.",
-  "wikipedia.", "cloudflare.", "gstatic.", "googleapis.",
+  "wikipedia.", "cloudflare.", "gstatic.", "googleapis.", "doubleclick.",
+  "bing.", "yahoo.", "duckduckgo.",
 ];
 
 function isJunkHost(host: string): boolean {
@@ -36,27 +77,19 @@ function isJunkHost(host: string): boolean {
 
 const PRODUCT_PATH_HINTS = [
   "/products/", "/product/", "/-i", "/p-", "/item", "/items",
-  "/catalog", "/shop", "/store", "/collections/", "/dp/", "/sku", "/listing",
-];
-
-const KNOWN_MARKETPLACES = [
-  "amazon.", "ebay.", "etsy.", "aliexpress.", "alibaba.", "daraz.",
-  "shopee.", "lazada.", "walmart.", "target.com", "bestbuy.", "flipkart.",
-  "rakuten.", "mercadolibre.", "shopify.",
+  "/catalog", "/shop", "/store", "/collections/", "/dp/", "/sku",
+  "/listing", "/itm/", "/ip/",
 ];
 
 function looksProductUrl(url: string): boolean {
   try {
     const u = new URL(url);
     const path = u.pathname.toLowerCase();
+    if (path === "/" || path.length < 3) return false;
     return PRODUCT_PATH_HINTS.some((h) => path.includes(h));
   } catch {
     return false;
   }
-}
-
-function looksEcommerceHost(host: string): boolean {
-  return KNOWN_MARKETPLACES.some((m) => host.includes(m));
 }
 
 function extractUrlsFromMarkdown(md: string): string[] {
@@ -68,43 +101,6 @@ function extractUrlsFromMarkdown(md: string): string[] {
   while ((m = bare.exec(md)) !== null) out.add(m[1]);
   return Array.from(out);
 }
-
-function findPaginationUrls(baseUrl: string, links: string[], max: number): string[] {
-  const baseHost = hostFrom(baseUrl);
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const link of links) {
-    if (out.length >= max) break;
-    if (hostFrom(link) !== baseHost) continue;
-    if (/([?&](page|p|start|offset)=\d+)|(\/page\/\d+)|(\/p\/\d+\/?$)/i.test(link)) {
-      if (seen.has(link)) continue;
-      seen.add(link);
-      out.push(link);
-    }
-  }
-  return out;
-}
-
-type DiscoveryOptions = {
-  limit?: number;
-  paginationLimit?: number;
-  internalProductLimit?: number;
-};
-
-export type ScrapeStatus = {
-  url: string;
-  status: "success" | "failed" | "skipped";
-  message?: string;
-};
-
-export type DebugInfo = {
-  seedUrl: string;
-  rawLinkCount: number;
-  markdownFallbackUsed: boolean;
-  internalProductLinks: number;
-  externalCompetitorDomains: number;
-  firstLinks: string[];
-};
 
 async function safeScrape(
   url: string,
@@ -118,179 +114,33 @@ async function safeScrape(
   }
 }
 
-export async function discoverFromSeeds(
-  userId: string,
-  seedUrls: string[],
-  opts: DiscoveryOptions = {},
-) {
-  const limit = Math.min(Math.max(opts.limit ?? 25, 1), 100);
-  const paginationLimit = Math.min(Math.max(opts.paginationLimit ?? 5, 0), 20);
-  const internalProductLimit = Math.min(Math.max(opts.internalProductLimit ?? 10, 0), 50);
-  const allCompetitors: Array<Record<string, unknown> & { id: string; domain: string; url: string }> = [];
-  const statuses: ScrapeStatus[] = [];
-  const debug: DebugInfo[] = [];
-  let productsInserted = 0;
+// ───────────────────────── Types ─────────────────────────
 
-  for (const seedUrl of seedUrls) {
-    const seedHost = hostFrom(seedUrl);
-    if (!seedHost) {
-      statuses.push({ url: seedUrl, status: "skipped", message: "invalid url" });
-      continue;
-    }
+export type ScrapeStatus = {
+  url: string;
+  status: "success" | "failed" | "skipped";
+  message?: string;
+};
 
-    // 1) Scrape the seed with JS render wait.
-    const { page: seedPage, error: seedErr } = await safeScrape(seedUrl, {
-      formats: ["markdown", "links", "html"],
-      extractSchema: PRODUCT_EXTRACT_SCHEMA,
-      waitFor: 3000,
-      actions: [{ type: "wait", milliseconds: 3000 }],
-    });
-    if (!seedPage) {
-      statuses.push({ url: seedUrl, status: "failed", message: seedErr });
-      debug.push({
-        seedUrl, rawLinkCount: 0, markdownFallbackUsed: false,
-        internalProductLinks: 0, externalCompetitorDomains: 0, firstLinks: [],
-      });
-      continue;
-    }
-    statuses.push({ url: seedUrl, status: "success" });
+export type DebugInfo = {
+  seedUrl: string;
+  rawLinkCount: number;
+  markdownFallbackUsed: boolean;
+  productLinksFound: number;
+  uniqueDomains: number;
+  firstLinks: string[];
+};
 
-    // 2) Build link pool: use Firecrawl links; if empty, fall back to markdown parsing.
-    let linkPool = seedPage.links.slice();
-    let markdownFallbackUsed = false;
-    if (linkPool.length === 0 && seedPage.markdown) {
-      linkPool = extractUrlsFromMarkdown(seedPage.markdown);
-      markdownFallbackUsed = true;
-    }
-    const rawLinkCount = linkPool.length;
-
-    // 3) Partition: internal product URLs vs external competitor domains.
-    const internalProductUrls: string[] = [];
-    const seenInternal = new Set<string>();
-    const externalByDomain = new Map<string, { url: string }>();
-
-    for (const link of linkPool) {
-      const host = hostFrom(link);
-      if (!host || isJunkHost(host)) continue;
-      if (host === seedHost) {
-        if (looksProductUrl(link) && !seenInternal.has(link) && link !== seedUrl) {
-          seenInternal.add(link);
-          internalProductUrls.push(link);
-        }
-      } else {
-        if (!looksProductUrl(link) && !looksEcommerceHost(host)) continue;
-        if (!externalByDomain.has(host)) externalByDomain.set(host, { url: link });
-        if (externalByDomain.size >= limit) {
-          /* keep collecting? cap below when building rows */
-        }
-      }
-    }
-
-    debug.push({
-      seedUrl,
-      rawLinkCount,
-      markdownFallbackUsed,
-      internalProductLinks: internalProductUrls.length,
-      externalCompetitorDomains: externalByDomain.size,
-      firstLinks: linkPool.slice(0, 5),
-    });
-
-    // 4) Upsert seed competitor + external competitor rows.
-    const competitorRows = [
-      {
-        user_id: userId,
-        query: seedUrl,
-        name: nameFromHost(seedHost),
-        domain: seedHost,
-        url: seedUrl,
-        description: null,
-        source: "firecrawl_scrape",
-      },
-      ...Array.from(externalByDomain.entries())
-        .slice(0, limit)
-        .map(([domain, r]) => ({
-          user_id: userId,
-          query: seedUrl,
-          name: nameFromHost(domain),
-          domain,
-          url: r.url,
-          description: null,
-          source: "firecrawl_scrape",
-        })),
-    ];
-
-    const { data, error } = await supabaseAdmin
-      .from("competitors")
-      .upsert(competitorRows, { onConflict: "user_id,domain,query" })
-      .select("*");
-    if (error) throw new Error(`competitors upsert failed: ${error.message}`);
-    if (data) allCompetitors.push(...(data as typeof allCompetitors));
-
-    // 5) Scrape top N internal product URLs (first-party products for seed).
-    const seedComp = allCompetitors.find((c) => c.domain === seedHost);
-    if (seedComp) {
-      const productPages: ScrapedPage[] = [seedPage];
-      for (const link of internalProductUrls.slice(0, internalProductLimit)) {
-        const { page, error: e } = await safeScrape(link, {
-          formats: ["markdown", "links", "html"],
-          extractSchema: PRODUCT_EXTRACT_SCHEMA,
-          waitFor: 2000,
-        });
-        if (page) {
-          productPages.push(page);
-          statuses.push({ url: link, status: "success" });
-        } else {
-          statuses.push({ url: link, status: "failed", message: e });
-        }
-      }
-      const { inserted } = await persistProducts(userId, seedComp.id, productPages);
-      productsInserted += inserted;
-    }
-
-    // 6) For each external competitor, scrape its landing URL + a bit of pagination.
-    for (const comp of allCompetitors) {
-      if (comp.domain === seedHost) continue;
-      const startUrl = comp.url;
-      const { page, error: e } = await safeScrape(startUrl, {
-        formats: ["markdown", "links", "html"],
-        extractSchema: PRODUCT_EXTRACT_SCHEMA,
-        waitFor: 2000,
-      });
-      if (!page) {
-        statuses.push({ url: startUrl, status: "failed", message: e });
-        continue;
-      }
-      statuses.push({ url: startUrl, status: "success" });
-      const pages: ScrapedPage[] = [page];
-      const paginated = findPaginationUrls(startUrl, page.links, paginationLimit);
-      for (const pUrl of paginated) {
-        const r = await safeScrape(pUrl, {
-          formats: ["markdown", "links"],
-          extractSchema: PRODUCT_EXTRACT_SCHEMA,
-          waitFor: 2000,
-        });
-        if (r.page) {
-          pages.push(r.page);
-          statuses.push({ url: pUrl, status: "success" });
-        } else {
-          statuses.push({ url: pUrl, status: "failed", message: r.error });
-        }
-      }
-      const { inserted } = await persistProducts(userId, comp.id, pages);
-      productsInserted += inserted;
-    }
-  }
-
-  return { competitors: allCompetitors, productsInserted, statuses, debug };
-}
-
-type ProductExtract = {
+type DiscoveredProduct = {
+  domain: string;
+  source_url: string;
   title?: string;
   price?: number;
   currency?: string;
-  availability?: string;
   image_url?: string;
 };
+
+// ───────────────────────── Product extraction ─────────────────────────
 
 function parsePrice(raw: unknown): { price?: number; currency?: string } {
   if (typeof raw === "number") return { price: raw };
@@ -301,13 +151,58 @@ function parsePrice(raw: unknown): { price?: number; currency?: string } {
   return { price: Number.isFinite(num) ? num : undefined, currency: m[1] };
 }
 
-function extractFromPage(p: ScrapedPage): ProductExtract {
+function titleForLink(link: string, md: string): string | undefined {
+  try {
+    // Markdown link: [text](url)
+    const safe = link.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp(`\\[([^\\]]{3,200})\\]\\(${safe}\\)`);
+    const m = md.match(re);
+    if (m) return m[1].replace(/\s+/g, " ").trim();
+  } catch {
+    /* noop */
+  }
+  return undefined;
+}
+
+function extractProductsFromListPage(
+  page: ScrapedPage,
+  seedHost: string,
+): DiscoveredProduct[] {
+  let pool = page.links.slice();
+  if (pool.length === 0 && page.markdown) {
+    pool = extractUrlsFromMarkdown(page.markdown);
+  }
+  const out: DiscoveredProduct[] = [];
+  const seen = new Set<string>();
+  const md = page.markdown ?? "";
+  for (const link of pool) {
+    const host = hostFrom(link);
+    if (!host || isJunkHost(host)) continue;
+    if (!looksProductUrl(link)) continue;
+    if (seen.has(link)) continue;
+    seen.add(link);
+    // Try to grab a nearby price from the markdown using the anchor text region.
+    const title = titleForLink(link, md);
+    out.push({
+      domain: host || seedHost,
+      source_url: link,
+      title,
+    });
+  }
+  return out;
+}
+
+function extractFromProductPage(p: ScrapedPage): {
+  title?: string;
+  price?: number;
+  currency?: string;
+  image_url?: string;
+} {
   const j = (p.json ?? {}) as {
     product_name?: string;
     title?: string;
     price?: unknown;
     currency?: string;
-    availability?: string;
     image_url?: string;
   };
   if (j.product_name || j.title || j.price != null) {
@@ -316,7 +211,6 @@ function extractFromPage(p: ScrapedPage): ProductExtract {
       title: j.product_name ?? j.title,
       price: parsed.price,
       currency: j.currency ?? parsed.currency,
-      availability: j.availability,
       image_url: j.image_url,
     };
   }
@@ -330,17 +224,196 @@ function extractFromPage(p: ScrapedPage): ProductExtract {
   };
 }
 
+// ───────────────────────── Main pipeline ─────────────────────────
+
+type DiscoveryOptions = {
+  maxDomains?: number;
+  maxProducts?: number;
+};
+
+export async function discoverFromQuery(
+  userId: string,
+  query: string,
+  opts: DiscoveryOptions = {},
+) {
+  const maxDomains = Math.min(Math.max(opts.maxDomains ?? 20, 1), 50);
+  const maxProducts = Math.min(Math.max(opts.maxProducts ?? 50, 1), 200);
+
+  const seeds = buildSeedsForQuery(query);
+  const statuses: ScrapeStatus[] = [];
+  const debug: DebugInfo[] = [];
+  const productsByDomain = new Map<string, DiscoveredProduct[]>();
+
+  const addProduct = (p: DiscoveredProduct) => {
+    if (totalProducts() >= maxProducts) return;
+    if (productsByDomain.size >= maxDomains && !productsByDomain.has(p.domain)) return;
+    const list = productsByDomain.get(p.domain) ?? [];
+    if (list.some((x) => x.source_url === p.source_url)) return;
+    list.push(p);
+    productsByDomain.set(p.domain, list);
+  };
+  const totalProducts = () =>
+    Array.from(productsByDomain.values()).reduce((s, l) => s + l.length, 0);
+
+  // ── Step 1+2: Scrape seed search pages ──────────────────────────
+  for (const seedUrl of seeds) {
+    if (totalProducts() >= maxProducts) break;
+    const seedHost = hostFrom(seedUrl);
+    const { page, error } = await safeScrape(seedUrl, {
+      formats: ["markdown", "links"],
+      waitFor: 3000,
+      actions: [{ type: "wait", milliseconds: 3000 }],
+    });
+    if (!page) {
+      statuses.push({ url: seedUrl, status: "failed", message: error });
+      debug.push({
+        seedUrl, rawLinkCount: 0, markdownFallbackUsed: false,
+        productLinksFound: 0, uniqueDomains: 0, firstLinks: [],
+      });
+      continue;
+    }
+    statuses.push({ url: seedUrl, status: "success" });
+
+    const products = extractProductsFromListPage(page, seedHost);
+    const rawLinkCount = page.links.length || extractUrlsFromMarkdown(page.markdown ?? "").length;
+    const uniqueDomains = new Set(products.map((p) => p.domain)).size;
+    debug.push({
+      seedUrl,
+      rawLinkCount,
+      markdownFallbackUsed: page.links.length === 0,
+      productLinksFound: products.length,
+      uniqueDomains,
+      firstLinks: (page.links.length ? page.links : extractUrlsFromMarkdown(page.markdown ?? ""))
+        .slice(0, 5),
+    });
+    for (const p of products) addProduct(p);
+  }
+
+  // ── Fallback: if nothing yet, hit a few known marketplace homepages
+  if (totalProducts() === 0) {
+    for (const url of FALLBACK_DOMAINS) {
+      const { page } = await safeScrape(url, {
+        formats: ["markdown", "links"],
+        waitFor: 2000,
+      });
+      if (!page) continue;
+      const seedHost = hostFrom(url);
+      for (const p of extractProductsFromListPage(page, seedHost)) addProduct(p);
+      if (totalProducts() > 0) break;
+    }
+  }
+
+  // ── Step 4: Expansion — scrape one extra page per new competitor
+  // (depth 2). Pick the first product URL we found per domain as the
+  // anchor and scrape it to enrich with title/price/image.
+  for (const [domain, list] of productsByDomain) {
+    if (totalProducts() >= maxProducts) break;
+    const anchor = list[0];
+    if (!anchor) continue;
+    const { page } = await safeScrape(anchor.source_url, {
+      formats: ["markdown", "links"],
+      extractSchema: PRODUCT_EXTRACT_SCHEMA,
+      waitFor: 2000,
+    });
+    if (!page) {
+      statuses.push({ url: anchor.source_url, status: "failed" });
+      continue;
+    }
+    statuses.push({ url: anchor.source_url, status: "success" });
+    const extracted = extractFromProductPage(page);
+    anchor.title = anchor.title ?? extracted.title;
+    anchor.price = extracted.price;
+    anchor.currency = extracted.currency;
+    anchor.image_url = extracted.image_url;
+
+    // Pick up a couple more product URLs from the same domain on this page.
+    const more = extractProductsFromListPage(page, domain).filter(
+      (p) => p.domain === domain,
+    );
+    for (const m of more.slice(0, 3)) addProduct(m);
+  }
+
+  // ── Step 6: Persist competitors + products
+  const competitorRows = Array.from(productsByDomain.keys()).map((domain) => ({
+    user_id: userId,
+    query,
+    name: nameFromHost(domain),
+    domain,
+    url: `https://${domain}`,
+    description: null,
+    source: "firecrawl_scrape_query",
+  }));
+
+  let competitors: Array<Record<string, unknown> & { id: string; domain: string }> = [];
+  if (competitorRows.length > 0) {
+    const { data, error } = await supabaseAdmin
+      .from("competitors")
+      .upsert(competitorRows, { onConflict: "user_id,domain,query" })
+      .select("*");
+    if (error) throw new Error(`competitors upsert failed: ${error.message}`);
+    competitors = (data ?? []) as typeof competitors;
+  }
+
+  let productsInserted = 0;
+  for (const [domain, list] of productsByDomain) {
+    const comp = competitors.find((c) => c.domain === domain);
+    if (!comp) continue;
+    const rows = list
+      .filter((p) => p.title || typeof p.price === "number")
+      .map((p) => ({
+        user_id: userId,
+        competitor_id: comp.id,
+        source_url: p.source_url,
+        title: p.title ?? null,
+        price: typeof p.price === "number" ? p.price : null,
+        currency: p.currency ?? null,
+        availability: null,
+        image_url: p.image_url ?? null,
+        raw: { query, domain } as unknown as never,
+        scraped_at: new Date().toISOString(),
+      }));
+    if (rows.length === 0) continue;
+    const { error, count } = await supabaseAdmin
+      .from("competitor_products")
+      .upsert(rows, { onConflict: "user_id,source_url", count: "exact" });
+    if (error) throw new Error(`competitor_products upsert failed: ${error.message}`);
+    productsInserted += count ?? rows.length;
+    await supabaseAdmin
+      .from("competitors")
+      .update({ last_scraped_at: new Date().toISOString() })
+      .eq("id", comp.id)
+      .eq("user_id", userId);
+  }
+
+  // Confidence flag per competitor based on product volume.
+  const competitorsWithConfidence = competitors.map((c) => {
+    const n = (productsByDomain.get(c.domain) ?? []).length;
+    const confidence = n >= 5 ? "high" : n >= 2 ? "medium" : "low";
+    return { ...c, product_count: n, confidence };
+  });
+
+  return {
+    competitors: competitorsWithConfidence,
+    productsInserted,
+    statuses,
+    debug,
+    totals: { domains: productsByDomain.size, products: totalProducts() },
+  };
+}
+
+// ───────────────────────── Single-competitor rescrape ─────────────────────────
+// Used by POST /api/competitors/scrape to refresh products for one competitor.
+
 export async function scrapeCompetitorPage(
   userId: string,
   competitorId: string,
   url: string,
-  opts: { paginationLimit?: number } = {},
 ) {
-  const paginationLimit = Math.min(Math.max(opts.paginationLimit ?? 5, 0), 20);
   const statuses: ScrapeStatus[] = [];
+  const seedHost = hostFrom(url);
 
   const { page, error } = await safeScrape(url, {
-    formats: ["markdown", "links", "html"],
+    formats: ["markdown", "links"],
     extractSchema: PRODUCT_EXTRACT_SCHEMA,
     waitFor: 3000,
     actions: [{ type: "wait", milliseconds: 3000 }],
@@ -351,56 +424,43 @@ export async function scrapeCompetitorPage(
   }
   statuses.push({ url, status: "success" });
 
-  const pages: ScrapedPage[] = [page];
-  const paginated = findPaginationUrls(url, page.links, paginationLimit);
-  for (const pUrl of paginated) {
-    const r = await safeScrape(pUrl, {
-      formats: ["markdown", "links"],
-      extractSchema: PRODUCT_EXTRACT_SCHEMA,
-      waitFor: 2000,
+  const listed = extractProductsFromListPage(page, seedHost);
+  const rows = listed.slice(0, 25).map((p) => ({
+    user_id: userId,
+    competitor_id: competitorId,
+    source_url: p.source_url,
+    title: p.title ?? null,
+    price: null,
+    currency: null,
+    availability: null,
+    image_url: null,
+    raw: { rescrape: true } as unknown as never,
+    scraped_at: new Date().toISOString(),
+  }));
+
+  // Also try the page itself as a product page.
+  const single = extractFromProductPage(page);
+  if (single.title || typeof single.price === "number") {
+    rows.push({
+      user_id: userId,
+      competitor_id: competitorId,
+      source_url: url,
+      title: single.title ?? null,
+      price: typeof single.price === "number" ? single.price : null,
+      currency: single.currency ?? null,
+      availability: null,
+      image_url: single.image_url ?? null,
+      raw: { rescrape: true } as unknown as never,
+      scraped_at: new Date().toISOString(),
     });
-    if (r.page) {
-      pages.push(r.page);
-      statuses.push({ url: pUrl, status: "success" });
-    } else {
-      statuses.push({ url: pUrl, status: "failed", message: r.error });
-    }
   }
 
-  const { inserted } = await persistProducts(userId, competitorId, pages);
-  return { inserted, statuses };
-}
+  if (rows.length === 0) return { inserted: 0, statuses };
 
-async function persistProducts(
-  userId: string,
-  competitorId: string,
-  pages: ScrapedPage[],
-) {
-  const rows = pages
-    .map((p) => {
-      const e = extractFromPage(p);
-      if (!e.title && typeof e.price !== "number") return null;
-      return {
-        user_id: userId,
-        competitor_id: competitorId,
-        source_url: p.url,
-        title: e.title ?? null,
-        price: typeof e.price === "number" ? e.price : null,
-        currency: e.currency ?? null,
-        availability: e.availability ?? null,
-        image_url: e.image_url ?? null,
-        raw: { metadata: p.metadata, json: p.json } as unknown as never,
-        scraped_at: new Date().toISOString(),
-      };
-    })
-    .filter((r): r is NonNullable<typeof r> => r !== null);
-
-  if (rows.length === 0) return { inserted: 0 };
-
-  const { error, count } = await supabaseAdmin
+  const { error: upErr, count } = await supabaseAdmin
     .from("competitor_products")
     .upsert(rows, { onConflict: "user_id,source_url", count: "exact" });
-  if (error) throw new Error(`competitor_products upsert failed: ${error.message}`);
+  if (upErr) throw new Error(`competitor_products upsert failed: ${upErr.message}`);
 
   await supabaseAdmin
     .from("competitors")
@@ -408,5 +468,5 @@ async function persistProducts(
     .eq("id", competitorId)
     .eq("user_id", userId);
 
-  return { inserted: count ?? rows.length };
+  return { inserted: count ?? rows.length, statuses };
 }
