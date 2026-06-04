@@ -162,6 +162,29 @@ function CompetitorsPage() {
     }
   };
 
+  const handleValidate = async () => {
+    if (!query.trim()) return;
+    setValidating(true);
+    setSeedReports([]);
+    try {
+      const res = await authedFetch("/api/competitors/validate-seeds", {
+        method: "POST",
+        body: JSON.stringify({ query: query.trim() }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "validation failed");
+      setSeedReports(json.reports ?? []);
+      const s = json.summary;
+      toast.success(
+        `Seeds: ${s.real_products} real · ${s.navigation_shell} shell · ${s.empty} empty · ${s.error} error`,
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Validation failed");
+    } finally {
+      setValidating(false);
+    }
+  };
+
   return (
     <>
       <DashboardTopbar title="প্রতিযোগী ইন্টেলিজেন্স / Competitor Intelligence" />
