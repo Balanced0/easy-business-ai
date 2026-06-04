@@ -14,6 +14,7 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiUploadRouteImport } from './routes/api/upload'
 import { Route as ApiSearchRouteImport } from './routes/api/search'
 import { Route as ApiScrapeRouteImport } from './routes/api/scrape'
 import { Route as ApiEmbeddingsRouteImport } from './routes/api/embeddings'
@@ -49,6 +50,11 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUploadRoute = ApiUploadRouteImport.update({
+  id: '/api/upload',
+  path: '/api/upload',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSearchRoute = ApiSearchRouteImport.update({
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/api/embeddings': typeof ApiEmbeddingsRoute
   '/api/scrape': typeof ApiScrapeRoute
   '/api/search': typeof ApiSearchRoute
+  '/api/upload': typeof ApiUploadRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -147,6 +154,7 @@ export interface FileRoutesByTo {
   '/api/embeddings': typeof ApiEmbeddingsRoute
   '/api/scrape': typeof ApiScrapeRoute
   '/api/search': typeof ApiSearchRoute
+  '/api/upload': typeof ApiUploadRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -167,6 +175,7 @@ export interface FileRoutesById {
   '/api/embeddings': typeof ApiEmbeddingsRoute
   '/api/scrape': typeof ApiScrapeRoute
   '/api/search': typeof ApiSearchRoute
+  '/api/upload': typeof ApiUploadRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -187,6 +196,7 @@ export interface FileRouteTypes {
     | '/api/embeddings'
     | '/api/scrape'
     | '/api/search'
+    | '/api/upload'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -205,6 +215,7 @@ export interface FileRouteTypes {
     | '/api/embeddings'
     | '/api/scrape'
     | '/api/search'
+    | '/api/upload'
   id:
     | '__root__'
     | '/'
@@ -224,6 +235,7 @@ export interface FileRouteTypes {
     | '/api/embeddings'
     | '/api/scrape'
     | '/api/search'
+    | '/api/upload'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -237,6 +249,7 @@ export interface RootRouteChildren {
   ApiEmbeddingsRoute: typeof ApiEmbeddingsRoute
   ApiScrapeRoute: typeof ApiScrapeRoute
   ApiSearchRoute: typeof ApiSearchRoute
+  ApiUploadRoute: typeof ApiUploadRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -274,6 +287,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/upload': {
+      id: '/api/upload'
+      path: '/api/upload'
+      fullPath: '/api/upload'
+      preLoaderRoute: typeof ApiUploadRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/search': {
@@ -396,7 +416,18 @@ const rootRouteChildren: RootRouteChildren = {
   ApiEmbeddingsRoute: ApiEmbeddingsRoute,
   ApiScrapeRoute: ApiScrapeRoute,
   ApiSearchRoute: ApiSearchRoute,
+  ApiUploadRoute: ApiUploadRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
