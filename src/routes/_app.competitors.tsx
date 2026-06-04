@@ -100,6 +100,10 @@ function CompetitorsPage() {
   const [debugInfo, setDebugInfo] = useState<DebugInfo[]>([]);
   const [seedReports, setSeedReports] = useState<SeedReport[]>([]);
   const [lastTotals, setLastTotals] = useState<{ domains: number; products: number } | null>(null);
+  const [currentRunIds, setCurrentRunIds] = useState<Set<string>>(new Set());
+  const [currentRunCount, setCurrentRunCount] = useState<number | null>(null);
+  const [lastRunAt, setLastRunAt] = useState<string | null>(null);
+  const [dbLoadedAt, setDbLoadedAt] = useState<string | null>(null);
 
 
   const load = useCallback(async () => {
@@ -108,6 +112,7 @@ function CompetitorsPage() {
     const json = await res.json();
     setCompetitors(json.competitors ?? []);
     setProducts(json.products ?? []);
+    setDbLoadedAt(new Date().toISOString());
   }, []);
 
   useEffect(() => {
@@ -118,6 +123,9 @@ function CompetitorsPage() {
     if (!query.trim()) return;
     setDiscovering(true);
     setDebugInfo([]);
+    setCurrentRunIds(new Set());
+    setCurrentRunCount(null);
+    setLastRunAt(null);
     try {
       const res = await authedFetch("/api/competitors/discover", {
         method: "POST",
@@ -127,6 +135,15 @@ function CompetitorsPage() {
       if (!res.ok) throw new Error(json.error || "discovery failed");
       setDebugInfo(json.debug ?? []);
       setLastTotals(json.totals ?? null);
+      const returned: Array<{ id?: string }> = json.competitors ?? [];
+      const ids = new Set<string>(
+        returned
+          .map((c) => c.id)
+          .filter((id): id is string => typeof id === "string"),
+      );
+      setCurrentRunIds(ids);
+      setCurrentRunCount(typeof json.count === "number" ? json.count : returned.length);
+      setLastRunAt(new Date().toISOString());
       toast.success(
         `Discovered ${json.count} competitors (${json.productsInserted ?? 0} products)`,
       );
@@ -137,6 +154,14 @@ function CompetitorsPage() {
     } finally {
       setDiscovering(false);
     }
+  };
+
+  const handleClearCurrentRun = () => {
+    setCurrentRunIds(new Set());
+    setCurrentRunCount(null);
+    setLastRunAt(null);
+    setDebugInfo([]);
+    setLastTotals(null);
   };
 
   const handleScrape = async (c: Competitor) => {
