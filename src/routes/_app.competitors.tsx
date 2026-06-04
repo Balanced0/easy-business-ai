@@ -42,6 +42,21 @@ type Product = {
   scraped_at: string;
 };
 
+type DebugInfo = {
+  seedUrl: string;
+  domain: string;
+  firecrawlStatus: "success" | "failed" | "empty";
+  errorMessage?: string;
+  markdownLength: number;
+  priceMatches: number;
+  productStrings: number;
+  rawLinkCount: number;
+  sampleTitles: string[];
+  markdownPreview: string;
+  productsExtracted: number;
+  note?: string;
+};
+
 async function authedFetch(input: string, init: RequestInit = {}) {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
