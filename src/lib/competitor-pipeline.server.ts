@@ -424,8 +424,20 @@ export async function scrapeCompetitorPage(
   }
   statuses.push({ url, status: "success" });
 
+  type Row = {
+    user_id: string;
+    competitor_id: string;
+    source_url: string;
+    title: string | null;
+    price: number | null;
+    currency: string | null;
+    availability: string | null;
+    image_url: string | null;
+    raw: never;
+    scraped_at: string;
+  };
   const listed = extractProductsFromListPage(page, seedHost);
-  const rows = listed.slice(0, 25).map((p) => ({
+  const rows: Row[] = listed.slice(0, 25).map((p) => ({
     user_id: userId,
     competitor_id: competitorId,
     source_url: p.source_url,
