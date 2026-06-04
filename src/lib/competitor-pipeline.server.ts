@@ -420,16 +420,26 @@ export async function discoverFromQuery(
       continue;
     }
     statuses.push({ url: seedUrl, status: "success" });
-    ensureDomain(seedHost);
 
-    const { products, debug: d } = extractSignals(page, seedUrl, seedHost);
+    const { products, pageType, debug: d } = extractSignals(page, seedUrl, seedHost);
     debug.push({ seedUrl, domain: seedHost, ...d });
     console.info(
-      `[discover] seed=${seedUrl} status=success mdLen=${d.markdownLength} ` +
+      `[discover] seed=${seedUrl} status=success type=${pageType} mdLen=${d.markdownLength} ` +
       `prices=${d.priceMatches} titles=${d.productStrings} links=${d.rawLinkCount} ` +
       `products=${d.productsExtracted}`,
     );
+
+    // Discard nav/irrelevant pages entirely — do not create a competitor.
+    if (pageType === "navigation_page" || pageType === "irrelevant_page") continue;
+    // Only register the seed domain as a competitor if it produced products.
+    if (products.length === 0) continue;
+    ensureDomain(seedHost);
     for (const p of products) addProduct(p);
+  }
+
+  // Drop empty domains — competitor = domain with at least 1 valid product.
+  for (const [domain, list] of Array.from(productsByDomain.entries())) {
+    if (list.length === 0) productsByDomain.delete(domain);
   }
 
   // ── Persist competitors ─────────────────────────────────
