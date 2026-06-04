@@ -102,6 +102,7 @@ export type DebugInfo = {
   domain: string;
   firecrawlStatus: "success" | "failed" | "empty";
   errorMessage?: string;
+  competitorStatus?: "structured_data" | "unstructured_data" | "empty_response" | "failed";
   markdownLength: number;
   priceMatches: number;
   productStrings: number;
@@ -118,6 +119,8 @@ type DiscoveredProduct = {
   title?: string;
   price?: number;
   currency?: string;
+  rawSnippet?: string;
+  status?: "structured_data" | "unstructured_data";
 };
 
 // ───────────────────────── Raw signal extraction ─────────────────────────
@@ -196,14 +199,33 @@ function pairPrices(titles: TitleHit[], prices: PriceHit[]): TitleHit[] {
   });
 }
 
+function buildRawSource(page: ScrapedPage): string {
+  const markdown = page.markdown?.trim() ?? "";
+  if (markdown.length > 0) return markdown;
+
+  const html = page.html?.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() ?? "";
+  if (html.length > 0) return html;
+
+  const links = Array.isArray(page.links) ? page.links.slice(0, 20).join("\n") : "";
+  if (links.length > 0) return links;
+
+  if (page.metadata && Object.keys(page.metadata).length > 0) {
+    return JSON.stringify(page.metadata);
+  }
+
+  return "";
+}
+
 function extractSignals(
   page: ScrapedPage,
   seedUrl: string,
   seedHost: string,
 ): { products: DiscoveredProduct[]; debug: Omit<DebugInfo, "seedUrl" | "domain"> } {
   const md = page.markdown ?? "";
-  const prices = findPrices(md);
-  const titles = findProductStrings(md);
+  const rawSource = buildRawSource(page);
+  const preview = rawSource.slice(0, 500);
+  const prices = findPrices(rawSource);
+  const titles = findProductStrings(rawSource);
   const paired = pairPrices(titles, prices) as Array<
     TitleHit & { price?: number; currency?: string }
   >;
@@ -240,29 +262,42 @@ function extractSignals(
 
   // Guarantee: if markdown exists, emit at least one placeholder product
   // for the seed domain so the dataset is never empty.
-  if (products.length === 0 && md.length > 0) {
+  if (products.length === 0 && rawSource.length > 0) {
     products.push({
       domain: seedHost,
       source_url: `${seedUrl}#raw`,
       title: `${nameFromHost(seedHost)} search results`,
+      rawSnippet: preview,
+      status: "unstructured_data",
     });
   }
 
+  const normalizedProducts = products.map((p) => ({
+    ...p,
+    rawSnippet: p.rawSnippet ?? preview,
+    status: p.status ?? "structured_data",
+  }));
+
   return {
-    products,
+    products: normalizedProducts,
     debug: {
-      firecrawlStatus: md.length > 0 ? "success" as const : "empty" as const,
+      firecrawlStatus: rawSource.length > 0 ? "success" as const : "empty" as const,
+      competitorStatus: rawSource.length === 0
+        ? "empty_response"
+        : normalizedProducts.some((p) => p.status === "unstructured_data")
+          ? "unstructured_data"
+          : "structured_data",
       markdownLength: md.length,
       priceMatches: prices.length,
       productStrings: titles.length,
       rawLinkCount: page.links.length,
       sampleTitles: titles.slice(0, 5).map((t) => t.text),
-      markdownPreview: md.slice(0, 500),
-      productsExtracted: products.length,
-      note: products.length === 0
-        ? "No structured data found, showing raw scrape output"
-        : md.length === 0
+      markdownPreview: preview,
+      productsExtracted: normalizedProducts.length,
+      note: rawSource.length === 0
           ? "Scrape returned empty response"
+          : normalizedProducts.some((p) => p.status === "unstructured_data")
+            ? "No structured data found, showing raw scrape output"
           : undefined,
     },
   };
@@ -303,7 +338,6 @@ export async function discoverFromQuery(
   const ensureDomain = (domain: string) => {
     if (!domain) return;
     if (productsByDomain.has(domain)) return;
-    if (productsByDomain.size >= maxDomains) return;
     productsByDomain.set(domain, []);
   };
 
@@ -321,6 +355,7 @@ export async function discoverFromQuery(
       const dbg: DebugInfo = {
         seedUrl, domain: seedHost,
         firecrawlStatus: "failed",
+        competitorStatus: "failed",
         errorMessage: error ?? "Scrape returned empty response",
         markdownLength: 0, priceMatches: 0, productStrings: 0,
         rawLinkCount: 0, sampleTitles: [], markdownPreview: "",
@@ -347,15 +382,18 @@ export async function discoverFromQuery(
   // ── Persist competitors ─────────────────────────────────
   const competitorRows = Array.from(productsByDomain.keys())
     .filter((d) => d.length > 0)
-    .map((domain) => ({
-      user_id: userId,
-      query,
-      name: nameFromHost(domain),
-      domain,
-      url: `https://${domain}`,
-      description: null,
-      source: "firecrawl_scrape_query",
-    }));
+    .map((domain) => {
+      const domainDebug = debug.find((d) => d.domain === domain);
+      return {
+        user_id: userId,
+        query,
+        name: nameFromHost(domain),
+        domain,
+        url: `https://${domain}`,
+        description: domainDebug?.markdownPreview || null,
+        source: `firecrawl_scrape_query:${domainDebug?.competitorStatus ?? "structured_data"}`,
+      };
+    });
 
   let competitors: Array<Record<string, unknown> & { id: string; domain: string }> = [];
   if (competitorRows.length > 0) {
@@ -381,7 +419,13 @@ export async function discoverFromQuery(
       currency: p.currency ?? null,
       availability: null,
       image_url: null,
-      raw: { query, domain, low_confidence: !p.price } as unknown as never,
+      raw: {
+        query,
+        domain,
+        low_confidence: !p.price,
+        status: p.status ?? "structured_data",
+        rawSnippet: p.rawSnippet ?? null,
+      } as unknown as never,
       scraped_at: new Date().toISOString(),
     }));
     const { error, count } = await supabaseAdmin
@@ -398,10 +442,14 @@ export async function discoverFromQuery(
 
   const competitorsWithConfidence = competitors.map((c) => {
     const list = productsByDomain.get(c.domain) ?? [];
-    const withPrice = list.filter((p) => typeof p.price === "number").length;
-    const confidence =
-      withPrice >= 3 ? "high" : withPrice >= 1 || list.length >= 3 ? "medium" : "low";
-    return { ...c, product_count: list.length, confidence };
+    const hasUnstructured = list.some((p) => p.status === "unstructured_data");
+    return {
+      ...c,
+      product_count: list.length,
+      confidence: hasUnstructured ? "low" : "medium",
+      status: hasUnstructured ? "unstructured_data" : "structured_data",
+      raw_snippet: debug.find((d) => d.domain === c.domain)?.markdownPreview ?? c.description,
+    };
   });
 
   return {
@@ -436,8 +484,12 @@ export async function scrapeCompetitorPage(
   }
   statuses.push({ url, status: "success" });
 
-  const { products } = extractSignals(page, url, seedHost);
-  if (products.length === 0) return { inserted: 0, statuses };
+  const { products, debug } = extractSignals(page, url, seedHost);
+  console.info(
+    `[rescrape] url=${url} status=success mdLen=${debug.markdownLength} ` +
+    `prices=${debug.priceMatches} titles=${debug.productStrings} links=${debug.rawLinkCount} ` +
+    `products=${debug.productsExtracted}`,
+  );
 
   const rows = products.slice(0, 30).map((p) => ({
     user_id: userId,
@@ -448,7 +500,11 @@ export async function scrapeCompetitorPage(
     currency: p.currency ?? null,
     availability: null,
     image_url: null,
-    raw: { rescrape: true } as unknown as never,
+    raw: {
+      rescrape: true,
+      status: p.status ?? "structured_data",
+      rawSnippet: p.rawSnippet ?? null,
+    } as unknown as never,
     scraped_at: new Date().toISOString(),
   }));
 

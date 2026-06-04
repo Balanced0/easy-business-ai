@@ -29,6 +29,8 @@ type Competitor = {
   url: string;
   description: string | null;
   last_scraped_at: string | null;
+  status?: "structured_data" | "unstructured_data";
+  raw_snippet?: string | null;
 };
 
 type Product = {
@@ -47,6 +49,7 @@ type DebugInfo = {
   domain: string;
   firecrawlStatus: "success" | "failed" | "empty";
   errorMessage?: string;
+  competitorStatus?: "structured_data" | "unstructured_data" | "empty_response" | "failed";
   markdownLength: number;
   priceMatches: number;
   productStrings: number;
@@ -192,6 +195,7 @@ function CompetitorsPage() {
               {debugInfo.map((d, i) => {
                 const isOk = d.firecrawlStatus === "success";
                 const isEmpty = d.firecrawlStatus === "empty" || d.markdownLength === 0;
+                const isUnstructured = d.competitorStatus === "unstructured_data";
                 return (
                   <details
                     key={`${d.seedUrl}-${i}`}
@@ -206,6 +210,11 @@ function CompetitorsPage() {
                         >
                           {d.firecrawlStatus}
                         </Badge>
+                        {d.competitorStatus && d.competitorStatus !== "failed" && (
+                          <Badge variant="outline" className="ml-1 text-[10px]">
+                            {d.competitorStatus}
+                          </Badge>
+                        )}
                       </span>
                       <span className="ml-2 text-muted-foreground">
                         md:{d.markdownLength} · links:{d.rawLinkCount} · prices:
@@ -221,6 +230,11 @@ function CompetitorsPage() {
                       )}
                       {d.note && (
                         <div className="text-muted-foreground italic">{d.note}</div>
+                      )}
+                      {isUnstructured && (
+                        <div className="text-muted-foreground italic">
+                          {t("No products detected; competitor kept as unstructured data.")}
+                        </div>
                       )}
                       {isEmpty && !d.errorMessage && (
                         <div className="text-destructive">
@@ -272,6 +286,7 @@ function CompetitorsPage() {
           <div className="grid gap-3 md:grid-cols-2">
             {competitors.map((c) => {
               const cProducts = products.filter((p) => p.competitor_id === c.id);
+              const isUnstructured = c.status === "unstructured_data";
               return (
                 <Card key={c.id}>
                   <CardHeader className="pb-2">
@@ -296,10 +311,25 @@ function CompetitorsPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
+                    {isUnstructured && (
+                      <Badge variant="outline" className="w-fit">
+                        unstructured_data
+                      </Badge>
+                    )}
                     {c.description && (
                       <p className="text-xs text-muted-foreground line-clamp-2">
                         {c.description}
                       </p>
+                    )}
+                    {isUnstructured && c.raw_snippet && (
+                      <div className="space-y-1 rounded-md border bg-muted/30 p-2">
+                        <div className="text-[11px] font-medium text-muted-foreground">
+                          Raw snippet
+                        </div>
+                        <pre className="max-h-28 overflow-auto whitespace-pre-wrap break-words text-[11px]">
+                          {c.raw_snippet}
+                        </pre>
+                      </div>
                     )}
                     <div className="flex flex-wrap gap-2">
                       <Button

@@ -26,7 +26,13 @@ export const Route = createFileRoute("/api/competitors/list")({
         if (e2) return Response.json({ error: e2.message }, { status: 500 });
 
         return Response.json({
-          competitors: competitors ?? [],
+          competitors: (competitors ?? []).map((competitor) => ({
+            ...competitor,
+            status: competitor.source?.includes(":unstructured_data")
+              ? "unstructured_data"
+              : "structured_data",
+            raw_snippet: competitor.description,
+          })),
           products: products ?? [],
         });
       },
