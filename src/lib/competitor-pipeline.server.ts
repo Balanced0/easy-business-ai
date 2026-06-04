@@ -1,14 +1,6 @@
 // Scrape-only competitor discovery + product extraction pipeline.
-// No /search, no /crawl — only Firecrawl /scrape is available in this env.
-//
-// Flow:
-//   discoverFromSeeds(seed)
-//     → scrape(seed)                          [links + products extraction]
-//     → filter outbound links for ecommerce domains
-//     → upsert competitors
-//     → for each new competitor: scrape homepage + paginated pages
-//     → upsert competitor_products
-// Per-URL failures are caught and reported, never crash the run.
+// Handles JS-rendered ecommerce sites by using Firecrawl waitFor + actions
+// and falling back to markdown URL parsing when the links array is empty.
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
@@ -31,22 +23,9 @@ function nameFromHost(host: string): string {
 }
 
 const SOCIAL_BLOCK = [
-  "google.",
-  "youtube.",
-  "facebook.",
-  "instagram.",
-  "twitter.",
-  "x.com",
-  "pinterest.",
-  "tiktok.",
-  "linkedin.",
-  "whatsapp.",
-  "t.me",
-  "reddit.",
-  "wikipedia.",
-  "cloudflare.",
-  "gstatic.",
-  "googleapis.",
+  "google.", "youtube.", "facebook.", "instagram.", "twitter.", "x.com",
+  "pinterest.", "tiktok.", "linkedin.", "whatsapp.", "t.me", "reddit.",
+  "wikipedia.", "cloudflare.", "gstatic.", "googleapis.",
 ];
 
 function isJunkHost(host: string): boolean {
@@ -55,55 +34,41 @@ function isJunkHost(host: string): boolean {
   return SOCIAL_BLOCK.some((s) => host.includes(s));
 }
 
-const ECOM_HINTS = [
-  "/product",
-  "/products",
-  "/item",
-  "/items",
-  "/shop",
-  "/catalog",
-  "/category",
-  "/collections",
-  "/store",
-  "/p/",
-  "/dp/",
-  "/sku",
-  "/listing",
+const PRODUCT_PATH_HINTS = [
+  "/products/", "/product/", "/-i", "/p-", "/item", "/items",
+  "/catalog", "/shop", "/store", "/collections/", "/dp/", "/sku", "/listing",
 ];
 
-// A URL looks ecommerce if its path hits one of the hints, OR the host
-// matches a known marketplace pattern.
 const KNOWN_MARKETPLACES = [
-  "amazon.",
-  "ebay.",
-  "etsy.",
-  "aliexpress.",
-  "alibaba.",
-  "daraz.",
-  "shopee.",
-  "lazada.",
-  "walmart.",
-  "target.com",
-  "bestbuy.",
-  "flipkart.",
-  "rakuten.",
-  "mercadolibre.",
-  "shopify.",
+  "amazon.", "ebay.", "etsy.", "aliexpress.", "alibaba.", "daraz.",
+  "shopee.", "lazada.", "walmart.", "target.com", "bestbuy.", "flipkart.",
+  "rakuten.", "mercadolibre.", "shopify.",
 ];
 
-function looksEcommerce(url: string): boolean {
+function looksProductUrl(url: string): boolean {
   try {
     const u = new URL(url);
     const path = u.pathname.toLowerCase();
-    if (ECOM_HINTS.some((h) => path.includes(h))) return true;
-    if (KNOWN_MARKETPLACES.some((m) => u.hostname.includes(m))) return true;
-    return false;
+    return PRODUCT_PATH_HINTS.some((h) => path.includes(h));
   } catch {
     return false;
   }
 }
 
-// Pagination link detection for a given base URL.
+function looksEcommerceHost(host: string): boolean {
+  return KNOWN_MARKETPLACES.some((m) => host.includes(m));
+}
+
+function extractUrlsFromMarkdown(md: string): string[] {
+  const out = new Set<string>();
+  const re = /\((https?:\/\/[^\s)]+)\)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(md)) !== null) out.add(m[1]);
+  const bare = /(?<![("])(https?:\/\/[^\s)<>"']+)/g;
+  while ((m = bare.exec(md)) !== null) out.add(m[1]);
+  return Array.from(out);
+}
+
 function findPaginationUrls(baseUrl: string, links: string[], max: number): string[] {
   const baseHost = hostFrom(baseUrl);
   const seen = new Set<string>();
@@ -111,9 +76,7 @@ function findPaginationUrls(baseUrl: string, links: string[], max: number): stri
   for (const link of links) {
     if (out.length >= max) break;
     if (hostFrom(link) !== baseHost) continue;
-    if (
-      /([?&](page|p|start|offset)=\d+)|(\/page\/\d+)|(\/p\/\d+\/?$)/i.test(link)
-    ) {
+    if (/([?&](page|p|start|offset)=\d+)|(\/page\/\d+)|(\/p\/\d+\/?$)/i.test(link)) {
       if (seen.has(link)) continue;
       seen.add(link);
       out.push(link);
@@ -123,15 +86,24 @@ function findPaginationUrls(baseUrl: string, links: string[], max: number): stri
 }
 
 type DiscoveryOptions = {
-  limit?: number; // max competitors to surface from a seed
-  paginationLimit?: number; // pages per competitor (default 5)
+  limit?: number;
+  paginationLimit?: number;
+  internalProductLimit?: number;
 };
 
 export type ScrapeStatus = {
   url: string;
   status: "success" | "failed" | "skipped";
   message?: string;
-  productsInserted?: number;
+};
+
+export type DebugInfo = {
+  seedUrl: string;
+  rawLinkCount: number;
+  markdownFallbackUsed: boolean;
+  internalProductLinks: number;
+  externalCompetitorDomains: number;
+  firstLinks: string[];
 };
 
 async function safeScrape(
@@ -153,8 +125,10 @@ export async function discoverFromSeeds(
 ) {
   const limit = Math.min(Math.max(opts.limit ?? 25, 1), 100);
   const paginationLimit = Math.min(Math.max(opts.paginationLimit ?? 5, 0), 20);
+  const internalProductLimit = Math.min(Math.max(opts.internalProductLimit ?? 10, 0), 50);
   const allCompetitors: Array<Record<string, unknown> & { id: string; domain: string; url: string }> = [];
   const statuses: ScrapeStatus[] = [];
+  const debug: DebugInfo[] = [];
   let productsInserted = 0;
 
   for (const seedUrl of seedUrls) {
@@ -164,88 +138,126 @@ export async function discoverFromSeeds(
       continue;
     }
 
-    // 1) Scrape the seed (links + product extraction).
+    // 1) Scrape the seed with JS render wait.
     const { page: seedPage, error: seedErr } = await safeScrape(seedUrl, {
-      formats: ["markdown", "links"],
+      formats: ["markdown", "links", "html"],
       extractSchema: PRODUCT_EXTRACT_SCHEMA,
+      waitFor: 3000,
+      actions: [{ type: "wait", milliseconds: 3000 }],
     });
     if (!seedPage) {
       statuses.push({ url: seedUrl, status: "failed", message: seedErr });
+      debug.push({
+        seedUrl, rawLinkCount: 0, markdownFallbackUsed: false,
+        internalProductLinks: 0, externalCompetitorDomains: 0, firstLinks: [],
+      });
       continue;
     }
     statuses.push({ url: seedUrl, status: "success" });
 
-    // 2) Aggregate competitor domains from outbound links.
-    const byDomain = new Map<string, { url: string }>();
-    byDomain.set(seedHost, { url: seedUrl });
+    // 2) Build link pool: use Firecrawl links; if empty, fall back to markdown parsing.
+    let linkPool = seedPage.links.slice();
+    let markdownFallbackUsed = false;
+    if (linkPool.length === 0 && seedPage.markdown) {
+      linkPool = extractUrlsFromMarkdown(seedPage.markdown);
+      markdownFallbackUsed = true;
+    }
+    const rawLinkCount = linkPool.length;
 
-    for (const link of seedPage.links) {
+    // 3) Partition: internal product URLs vs external competitor domains.
+    const internalProductUrls: string[] = [];
+    const seenInternal = new Set<string>();
+    const externalByDomain = new Map<string, { url: string }>();
+
+    for (const link of linkPool) {
       const host = hostFrom(link);
       if (!host || isJunkHost(host)) continue;
-      if (!looksEcommerce(link) && host === seedHost) continue;
-      // Keep ecommerce-looking links (including same-host product pages),
-      // and keep any outbound host whose URL looks ecommerce.
-      if (host === seedHost) continue; // same host, only used for products below
-      if (!looksEcommerce(link)) continue;
-      if (!byDomain.has(host)) byDomain.set(host, { url: link });
-      if (byDomain.size >= limit + 1) break; // +1 for seed itself
-    }
-
-    const competitorRows = Array.from(byDomain.entries()).map(([domain, r]) => ({
-      user_id: userId,
-      query: seedUrl,
-      name: nameFromHost(domain),
-      domain,
-      url: r.url,
-      description: null,
-      source: "firecrawl_scrape",
-    }));
-
-    if (competitorRows.length > 0) {
-      const { data, error } = await supabaseAdmin
-        .from("competitors")
-        .upsert(competitorRows, { onConflict: "user_id,domain,query" })
-        .select("*");
-      if (error) throw new Error(`competitors upsert failed: ${error.message}`);
-      if (data) allCompetitors.push(...(data as typeof allCompetitors));
-    }
-
-    // 3) Persist products from the seed scrape itself (for the seed host).
-    const seedComp = allCompetitors.find((c) => c.domain === seedHost);
-    if (seedComp) {
-      const seedProductPages = [seedPage];
-      // Also follow ecommerce-looking same-host links found on the seed page
-      // as additional product page candidates (cap to paginationLimit).
-      const sameHostProductLinks = seedPage.links
-        .filter((l) => hostFrom(l) === seedHost && looksEcommerce(l) && l !== seedUrl)
-        .slice(0, paginationLimit);
-      for (const link of sameHostProductLinks) {
-        const { page, error } = await safeScrape(link, {
-          formats: ["markdown", "links"],
-          extractSchema: PRODUCT_EXTRACT_SCHEMA,
-        });
-        if (page) {
-          seedProductPages.push(page);
-          statuses.push({ url: link, status: "success" });
-        } else {
-          statuses.push({ url: link, status: "failed", message: error });
+      if (host === seedHost) {
+        if (looksProductUrl(link) && !seenInternal.has(link) && link !== seedUrl) {
+          seenInternal.add(link);
+          internalProductUrls.push(link);
+        }
+      } else {
+        if (!looksProductUrl(link) && !looksEcommerceHost(host)) continue;
+        if (!externalByDomain.has(host)) externalByDomain.set(host, { url: link });
+        if (externalByDomain.size >= limit) {
+          /* keep collecting? cap below when building rows */
         }
       }
-      const { inserted } = await persistProducts(userId, seedComp.id, seedProductPages);
+    }
+
+    debug.push({
+      seedUrl,
+      rawLinkCount,
+      markdownFallbackUsed,
+      internalProductLinks: internalProductUrls.length,
+      externalCompetitorDomains: externalByDomain.size,
+      firstLinks: linkPool.slice(0, 5),
+    });
+
+    // 4) Upsert seed competitor + external competitor rows.
+    const competitorRows = [
+      {
+        user_id: userId,
+        query: seedUrl,
+        name: nameFromHost(seedHost),
+        domain: seedHost,
+        url: seedUrl,
+        description: null,
+        source: "firecrawl_scrape",
+      },
+      ...Array.from(externalByDomain.entries())
+        .slice(0, limit)
+        .map(([domain, r]) => ({
+          user_id: userId,
+          query: seedUrl,
+          name: nameFromHost(domain),
+          domain,
+          url: r.url,
+          description: null,
+          source: "firecrawl_scrape",
+        })),
+    ];
+
+    const { data, error } = await supabaseAdmin
+      .from("competitors")
+      .upsert(competitorRows, { onConflict: "user_id,domain,query" })
+      .select("*");
+    if (error) throw new Error(`competitors upsert failed: ${error.message}`);
+    if (data) allCompetitors.push(...(data as typeof allCompetitors));
+
+    // 5) Scrape top N internal product URLs (first-party products for seed).
+    const seedComp = allCompetitors.find((c) => c.domain === seedHost);
+    if (seedComp) {
+      const productPages: ScrapedPage[] = [seedPage];
+      for (const link of internalProductUrls.slice(0, internalProductLimit)) {
+        const { page, error: e } = await safeScrape(link, {
+          formats: ["markdown", "links", "html"],
+          extractSchema: PRODUCT_EXTRACT_SCHEMA,
+          waitFor: 2000,
+        });
+        if (page) {
+          productPages.push(page);
+          statuses.push({ url: link, status: "success" });
+        } else {
+          statuses.push({ url: link, status: "failed", message: e });
+        }
+      }
+      const { inserted } = await persistProducts(userId, seedComp.id, productPages);
       productsInserted += inserted;
     }
 
-    // 4) For each discovered competitor (other than seed), scrape homepage
-    //    + a few paginated URLs.
+    // 6) For each external competitor, scrape its landing URL + a bit of pagination.
     for (const comp of allCompetitors) {
       if (comp.domain === seedHost) continue;
       const startUrl = comp.url;
-      const { page, error } = await safeScrape(startUrl, {
-        formats: ["markdown", "links"],
+      const { page, error: e } = await safeScrape(startUrl, {
+        formats: ["markdown", "links", "html"],
         extractSchema: PRODUCT_EXTRACT_SCHEMA,
+        waitFor: 2000,
       });
       if (!page) {
-        statuses.push({ url: startUrl, status: "failed", message: error });
+        statuses.push({ url: startUrl, status: "failed", message: e });
         continue;
       }
       statuses.push({ url: startUrl, status: "success" });
@@ -255,6 +267,7 @@ export async function discoverFromSeeds(
         const r = await safeScrape(pUrl, {
           formats: ["markdown", "links"],
           extractSchema: PRODUCT_EXTRACT_SCHEMA,
+          waitFor: 2000,
         });
         if (r.page) {
           pages.push(r.page);
@@ -268,7 +281,7 @@ export async function discoverFromSeeds(
     }
   }
 
-  return { competitors: allCompetitors, productsInserted, statuses };
+  return { competitors: allCompetitors, productsInserted, statuses, debug };
 }
 
 type ProductExtract = {
@@ -317,7 +330,6 @@ function extractFromPage(p: ScrapedPage): ProductExtract {
   };
 }
 
-// Single-page on-demand scrape (used by /api/competitors/scrape).
 export async function scrapeCompetitorPage(
   userId: string,
   competitorId: string,
@@ -328,8 +340,10 @@ export async function scrapeCompetitorPage(
   const statuses: ScrapeStatus[] = [];
 
   const { page, error } = await safeScrape(url, {
-    formats: ["markdown", "links"],
+    formats: ["markdown", "links", "html"],
     extractSchema: PRODUCT_EXTRACT_SCHEMA,
+    waitFor: 3000,
+    actions: [{ type: "wait", milliseconds: 3000 }],
   });
   if (!page) {
     statuses.push({ url, status: "failed", message: error });
@@ -343,6 +357,7 @@ export async function scrapeCompetitorPage(
     const r = await safeScrape(pUrl, {
       formats: ["markdown", "links"],
       extractSchema: PRODUCT_EXTRACT_SCHEMA,
+      waitFor: 2000,
     });
     if (r.page) {
       pages.push(r.page);
