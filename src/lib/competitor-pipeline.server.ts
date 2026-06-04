@@ -97,12 +97,24 @@ export type ScrapeStatus = {
   message?: string;
 };
 
+export type PageType =
+  | "product_page"
+  | "category_page"
+  | "navigation_page"
+  | "irrelevant_page";
+
 export type DebugInfo = {
   seedUrl: string;
   domain: string;
   firecrawlStatus: "success" | "failed" | "empty";
   errorMessage?: string;
-  competitorStatus?: "structured_data" | "unstructured_data" | "empty_response" | "failed";
+  competitorStatus?:
+    | "structured_data"
+    | "unstructured_data"
+    | "empty_response"
+    | "failed"
+    | "discarded";
+  pageType?: PageType;
   markdownLength: number;
   priceMatches: number;
   productStrings: number;
@@ -122,6 +134,48 @@ type DiscoveredProduct = {
   rawSnippet?: string;
   status?: "structured_data" | "unstructured_data";
 };
+
+// ───────────────────────── Page classification ─────────────────────────
+
+const PRODUCT_URL_RE =
+  /\/(product|item|products|listing|dp|itm)\/|\/p\/|-i\.|\/itm\//i;
+const CATEGORY_URL_RE =
+  /\/(catalog|category|categories|search|sch\/|w\/wholesale|searchpage|keyword)/i;
+const NAV_URL_RE =
+  /\/(login|signin|signup|register|account|help|support|seller|customer-service|contact|about|privacy|terms|shipping|returns?)(\/|$|\?)/i;
+const NAV_KEYWORDS = [
+  "login", "sign in", "sign up", "register", "my account",
+  "help center", "customer service", "seller center", "become a seller",
+  "contact us", "about us", "privacy policy", "terms of use",
+  "shipping policy", "return policy", "track order",
+];
+const PRODUCT_KEYWORDS = [
+  "add to cart", "buy now", "add to bag", "in stock", "out of stock", "order now",
+];
+
+export function classifyPage(
+  url: string,
+  markdown: string,
+  priceCount: number,
+  titleCount: number,
+): PageType {
+  if (NAV_URL_RE.test(url)) return "navigation_page";
+  const md = markdown.toLowerCase();
+  const navHits = NAV_KEYWORDS.filter((k) => md.includes(k)).length;
+  const prodHits = PRODUCT_KEYWORDS.filter((k) => md.includes(k)).length;
+
+  if (priceCount === 0 && navHits >= 3 && titleCount < 3) return "navigation_page";
+  if (priceCount === 0 && titleCount === 0) return "irrelevant_page";
+
+  if (PRODUCT_URL_RE.test(url) || prodHits >= 1) return "product_page";
+  if (CATEGORY_URL_RE.test(url)) return "category_page";
+  if (priceCount >= 1 && titleCount >= 1) return "category_page";
+  return "irrelevant_page";
+}
+
+function isNavUrl(url: string): boolean {
+  return NAV_URL_RE.test(url);
+}
 
 // ───────────────────────── Raw signal extraction ─────────────────────────
 // Treat markdown as noisy text. Extract:
@@ -220,7 +274,11 @@ function extractSignals(
   page: ScrapedPage,
   seedUrl: string,
   seedHost: string,
-): { products: DiscoveredProduct[]; debug: Omit<DebugInfo, "seedUrl" | "domain"> } {
+): {
+  products: DiscoveredProduct[];
+  pageType: PageType;
+  debug: Omit<DebugInfo, "seedUrl" | "domain">;
+} {
   const md = page.markdown ?? "";
   const rawSource = buildRawSource(page);
   const preview = rawSource.slice(0, 500);
@@ -230,75 +288,70 @@ function extractSignals(
     TitleHit & { price?: number; currency?: string }
   >;
 
+  const pageType = classifyPage(seedUrl, rawSource, prices.length, titles.length);
+
   const products: DiscoveredProduct[] = [];
-  const seen = new Set<string>();
 
-  for (const h of paired.slice(0, 30)) {
-    const url = h.url ?? `${seedUrl}#t-${h.index}`;
-    if (seen.has(url)) continue;
-    seen.add(url);
-    const host = h.url ? hostFrom(h.url) || seedHost : seedHost;
-    products.push({
-      domain: host,
-      source_url: url,
-      title: h.text,
-      price: h.price,
-      currency: h.currency,
-    });
-  }
+  // Only product/category pages produce product entries.
+  if (pageType === "product_page" || pageType === "category_page") {
+    const seen = new Set<string>();
+    for (const h of paired.slice(0, 30)) {
+      // A valid product must have either a real price or a product-like link URL.
+      const hasPrice = typeof h.price === "number";
+      const linkUrl = h.url;
+      if (!hasPrice && (!linkUrl || isNavUrl(linkUrl))) continue;
+      if (linkUrl && isNavUrl(linkUrl)) continue;
 
-  // If we have prices but no titles, still emit price-only entries.
-  if (products.length === 0 && prices.length > 0) {
-    for (const [i, p] of prices.slice(0, 10).entries()) {
+      const url = linkUrl ?? `${seedUrl}#t-${h.index}`;
+      if (seen.has(url)) continue;
+      seen.add(url);
+      const host = linkUrl ? hostFrom(linkUrl) || seedHost : seedHost;
       products.push({
-        domain: seedHost,
-        source_url: `${seedUrl}#p-${i}`,
-        title: `${nameFromHost(seedHost)} listing ${i + 1}`,
-        price: p.price,
-        currency: p.currency,
+        domain: host,
+        source_url: url,
+        title: h.text,
+        price: h.price,
+        currency: h.currency,
+        status: "structured_data",
       });
     }
   }
 
-  // Guarantee: if markdown exists, emit at least one placeholder product
-  // for the seed domain so the dataset is never empty.
-  if (products.length === 0 && rawSource.length > 0) {
-    products.push({
-      domain: seedHost,
-      source_url: `${seedUrl}#raw`,
-      title: `${nameFromHost(seedHost)} search results`,
-      rawSnippet: preview,
-      status: "unstructured_data",
-    });
-  }
+  const competitorStatus: DebugInfo["competitorStatus"] =
+    rawSource.length === 0
+      ? "empty_response"
+      : pageType === "navigation_page" || pageType === "irrelevant_page"
+        ? "discarded"
+        : products.length > 0
+          ? "structured_data"
+          : "discarded";
 
-  const normalizedProducts = products.map((p) => ({
-    ...p,
-    rawSnippet: p.rawSnippet ?? preview,
-    status: p.status ?? "structured_data",
-  }));
+  const note =
+    rawSource.length === 0
+      ? "Scrape returned empty response"
+      : pageType === "navigation_page"
+        ? "Navigation page — discarded"
+        : pageType === "irrelevant_page"
+          ? "Irrelevant page — no product signals, discarded"
+          : products.length === 0
+            ? "No valid products extracted — discarded"
+            : undefined;
 
   return {
-    products: normalizedProducts,
+    products,
+    pageType,
     debug: {
-      firecrawlStatus: rawSource.length > 0 ? "success" as const : "empty" as const,
-      competitorStatus: rawSource.length === 0
-        ? "empty_response"
-        : normalizedProducts.some((p) => p.status === "unstructured_data")
-          ? "unstructured_data"
-          : "structured_data",
+      firecrawlStatus: rawSource.length > 0 ? ("success" as const) : ("empty" as const),
+      competitorStatus,
+      pageType,
       markdownLength: md.length,
       priceMatches: prices.length,
       productStrings: titles.length,
       rawLinkCount: page.links.length,
-      sampleTitles: titles.slice(0, 5).map((t) => t.text),
+      sampleTitles: products.slice(0, 5).map((p) => p.title ?? ""),
       markdownPreview: preview,
-      productsExtracted: normalizedProducts.length,
-      note: rawSource.length === 0
-          ? "Scrape returned empty response"
-          : normalizedProducts.some((p) => p.status === "unstructured_data")
-            ? "No structured data found, showing raw scrape output"
-          : undefined,
+      productsExtracted: products.length,
+      note,
     },
   };
 }
@@ -367,16 +420,26 @@ export async function discoverFromQuery(
       continue;
     }
     statuses.push({ url: seedUrl, status: "success" });
-    ensureDomain(seedHost);
 
-    const { products, debug: d } = extractSignals(page, seedUrl, seedHost);
+    const { products, pageType, debug: d } = extractSignals(page, seedUrl, seedHost);
     debug.push({ seedUrl, domain: seedHost, ...d });
     console.info(
-      `[discover] seed=${seedUrl} status=success mdLen=${d.markdownLength} ` +
+      `[discover] seed=${seedUrl} status=success type=${pageType} mdLen=${d.markdownLength} ` +
       `prices=${d.priceMatches} titles=${d.productStrings} links=${d.rawLinkCount} ` +
       `products=${d.productsExtracted}`,
     );
+
+    // Discard nav/irrelevant pages entirely — do not create a competitor.
+    if (pageType === "navigation_page" || pageType === "irrelevant_page") continue;
+    // Only register the seed domain as a competitor if it produced products.
+    if (products.length === 0) continue;
+    ensureDomain(seedHost);
     for (const p of products) addProduct(p);
+  }
+
+  // Drop empty domains — competitor = domain with at least 1 valid product.
+  for (const [domain, list] of Array.from(productsByDomain.entries())) {
+    if (list.length === 0) productsByDomain.delete(domain);
   }
 
   // ── Persist competitors ─────────────────────────────────
@@ -484,12 +547,15 @@ export async function scrapeCompetitorPage(
   }
   statuses.push({ url, status: "success" });
 
-  const { products, debug } = extractSignals(page, url, seedHost);
+  const { products, pageType, debug } = extractSignals(page, url, seedHost);
   console.info(
-    `[rescrape] url=${url} status=success mdLen=${debug.markdownLength} ` +
+    `[rescrape] url=${url} status=success type=${pageType} mdLen=${debug.markdownLength} ` +
     `prices=${debug.priceMatches} titles=${debug.productStrings} links=${debug.rawLinkCount} ` +
     `products=${debug.productsExtracted}`,
   );
+  if (pageType === "navigation_page" || pageType === "irrelevant_page" || products.length === 0) {
+    return { inserted: 0, statuses };
+  }
 
   const rows = products.slice(0, 30).map((p) => ({
     user_id: userId,
