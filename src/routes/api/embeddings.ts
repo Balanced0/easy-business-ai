@@ -22,9 +22,9 @@ export const Route = createFileRoute("/api/embeddings")({
           if (body.reset) {
             await supabaseAdmin.from("knowledge_documents").delete().eq("user_id", authed.userId);
           }
-          const docs = body.seed ? buildSeedDocuments() : (body.documents ?? []);
+          const docs = body.documents ?? [];
           if (docs.length === 0) {
-            return Response.json({ error: "No documents. Pass { seed: true } or documents[]." }, { status: 400 });
+            return Response.json({ error: "No documents. Upload a CSV/XLSX from the Upload page or pass documents[]." }, { status: 400 });
           }
           const result = await upsertDocuments(docs, authed.userId);
           return Response.json({ ok: true, ...result });
