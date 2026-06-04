@@ -203,8 +203,7 @@ function CompetitorsPage() {
                     <div className="flex flex-wrap gap-2">
                       <Button
                         size="sm"
-                        variant="outline"
-                        onClick={() => handleScrape(c, "scrape")}
+                        onClick={() => handleScrape(c)}
                         disabled={scrapingId === c.id}
                       >
                         {scrapingId === c.id ? (
@@ -212,19 +211,7 @@ function CompetitorsPage() {
                         ) : (
                           <Download className="mr-1 h-3.5 w-3.5" />
                         )}
-                        {t("পেজ স্ক্রেপ / Scrape page")}
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => handleScrape(c, "crawl")}
-                        disabled={scrapingId === c.id}
-                      >
-                        {scrapingId === c.id ? (
-                          <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Download className="mr-1 h-3.5 w-3.5" />
-                        )}
-                        {t("ক্রল / Crawl site")}
+                        {t("পণ্য স্ক্রেপ / Scrape products")}
                       </Button>
                     </div>
                     {cProducts.length > 0 && (
