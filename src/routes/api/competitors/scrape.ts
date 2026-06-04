@@ -41,7 +41,6 @@ export const Route = createFileRoute("/api/competitors/scrape")({
             authed.userId,
             comp.id,
             startUrl,
-            { paginationLimit: body.paginationLimit ?? 5 },
           );
           return Response.json({ ok: true, ...result });
         } catch (err) {

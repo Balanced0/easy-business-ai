@@ -1,36 +1,18 @@
-// POST /api/competitors/discover  { seedUrl?: string, seedUrls?: string[], limit?: number }
-// Crawl-driven discovery: starts from one or more seed URLs (category pages
-// or curated ecommerce entry points), extracts product links and outbound
-// domains, and builds the competitor list from what it finds. No /search.
+// POST /api/competitors/discover  { query: string, maxDomains?, maxProducts? }
+// Query-driven discovery: user provides only a product query. The pipeline
+// generates seed search URLs against known ecommerce templates, scrapes them
+// with Firecrawl /scrape, groups products by domain to infer competitors,
+// and expands one level deeper per domain.
 import { createFileRoute } from "@tanstack/react-router";
 import { getAuthedUser } from "@/lib/auth-route.server";
-import { discoverFromSeeds } from "@/lib/competitor-pipeline.server";
+import { discoverFromQuery } from "@/lib/competitor-pipeline.server";
 
 type Body = {
-  seedUrl?: string;
-  seedUrls?: string[];
-  query?: string; // legacy clients — treated as seedUrl if it looks like a URL
-  limit?: number;
+  query?: string;
+  seedUrl?: string; // legacy — treated as query text if non-URL
+  maxDomains?: number;
+  maxProducts?: number;
 };
-
-function normalizeSeeds(b: Body): string[] {
-  const raw: string[] = [];
-  if (Array.isArray(b.seedUrls)) raw.push(...b.seedUrls);
-  if (b.seedUrl) raw.push(b.seedUrl);
-  if (b.query) raw.push(b.query);
-  const out: string[] = [];
-  for (const s of raw) {
-    const v = s?.trim();
-    if (!v) continue;
-    try {
-      const u = new URL(v.startsWith("http") ? v : `https://${v}`);
-      out.push(u.toString());
-    } catch {
-      /* skip non-URLs */
-    }
-  }
-  return Array.from(new Set(out));
-}
 
 export const Route = createFileRoute("/api/competitors/discover")({
   server: {
@@ -39,25 +21,26 @@ export const Route = createFileRoute("/api/competitors/discover")({
         const authed = await getAuthedUser(request);
         if (!authed) return new Response("Unauthorized", { status: 401 });
         const body = (await request.json().catch(() => ({}))) as Body;
-        const seeds = normalizeSeeds(body);
-        if (seeds.length === 0) {
+        const query = (body.query ?? body.seedUrl ?? "").trim();
+        if (!query) {
           return Response.json(
-            { error: "seedUrl required (a valid http(s) URL)" },
+            { error: "query required (e.g. 'wireless earbuds')" },
             { status: 400 },
           );
         }
         try {
-          const { competitors, productsInserted, statuses, debug } =
-            await discoverFromSeeds(authed.userId, seeds, {
-              limit: Math.min(Math.max(body.limit ?? 25, 1), 100),
-            });
+          const result = await discoverFromQuery(authed.userId, query, {
+            maxDomains: body.maxDomains,
+            maxProducts: body.maxProducts,
+          });
           return Response.json({
             ok: true,
-            count: competitors.length,
-            productsInserted,
-            competitors,
-            statuses,
-            debug,
+            count: result.competitors.length,
+            productsInserted: result.productsInserted,
+            competitors: result.competitors,
+            statuses: result.statuses,
+            debug: result.debug,
+            totals: result.totals,
           });
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);

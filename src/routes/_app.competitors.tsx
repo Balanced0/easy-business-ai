@@ -81,7 +81,7 @@ function CompetitorsPage() {
     try {
       const res = await authedFetch("/api/competitors/discover", {
         method: "POST",
-        body: JSON.stringify({ seedUrl: query.trim(), limit: 25 }),
+        body: JSON.stringify({ query: query.trim() }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "discovery failed");
@@ -131,7 +131,7 @@ function CompetitorsPage() {
             </CardTitle>
             <CardDescription>
               {t(
-                "একটি seed URL দিন (ক্যাটাগরি পেজ বা ইকমার্স এন্ট্রি পয়েন্ট); ক্রল করে প্রতিযোগী আবিষ্কার হবে। / Paste a seed URL (category page or ecommerce entry point) — crawl-based discovery will expand from there.",
+                "একটি পণ্যের নাম লিখুন (যেমন: wireless earbuds); সিস্টেম স্বয়ংক্রিয়ভাবে প্রতিযোগী খুঁজে দেবে। / Enter a product name (e.g. wireless earbuds) — the system auto-discovers competitors by scraping known ecommerce sites.",
               )}
             </CardDescription>
           </CardHeader>
@@ -140,7 +140,7 @@ function CompetitorsPage() {
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="https://example-shop.com/category/earbuds"
+                placeholder="wireless earbuds"
                 onKeyDown={(e) => e.key === "Enter" && handleDiscover()}
               />
 
