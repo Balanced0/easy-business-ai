@@ -20,12 +20,12 @@ function LanguageToggle() {
       className="flex h-8 items-center overflow-hidden rounded-md border text-xs"
     >
       <span
-        className={`${lang === "bn" ? "bg-primary text-primary-foreground rounded py-[4px] px-[12px]" : "px-2 py-1 text-muted-foreground rounded-xl"}`}
+        className={`${lang === "bn" ? "bg-primary text-primary-foreground rounded py-[4px] px-[8px] mx-[4px]" : "px-2 py-1 text-muted-foreground rounded-xl"}`}
       >
         বাং
       </span>
       <span
-        className={`${lang === "en" ? "bg-primary text-primary-foreground rounded py-[4px] px-[12px]" : "px-2 py-1 text-muted-foreground rounded-xl"}`}
+        className={`${lang === "en" ? "bg-primary text-primary-foreground rounded py-[4px] px-[8px] mx-[4px]" : "px-2 py-1 text-muted-foreground rounded-xl"}`}
       >
         En
       </span>
