@@ -97,16 +97,21 @@ function CompetitorsPage() {
     }
   };
 
-  const handleScrape = async (c: Competitor, mode: "scrape" | "crawl") => {
+  const handleScrape = async (c: Competitor) => {
     setScrapingId(c.id);
     try {
       const res = await authedFetch("/api/competitors/scrape", {
         method: "POST",
-        body: JSON.stringify({ competitorId: c.id, mode, limit: 15 }),
+        body: JSON.stringify({ competitorId: c.id, paginationLimit: 5 }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "scrape failed");
-      toast.success(`${mode === "crawl" ? "Crawled" : "Scraped"} ${c.domain}: ${json.inserted} products`);
+      const failed = (json.statuses ?? []).filter(
+        (s: { status: string }) => s.status === "failed",
+      ).length;
+      toast.success(
+        `Scraped ${c.domain}: ${json.inserted} products${failed ? ` (${failed} failed)` : ""}`,
+      );
       await load();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Scrape failed");
