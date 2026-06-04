@@ -212,30 +212,23 @@ function AssistantPage() {
                   {t("নলেজ বেস / Knowledge base")}
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  {seedCount === null
+                  {docCount === null
                     ? t("লোড হচ্ছে... / Loading...")
-                    : seedCount === 0
-                    ? t("খালি — সিড করুন / Empty — seed it")
-                    : `${seedCount} ${t("ডকুমেন্ট ইন্ডেক্স করা / documents indexed")}`}
+                    : docCount === 0
+                    ? t("খালি — ডেটা আপলোড করুন / Empty — upload data")
+                    : `${docCount} ${t("ডকুমেন্ট ইন্ডেক্স করা / documents indexed")}`}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button
-                  onClick={handleSeed}
-                  disabled={seeding}
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                >
-                  {seeding ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : null}
-                  {seedCount && seedCount > 0
-                    ? t("পুনরায় সিড / Re-seed")
-                    : t("নলেজ বেস তৈরি করুন / Build knowledge base")}
+                <Button asChild variant="outline" size="sm" className="w-full">
+                  <Link to="/upload">
+                    <Upload className="mr-2 h-3.5 w-3.5" />
+                    {t("ডেটা আপলোড পেজ / Upload data page")}
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
+
 
             <Card>
               <CardHeader>
