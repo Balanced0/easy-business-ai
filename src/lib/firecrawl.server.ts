@@ -30,29 +30,9 @@ async function gw<T = unknown>(path: string, body: unknown): Promise<T> {
   return (await res.json()) as T;
 }
 
-export type FirecrawlSearchResult = {
-  url: string;
-  title?: string;
-  description?: string;
-};
+// NOTE: Firecrawl /search is not available in this environment. Discovery is
+// crawl-driven only — see competitor-pipeline.server.ts.
 
-type SearchResp = {
-  data?: {
-    web?: FirecrawlSearchResult[];
-  };
-  web?: FirecrawlSearchResult[];
-};
-
-export async function firecrawlSearch(
-  query: string,
-  opts: { limit?: number } = {},
-): Promise<FirecrawlSearchResult[]> {
-  const json = await gw<SearchResp>("/search", {
-    query,
-    limit: opts.limit ?? 10,
-  });
-  return json.data?.web ?? json.web ?? [];
-}
 
 export type ScrapedPage = {
   url: string;

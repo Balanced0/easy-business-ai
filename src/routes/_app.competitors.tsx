@@ -81,12 +81,15 @@ function CompetitorsPage() {
     try {
       const res = await authedFetch("/api/competitors/discover", {
         method: "POST",
-        body: JSON.stringify({ query: query.trim(), limit: 10 }),
+        body: JSON.stringify({ seedUrl: query.trim(), limit: 25 }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "discovery failed");
-      toast.success(`Found ${json.count} competitors`);
+      toast.success(
+        `Discovered ${json.count} competitors (${json.productsInserted ?? 0} products)`,
+      );
       await load();
+
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Discovery failed");
     } finally {
@@ -123,7 +126,7 @@ function CompetitorsPage() {
             </CardTitle>
             <CardDescription>
               {t(
-                "একটি পণ্য বা ক্যাটাগরি দিন, Firecrawl ওয়েব সার্চ করে প্রতিযোগী আবিষ্কার করবে। / Enter a product or category — Firecrawl will discover competitor stores from the open web.",
+                "একটি seed URL দিন (ক্যাটাগরি পেজ বা ইকমার্স এন্ট্রি পয়েন্ট); ক্রল করে প্রতিযোগী আবিষ্কার হবে। / Paste a seed URL (category page or ecommerce entry point) — crawl-based discovery will expand from there.",
               )}
             </CardDescription>
           </CardHeader>
@@ -132,9 +135,10 @@ function CompetitorsPage() {
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="e.g. wireless earbuds, leather wallets"
+                placeholder="https://example-shop.com/category/earbuds"
                 onKeyDown={(e) => e.key === "Enter" && handleDiscover()}
               />
+
               <Button onClick={handleDiscover} disabled={discovering || !query.trim()}>
                 {discovering ? (
                   <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
