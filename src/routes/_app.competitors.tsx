@@ -176,6 +176,87 @@ function CompetitorsPage() {
           </CardContent>
         </Card>
 
+        {debugInfo.length > 0 && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">
+                {t("স্ক্রেপ ডায়াগনস্টিক্স / Scrape diagnostics")}
+              </CardTitle>
+              <CardDescription>
+                {lastTotals
+                  ? `${lastTotals.domains} domains · ${lastTotals.products} products extracted across ${debugInfo.length} seeds`
+                  : `${debugInfo.length} seeds`}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {debugInfo.map((d, i) => {
+                const isOk = d.firecrawlStatus === "success";
+                const isEmpty = d.firecrawlStatus === "empty" || d.markdownLength === 0;
+                return (
+                  <details
+                    key={`${d.seedUrl}-${i}`}
+                    className="rounded-md border bg-muted/30 p-2 text-xs"
+                  >
+                    <summary className="cursor-pointer select-none">
+                      <span className="font-mono break-all">{d.seedUrl}</span>
+                      <span className="ml-2">
+                        <Badge
+                          variant={isOk ? "secondary" : "destructive"}
+                          className="text-[10px]"
+                        >
+                          {d.firecrawlStatus}
+                        </Badge>
+                      </span>
+                      <span className="ml-2 text-muted-foreground">
+                        md:{d.markdownLength} · links:{d.rawLinkCount} · prices:
+                        {d.priceMatches} · titles:{d.productStrings} · products:
+                        {d.productsExtracted}
+                      </span>
+                    </summary>
+                    <div className="mt-2 space-y-2">
+                      {d.errorMessage && (
+                        <div className="text-destructive">
+                          ⚠ {d.errorMessage}
+                        </div>
+                      )}
+                      {d.note && (
+                        <div className="text-muted-foreground italic">{d.note}</div>
+                      )}
+                      {isEmpty && !d.errorMessage && (
+                        <div className="text-destructive">
+                          {t("Scrape returned empty response")}
+                        </div>
+                      )}
+                      {d.sampleTitles.length > 0 && (
+                        <div>
+                          <div className="font-medium mb-1">Sample titles:</div>
+                          <ul className="list-disc pl-4 space-y-0.5">
+                            {d.sampleTitles.map((s, j) => (
+                              <li key={j} className="truncate">{s}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {d.markdownPreview && (
+                        <div>
+                          <div className="font-medium mb-1">
+                            Raw page data viewer (first {d.markdownPreview.length} chars):
+                          </div>
+                          <pre className="whitespace-pre-wrap break-words rounded bg-background p-2 text-[11px] max-h-48 overflow-auto">
+                            {d.markdownPreview}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
+                  </details>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
+
+
+
         {competitors.length === 0 ? (
           <Card className="border-warning/40 bg-warning/[0.04]">
             <CardHeader>
