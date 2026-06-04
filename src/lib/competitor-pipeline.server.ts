@@ -279,11 +279,20 @@ function classifyPage(
   const md = markdown.toLowerCase();
   const navHits = NAV_KEYWORDS.filter((k) => md.includes(k)).length;
   const prodHits = PRODUCT_KEYWORDS.filter((k) => md.includes(k)).length;
-  if (priceCount === 0 && navHits >= 3 && titleCount < 3) return "navigation_page";
-  if (priceCount === 0 && titleCount === 0) return "irrelevant_page";
-  if (PRODUCT_URL_RE.test(url) || prodHits >= 1) return "product_page";
-  if (CATEGORY_URL_RE.test(url)) return "category_page";
-  if (priceCount >= 1 && titleCount >= 1) return "category_page";
+
+  // Nav-dominant pages (login/help/seller/account-heavy shells)
+  if (navHits >= 3 && prodHits === 0 && priceCount < 2) return "navigation_page";
+
+  // HARD RULE — product page requires ALL of:
+  //   • visible price in markdown
+  //   • product action keyword ("add to cart" / "buy now" / "in stock" / ...)
+  //   • repeated product-card patterns (≥3 distinct titles)
+  // Otherwise the page is discarded (no category_page fallback).
+  const hasPrice = priceCount >= 1;
+  const hasAction = prodHits >= 1;
+  const hasRepeated = titleCount >= 3;
+  if (hasPrice && hasAction && hasRepeated) return "product_page";
+
   return "irrelevant_page";
 }
 
