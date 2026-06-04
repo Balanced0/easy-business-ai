@@ -97,12 +97,24 @@ export type ScrapeStatus = {
   message?: string;
 };
 
+export type PageType =
+  | "product_page"
+  | "category_page"
+  | "navigation_page"
+  | "irrelevant_page";
+
 export type DebugInfo = {
   seedUrl: string;
   domain: string;
   firecrawlStatus: "success" | "failed" | "empty";
   errorMessage?: string;
-  competitorStatus?: "structured_data" | "unstructured_data" | "empty_response" | "failed";
+  competitorStatus?:
+    | "structured_data"
+    | "unstructured_data"
+    | "empty_response"
+    | "failed"
+    | "discarded";
+  pageType?: PageType;
   markdownLength: number;
   priceMatches: number;
   productStrings: number;
@@ -122,6 +134,48 @@ type DiscoveredProduct = {
   rawSnippet?: string;
   status?: "structured_data" | "unstructured_data";
 };
+
+// ───────────────────────── Page classification ─────────────────────────
+
+const PRODUCT_URL_RE =
+  /\/(product|item|products|listing|dp|itm)\/|\/p\/|-i\.|\/itm\//i;
+const CATEGORY_URL_RE =
+  /\/(catalog|category|categories|search|sch\/|w\/wholesale|searchpage|keyword)/i;
+const NAV_URL_RE =
+  /\/(login|signin|signup|register|account|help|support|seller|customer-service|contact|about|privacy|terms|shipping|returns?)(\/|$|\?)/i;
+const NAV_KEYWORDS = [
+  "login", "sign in", "sign up", "register", "my account",
+  "help center", "customer service", "seller center", "become a seller",
+  "contact us", "about us", "privacy policy", "terms of use",
+  "shipping policy", "return policy", "track order",
+];
+const PRODUCT_KEYWORDS = [
+  "add to cart", "buy now", "add to bag", "in stock", "out of stock", "order now",
+];
+
+export function classifyPage(
+  url: string,
+  markdown: string,
+  priceCount: number,
+  titleCount: number,
+): PageType {
+  if (NAV_URL_RE.test(url)) return "navigation_page";
+  const md = markdown.toLowerCase();
+  const navHits = NAV_KEYWORDS.filter((k) => md.includes(k)).length;
+  const prodHits = PRODUCT_KEYWORDS.filter((k) => md.includes(k)).length;
+
+  if (priceCount === 0 && navHits >= 3 && titleCount < 3) return "navigation_page";
+  if (priceCount === 0 && titleCount === 0) return "irrelevant_page";
+
+  if (PRODUCT_URL_RE.test(url) || prodHits >= 1) return "product_page";
+  if (CATEGORY_URL_RE.test(url)) return "category_page";
+  if (priceCount >= 1 && titleCount >= 1) return "category_page";
+  return "irrelevant_page";
+}
+
+function isNavUrl(url: string): boolean {
+  return NAV_URL_RE.test(url);
+}
 
 // ───────────────────────── Raw signal extraction ─────────────────────────
 // Treat markdown as noisy text. Extract:
