@@ -100,6 +100,10 @@ function CompetitorsPage() {
   const [debugInfo, setDebugInfo] = useState<DebugInfo[]>([]);
   const [seedReports, setSeedReports] = useState<SeedReport[]>([]);
   const [lastTotals, setLastTotals] = useState<{ domains: number; products: number } | null>(null);
+  const [currentRunIds, setCurrentRunIds] = useState<Set<string>>(new Set());
+  const [currentRunCount, setCurrentRunCount] = useState<number | null>(null);
+  const [lastRunAt, setLastRunAt] = useState<string | null>(null);
+  const [dbLoadedAt, setDbLoadedAt] = useState<string | null>(null);
 
 
   const load = useCallback(async () => {
@@ -108,6 +112,7 @@ function CompetitorsPage() {
     const json = await res.json();
     setCompetitors(json.competitors ?? []);
     setProducts(json.products ?? []);
+    setDbLoadedAt(new Date().toISOString());
   }, []);
 
   useEffect(() => {
@@ -118,6 +123,9 @@ function CompetitorsPage() {
     if (!query.trim()) return;
     setDiscovering(true);
     setDebugInfo([]);
+    setCurrentRunIds(new Set());
+    setCurrentRunCount(null);
+    setLastRunAt(null);
     try {
       const res = await authedFetch("/api/competitors/discover", {
         method: "POST",
@@ -127,6 +135,15 @@ function CompetitorsPage() {
       if (!res.ok) throw new Error(json.error || "discovery failed");
       setDebugInfo(json.debug ?? []);
       setLastTotals(json.totals ?? null);
+      const returned: Array<{ id?: string }> = json.competitors ?? [];
+      const ids = new Set<string>(
+        returned
+          .map((c) => c.id)
+          .filter((id): id is string => typeof id === "string"),
+      );
+      setCurrentRunIds(ids);
+      setCurrentRunCount(typeof json.count === "number" ? json.count : returned.length);
+      setLastRunAt(new Date().toISOString());
       toast.success(
         `Discovered ${json.count} competitors (${json.productsInserted ?? 0} products)`,
       );
@@ -137,6 +154,14 @@ function CompetitorsPage() {
     } finally {
       setDiscovering(false);
     }
+  };
+
+  const handleClearCurrentRun = () => {
+    setCurrentRunIds(new Set());
+    setCurrentRunCount(null);
+    setLastRunAt(null);
+    setDebugInfo([]);
+    setLastTotals(null);
   };
 
   const handleScrape = async (c: Competitor) => {
@@ -392,6 +417,45 @@ function CompetitorsPage() {
 
 
 
+        {(currentRunCount !== null || dbLoadedAt) && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Result diagnostics</CardTitle>
+              <CardDescription className="space-y-0.5 text-xs">
+                <div>
+                  Loaded from database: <strong>{competitors.length}</strong> competitors,{" "}
+                  <strong>{products.length}</strong> products
+                  {dbLoadedAt && (
+                    <span className="text-muted-foreground"> · at {new Date(dbLoadedAt).toLocaleTimeString()}</span>
+                  )}
+                </div>
+                {currentRunCount !== null && (
+                  <div>
+                    Returned by current discovery run:{" "}
+                    <strong>{currentRunCount}</strong> competitors,{" "}
+                    <strong>{lastTotals?.products ?? 0}</strong> products
+                    {lastRunAt && (
+                      <span className="text-muted-foreground"> · at {new Date(lastRunAt).toLocaleTimeString()}</span>
+                    )}
+                  </div>
+                )}
+                {currentRunCount === 0 && (
+                  <div className="text-warning">
+                    ⚠ Current run produced 0 competitors. Cards below are historical records from previous runs.
+                  </div>
+                )}
+              </CardDescription>
+            </CardHeader>
+            {currentRunIds.size > 0 && (
+              <CardContent className="pt-0">
+                <Button size="sm" variant="outline" onClick={handleClearCurrentRun}>
+                  Clear current run view
+                </Button>
+              </CardContent>
+            )}
+          </Card>
+        )}
+
         {competitors.length === 0 ? (
           <Card className="border-warning/40 bg-warning/[0.04]">
             <CardHeader>
@@ -404,8 +468,16 @@ function CompetitorsPage() {
             </CardHeader>
           </Card>
         ) : (
-          <div className="grid gap-3 md:grid-cols-2">
-            {competitors.map((c) => {
+          (() => {
+            const hasCurrentRun = currentRunIds.size > 0;
+            const current = hasCurrentRun
+              ? competitors.filter((c) => currentRunIds.has(c.id))
+              : [];
+            const historical = hasCurrentRun
+              ? competitors.filter((c) => !currentRunIds.has(c.id))
+              : competitors;
+
+            const renderCard = (c: Competitor) => {
               const cProducts = products.filter((p) => p.competitor_id === c.id);
               const isUnstructured = c.status === "unstructured_data";
               return (
@@ -416,12 +488,7 @@ function CompetitorsPage() {
                         <CardTitle className="text-base truncate">{c.name}</CardTitle>
                         <CardDescription className="flex items-center gap-1 truncate">
                           <Globe className="h-3 w-3 shrink-0" />
-                          <a
-                            href={c.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="hover:underline truncate"
-                          >
+                          <a href={c.url} target="_blank" rel="noreferrer" className="hover:underline truncate">
                             {c.domain}
                           </a>
                         </CardDescription>
@@ -432,32 +499,27 @@ function CompetitorsPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
+                    {c.last_scraped_at && (
+                      <div className="text-[11px] text-muted-foreground">
+                        Last scraped: {new Date(c.last_scraped_at).toLocaleString()}
+                      </div>
+                    )}
                     {isUnstructured && (
-                      <Badge variant="outline" className="w-fit">
-                        unstructured_data
-                      </Badge>
+                      <Badge variant="outline" className="w-fit">unstructured_data</Badge>
                     )}
                     {c.description && (
-                      <p className="text-xs text-muted-foreground line-clamp-2">
-                        {c.description}
-                      </p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{c.description}</p>
                     )}
                     {isUnstructured && c.raw_snippet && (
                       <div className="space-y-1 rounded-md border bg-muted/30 p-2">
-                        <div className="text-[11px] font-medium text-muted-foreground">
-                          Raw snippet
-                        </div>
+                        <div className="text-[11px] font-medium text-muted-foreground">Raw snippet</div>
                         <pre className="max-h-28 overflow-auto whitespace-pre-wrap break-words text-[11px]">
                           {c.raw_snippet}
                         </pre>
                       </div>
                     )}
                     <div className="flex flex-wrap gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => handleScrape(c)}
-                        disabled={scrapingId === c.id}
-                      >
+                      <Button size="sm" onClick={() => handleScrape(c)} disabled={scrapingId === c.id}>
                         {scrapingId === c.id ? (
                           <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
                         ) : (
@@ -469,16 +531,8 @@ function CompetitorsPage() {
                     {cProducts.length > 0 && (
                       <div className="space-y-1 border-t pt-2">
                         {cProducts.slice(0, 5).map((p) => (
-                          <div
-                            key={p.id}
-                            className="flex items-center justify-between gap-2 text-xs"
-                          >
-                            <a
-                              href={p.source_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="truncate hover:underline"
-                            >
+                          <div key={p.id} className="flex items-center justify-between gap-2 text-xs">
+                            <a href={p.source_url} target="_blank" rel="noreferrer" className="truncate hover:underline">
                               {p.title || p.source_url}
                             </a>
                             {p.price != null && (
@@ -494,8 +548,55 @@ function CompetitorsPage() {
                   </CardContent>
                 </Card>
               );
-            })}
-          </div>
+            };
+
+            return (
+              <div className="space-y-4">
+                {hasCurrentRun && (
+                  <section className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-sm font-semibold">Current discovery results</h2>
+                      <Badge variant="secondary">{current.length}</Badge>
+                      {lastRunAt && (
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(lastRunAt).toLocaleTimeString()}
+                        </span>
+                      )}
+                    </div>
+                    {current.length === 0 ? (
+                      <Card className="border-warning/40 bg-warning/[0.04]">
+                        <CardHeader>
+                          <CardDescription>
+                            Current run returned no competitors matching this query.
+                          </CardDescription>
+                        </CardHeader>
+                      </Card>
+                    ) : (
+                      <div className="grid gap-3 md:grid-cols-2">{current.map(renderCard)}</div>
+                    )}
+                  </section>
+                )}
+                {historical.length > 0 && (
+                  <section className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-sm font-semibold text-muted-foreground">
+                        {hasCurrentRun ? "Previously stored competitors" : "Stored competitors"}
+                      </h2>
+                      <Badge variant="outline">{historical.length}</Badge>
+                      {hasCurrentRun && (
+                        <span className="text-xs text-muted-foreground">
+                          Not part of the current run
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2 opacity-90">
+                      {historical.map(renderCard)}
+                    </div>
+                  </section>
+                )}
+              </div>
+            );
+          })()
         )}
       </main>
     </>
