@@ -81,12 +81,15 @@ function CompetitorsPage() {
     try {
       const res = await authedFetch("/api/competitors/discover", {
         method: "POST",
-        body: JSON.stringify({ query: query.trim(), limit: 10 }),
+        body: JSON.stringify({ seedUrl: query.trim(), limit: 25 }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "discovery failed");
-      toast.success(`Found ${json.count} competitors`);
+      toast.success(
+        `Discovered ${json.count} competitors (${json.productsInserted ?? 0} products)`,
+      );
       await load();
+
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Discovery failed");
     } finally {
