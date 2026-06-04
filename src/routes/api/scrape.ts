@@ -26,20 +26,17 @@ export const Route = createFileRoute("/api/scrape")({
         }
 
         const key = process.env.FIRECRAWL_API_KEY;
-        const lovableKey = process.env.LOVABLE_API_KEY;
         if (!key) return Response.json({ error: "Firecrawl not configured" }, { status: 500 });
-        if (!lovableKey) return Response.json({ error: "LOVABLE_API_KEY missing" }, { status: 500 });
 
         try {
-          // Firecrawl gateway via Lovable connector
+          // Direct Firecrawl API (no Lovable connector gateway in this project)
           const fcRes = await fetch(
-            "https://connector-gateway.lovable.dev/firecrawl/v2/scrape",
+            "https://api.firecrawl.dev/v2/scrape",
             {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${lovableKey}`,
-                "X-Connection-Api-Key": key,
+                Authorization: `Bearer ${key}`,
               },
               body: JSON.stringify({
                 url,
