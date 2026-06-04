@@ -547,12 +547,15 @@ export async function scrapeCompetitorPage(
   }
   statuses.push({ url, status: "success" });
 
-  const { products, debug } = extractSignals(page, url, seedHost);
+  const { products, pageType, debug } = extractSignals(page, url, seedHost);
   console.info(
-    `[rescrape] url=${url} status=success mdLen=${debug.markdownLength} ` +
+    `[rescrape] url=${url} status=success type=${pageType} mdLen=${debug.markdownLength} ` +
     `prices=${debug.priceMatches} titles=${debug.productStrings} links=${debug.rawLinkCount} ` +
     `products=${debug.productsExtracted}`,
   );
+  if (pageType === "navigation_page" || pageType === "irrelevant_page" || products.length === 0) {
+    return { inserted: 0, statuses };
+  }
 
   const rows = products.slice(0, 30).map((p) => ({
     user_id: userId,
