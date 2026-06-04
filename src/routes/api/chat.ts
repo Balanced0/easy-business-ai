@@ -151,10 +151,20 @@ export const Route = createFileRoute("/api/chat")({
           }
         }
 
+        // Compute analytics facts from real uploaded data.
+        const { computeAnalyticsForUser } = await import("@/lib/data-pipeline.server");
+        const analytics = await computeAnalyticsForUser(authed.userId);
+
         const gateway = createLovableAiGatewayProvider(key);
         const result = streamText({
           model: gateway("google/gemini-3-flash-preview"),
-          system: buildSystemPrompt(retrievedBlock, business as BusinessProfile | null, language),
+          system: buildSystemPrompt(
+            retrievedBlock,
+            business as BusinessProfile | null,
+            analytics.aiSummaryFacts,
+            analytics.hasData,
+            language,
+          ),
           messages: await convertToModelMessages(messages),
         });
 
