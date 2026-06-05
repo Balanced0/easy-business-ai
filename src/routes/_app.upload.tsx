@@ -92,7 +92,7 @@ function UploadPage() {
       });
       toast.success(`${kind}: ${json.rowsInserted} rows ingested`);
       setFile(null);
-      (document.getElementById("file-input") as HTMLInputElement | null)?.value && ((document.getElementById("file-input") as HTMLInputElement).value = "");
+      if (fileInputRef.current) fileInputRef.current.value = "";
       await refreshBatches();
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
