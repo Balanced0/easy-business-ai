@@ -10,12 +10,13 @@ export const Route = createFileRoute("/_app/about")({
 });
 
 const stages = [
-  { step: "১", title: "ডেটা আপলোড / Upload Data", desc: "CSV/XLSX ফাইল আপলোড করুন — বিক্রয়, ইনভেন্টরি, পণ্য, রিভিউ, এবং অর্ডার ডেটা / Upload CSV/XLSX files for sales, inventory, products, reviews, and orders" },
-  { step: "২", title: "এআই প্রসেসিং / AI Processing", desc: "ডেটা ক্লিনিং, এমবেডিং ইনডেক্সিং, এবং অটোমেটেড অ্যানালিটিক্স কম্পিউটেশন / Data cleaning, embedding indexing, and automated analytics computation" },
-  { step: "৩", title: "ড্যাশবোর্ড ও অন্তর্দৃষ্টি / Dashboard & Insights", desc: "বিক্রয় প্রবণতা, চাহিদা পূর্বাভাস, ইনভেন্টরি সতর্কতা, রিভিউ সেন্টিমেন্ট, এবং RAG-ভিত্তিক সার্চ / Sales trends, demand forecasts, inventory alerts, review sentiment, and RAG-powered search" },
-  { step: "৪", title: "এআই সহকারী / AI Assistant", desc: "আপনার স্টোর ডেটা থেকে সরাসরি উত্তর পান — ভয়েস ইনপুট ও আউটপুট সহ (শুধু ইংরেজি) / Get answers grounded in your store data — with voice input and output (English only)" },
-  { step: "৫", title: "প্রতিযোগী বিশ্লেষণ / Competitor Analysis", desc: "সিম্যান্টিক সাদৃশ্য বিশ্লেষণ, মূল্য/রেটিং/রিভিউ তুলনা, এবং আধুনিক চার্টের মাধ্যমে বাজার অবস্থান / Semantic similarity analysis, price/rating/review comparison, and market positioning via modern charts" },
+  { step: "১ / 1", title: "ডেটা আপলোড / Upload Data", desc: "CSV/XLSX ফাইল আপলোড করুন — বিক্রয়, ইনভেন্টরি, পণ্য, রিভিউ, এবং অর্ডার ডেটা / Upload CSV/XLSX files for sales, inventory, products, reviews, and orders" },
+  { step: "২ / 2", title: "এআই প্রসেসিং / AI Processing", desc: "ডেটা ক্লিনিং, এমবেডিং ইনডেক্সিং, এবং অটোমেটেড অ্যানালিটিক্স কম্পিউটেশন / Data cleaning, embedding indexing, and automated analytics computation" },
+  { step: "৩ / 3", title: "ড্যাশবোর্ড ও অন্তর্দৃষ্টি / Dashboard & Insights", desc: "বিক্রয় প্রবণতা, চাহিদা পূর্বাভাস, ইনভেন্টরি সতর্কতা, রিভিউ সেন্টিমেন্ট, এবং RAG-ভিত্তিক সার্চ / Sales trends, demand forecasts, inventory alerts, review sentiment, and RAG-powered search" },
+  { step: "৪ / 4", title: "এআই সহকারী / AI Assistant", desc: "আপনার স্টোর ডেটা থেকে সরাসরি উত্তর পান — ভয়েস ইনপুট ও আউটপুট সহ (শুধু ইংরেজি) / Get answers grounded in your store data — with voice input and output (English only)" },
+  { step: "৫ / 5", title: "প্রতিযোগী বিশ্লেষণ / Competitor Analysis", desc: "সিম্যান্টিক সাদৃশ্য বিশ্লেষণ, মূল্য/রেটিং/রিভিউ তুলনা, এবং আধুনিক চার্টের মাধ্যমে বাজার অবস্থান / Semantic similarity analysis, price/rating/review comparison, and market positioning via modern charts" },
 ];
+
 
 const stack = [
   "TanStack Start",
