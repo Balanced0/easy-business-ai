@@ -33,6 +33,8 @@ function InventoryPage() {
   const t = useT();
   const [a, setA] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<InvItem | null>(null);
+  const [acting, setActing] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -45,6 +47,20 @@ function InventoryPage() {
       }
     })();
   }, []);
+
+  const handleConfirm = async () => {
+    if (!selected) return;
+    setActing(true);
+    await new Promise((r) => setTimeout(r, 600));
+    setActing(false);
+    setSelected(null);
+    toast.success(
+      selected.status === "low"
+        ? t(`রিস্টক অর্ডার তৈরি হয়েছে / Restock order created for ${selected.name} (${selected.recommend} units)`)
+        : t(`প্রমো ক্যাম্পেইন শুরু হয়েছে / Promo campaign started for ${selected.name}`),
+    );
+  };
+
 
   const items = [...(a?.inventory.low ?? []), ...(a?.inventory.overstock ?? [])];
   const low = a?.inventory.low ?? [];
