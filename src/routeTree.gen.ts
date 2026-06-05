@@ -34,6 +34,7 @@ import { Route as ApiCompetitorsValidateSeedsRouteImport } from './routes/api/co
 import { Route as ApiCompetitorsScrapeRouteImport } from './routes/api/competitors/scrape'
 import { Route as ApiCompetitorsListRouteImport } from './routes/api/competitors/list'
 import { Route as ApiCompetitorsDiscoverRouteImport } from './routes/api/competitors/discover'
+import { Route as ApiCompetitorsAnalyzeRouteImport } from './routes/api/competitors/analyze'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -160,6 +161,11 @@ const ApiCompetitorsDiscoverRoute = ApiCompetitorsDiscoverRouteImport.update({
   path: '/api/competitors/discover',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCompetitorsAnalyzeRoute = ApiCompetitorsAnalyzeRouteImport.update({
+  id: '/api/competitors/analyze',
+  path: '/api/competitors/analyze',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -180,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/api/scrape': typeof ApiScrapeRoute
   '/api/search': typeof ApiSearchRoute
   '/api/upload': typeof ApiUploadRoute
+  '/api/competitors/analyze': typeof ApiCompetitorsAnalyzeRoute
   '/api/competitors/discover': typeof ApiCompetitorsDiscoverRoute
   '/api/competitors/list': typeof ApiCompetitorsListRoute
   '/api/competitors/scrape': typeof ApiCompetitorsScrapeRoute
@@ -206,6 +213,7 @@ export interface FileRoutesByTo {
   '/api/scrape': typeof ApiScrapeRoute
   '/api/search': typeof ApiSearchRoute
   '/api/upload': typeof ApiUploadRoute
+  '/api/competitors/analyze': typeof ApiCompetitorsAnalyzeRoute
   '/api/competitors/discover': typeof ApiCompetitorsDiscoverRoute
   '/api/competitors/list': typeof ApiCompetitorsListRoute
   '/api/competitors/scrape': typeof ApiCompetitorsScrapeRoute
@@ -234,6 +242,7 @@ export interface FileRoutesById {
   '/api/scrape': typeof ApiScrapeRoute
   '/api/search': typeof ApiSearchRoute
   '/api/upload': typeof ApiUploadRoute
+  '/api/competitors/analyze': typeof ApiCompetitorsAnalyzeRoute
   '/api/competitors/discover': typeof ApiCompetitorsDiscoverRoute
   '/api/competitors/list': typeof ApiCompetitorsListRoute
   '/api/competitors/scrape': typeof ApiCompetitorsScrapeRoute
@@ -262,6 +271,7 @@ export interface FileRouteTypes {
     | '/api/scrape'
     | '/api/search'
     | '/api/upload'
+    | '/api/competitors/analyze'
     | '/api/competitors/discover'
     | '/api/competitors/list'
     | '/api/competitors/scrape'
@@ -288,6 +298,7 @@ export interface FileRouteTypes {
     | '/api/scrape'
     | '/api/search'
     | '/api/upload'
+    | '/api/competitors/analyze'
     | '/api/competitors/discover'
     | '/api/competitors/list'
     | '/api/competitors/scrape'
@@ -315,6 +326,7 @@ export interface FileRouteTypes {
     | '/api/scrape'
     | '/api/search'
     | '/api/upload'
+    | '/api/competitors/analyze'
     | '/api/competitors/discover'
     | '/api/competitors/list'
     | '/api/competitors/scrape'
@@ -335,6 +347,7 @@ export interface RootRouteChildren {
   ApiScrapeRoute: typeof ApiScrapeRoute
   ApiSearchRoute: typeof ApiSearchRoute
   ApiUploadRoute: typeof ApiUploadRoute
+  ApiCompetitorsAnalyzeRoute: typeof ApiCompetitorsAnalyzeRoute
   ApiCompetitorsDiscoverRoute: typeof ApiCompetitorsDiscoverRoute
   ApiCompetitorsListRoute: typeof ApiCompetitorsListRoute
   ApiCompetitorsScrapeRoute: typeof ApiCompetitorsScrapeRoute
@@ -520,6 +533,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCompetitorsDiscoverRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/competitors/analyze': {
+      id: '/api/competitors/analyze'
+      path: '/api/competitors/analyze'
+      fullPath: '/api/competitors/analyze'
+      preLoaderRoute: typeof ApiCompetitorsAnalyzeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -559,6 +579,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiScrapeRoute: ApiScrapeRoute,
   ApiSearchRoute: ApiSearchRoute,
   ApiUploadRoute: ApiUploadRoute,
+  ApiCompetitorsAnalyzeRoute: ApiCompetitorsAnalyzeRoute,
   ApiCompetitorsDiscoverRoute: ApiCompetitorsDiscoverRoute,
   ApiCompetitorsListRoute: ApiCompetitorsListRoute,
   ApiCompetitorsScrapeRoute: ApiCompetitorsScrapeRoute,
@@ -569,13 +590,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
