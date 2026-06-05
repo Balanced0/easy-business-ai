@@ -458,16 +458,26 @@ export async function computeAnalyticsForUser(userId: string): Promise<Analytics
   const fmt = (n: number) => `$${Math.round(n).toLocaleString()}`;
   const summaryCards = hasData
     ? [
-        { label: "Total Sales", value: fmt(totalRevenue), delta: `${totalUnits} units`, positive: totalRevenue > 0 },
-        { label: "Orders", value: String(totalOrders), delta: `AOV ${fmt(aov)}`, positive: totalOrders > 0 },
         {
-          label: "Inventory Risk",
-          value: `${low.length + overstock.length} items`,
-          delta: `${low.length} low · ${overstock.length} overstock`,
+          label: "মোট বিক্রয় / Total Sales",
+          value: fmt(totalRevenue),
+          delta: `${totalUnits} ইউনিট / ${totalUnits} units`,
+          positive: totalRevenue > 0,
+        },
+        {
+          label: "অর্ডার / Orders",
+          value: String(totalOrders),
+          delta: `গড় অর্ডার মান ${fmt(aov)} / AOV ${fmt(aov)}`,
+          positive: totalOrders > 0,
+        },
+        {
+          label: "ইনভেন্টরি ঝুঁকি / Inventory Risk",
+          value: `${low.length + overstock.length} আইটেম / ${low.length + overstock.length} items`,
+          delta: `${low.length} কম · ${overstock.length} অতিরিক্ত / ${low.length} low · ${overstock.length} overstock`,
           positive: low.length === 0 && overstock.length === 0,
         },
         {
-          label: "Trending Products",
+          label: "ট্রেন্ডিং পণ্য / Trending Products",
           value: String(trendingProducts.length),
           delta: trendingProducts[0]?.name ?? "—",
           positive: trendingProducts.length > 0,
@@ -475,7 +485,20 @@ export async function computeAnalyticsForUser(userId: string): Promise<Analytics
       ]
     : [];
 
-  const aiSummaryFacts = hasData
+  const bnFacts = hasData
+    ? [
+        `মোট রাজস্ব: ${fmt(totalRevenue)}, ${totalOrders} অর্ডারে (${totalUnits} ইউনিট)।`,
+        trendingProducts.length
+          ? `শীর্ষ পণ্য: ${trendingProducts[0].name} (${trendingProducts[0].unitsSold} ইউনিট${trendingProducts[0].growth ? `, ${trendingProducts[0].growth}` : ""})।`
+          : "",
+        low.length ? `${low.length}টি SKU রিঅর্ডার থ্রেশহোল্ডের নিচে।` : "",
+        overstock.length ? `${overstock.length}টি SKU অতিরিক্ত স্টকে আছে।` : "",
+        breakdown.length
+          ? `সেন্টিমেন্ট: ${breakdown[0].value}% পজিটিভ, ${breakdown[2]?.value ?? 0}% নেগেটিভ, ${totalSentiment} রিভিউ জুড়ে।`
+          : "",
+      ].filter(Boolean).join(" ")
+    : "";
+  const enFacts = hasData
     ? [
         `Total revenue: ${fmt(totalRevenue)} across ${totalOrders} orders (${totalUnits} units).`,
         trendingProducts.length
@@ -486,10 +509,9 @@ export async function computeAnalyticsForUser(userId: string): Promise<Analytics
         breakdown.length
           ? `Sentiment: ${breakdown[0].value}% positive, ${breakdown[2]?.value ?? 0}% negative across ${totalSentiment} reviews.`
           : "",
-      ]
-        .filter(Boolean)
-        .join(" ")
+      ].filter(Boolean).join(" ")
     : "";
+  const aiSummaryFacts = hasData ? `${bnFacts} / ${enFacts}` : "";
 
   return {
     hasData,

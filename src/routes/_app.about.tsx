@@ -70,7 +70,7 @@ function AboutPage() {
                 <div key={s.step} className="relative flex">
                   <div className="flex h-full w-full flex-col rounded-md border bg-card p-4">
                     <div className="mb-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                      {s.step}
+                      {t(s.step)}
                     </div>
                     <div className="text-sm font-medium">{t(s.title)}</div>
                     <div className="mt-1 text-xs text-muted-foreground">{t(s.desc)}</div>

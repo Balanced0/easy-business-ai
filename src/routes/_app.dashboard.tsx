@@ -309,7 +309,7 @@ function DashboardPage() {
           </CardHeader>
           <CardContent>
             <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
-              {visibleAiSummary || t("বিশ্লেষণ পেতে আপনার বিক্রয়/ইনভেন্টরি/রিভিউ ডেটা আপলোড করুন / Upload your sales/inventory/review data to see analytics.")}
+              {visibleAiSummary ? t(visibleAiSummary) : t("বিশ্লেষণ পেতে আপনার বিক্রয়/ইনভেন্টরি/রিভিউ ডেটা আপলোড করুন / Upload your sales/inventory/review data to see analytics.")}
             </p>
           </CardContent>
         </Card>
