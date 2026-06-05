@@ -51,11 +51,12 @@ function AssistantPage() {
     );
   }, []);
 
+  const voiceModeRef = useRef(false);
   const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
       prepareSendMessagesRequest: async ({ messages: ms, id }) => ({
-        body: { messages: ms, id, language: lang },
+        body: { messages: ms, id, language: lang, voice: voiceModeRef.current },
         headers: await authHeaders(),
       }),
     }),
