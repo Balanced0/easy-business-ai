@@ -22,11 +22,20 @@ function buildSystemPrompt(
   analyticsFacts: string,
   hasData: boolean,
   language: "bn" | "en",
+  voice: boolean,
 ) {
   const langRule =
     language === "bn"
       ? `LANGUAGE RULE (CRITICAL): Reply ONLY in Bangla (Bengali). Do NOT include English translations. Use natural, conversational Bangla.`
       : `LANGUAGE RULE (CRITICAL): Reply ONLY in English. Do NOT include Bangla translations. Use clear, conversational English.`;
+
+  const voiceRule = voice
+    ? `\nVOICE MODE (CRITICAL): The reply will be spoken aloud. Be extremely concise and conversational, like a human speaking.
+- Greetings or small-talk → reply in ONE short sentence only. Do not add follow-up questions, lists, or offers of help unless explicitly asked.
+- Analytical answers → max 2-3 short sentences. No markdown, no bullet points, no headings, no emojis.
+- Never read out URLs, code, tables, or long numbers. Round numbers naturally.
+- Do not restate the question. Get straight to the point.`
+    : "";
 
   const businessBlock = business
     ? `BUSINESS PROFILE:
