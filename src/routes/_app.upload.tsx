@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 import { DashboardTopbar } from "@/components/dashboard-topbar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -49,6 +49,8 @@ function UploadPage() {
   const [lastResult, setLastResult] = useState<{ ok: boolean; message: string } | null>(null);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [loadingBatches, setLoadingBatches] = useState(true);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const refreshBatches = async () => {
     setLoadingBatches(true);
@@ -89,7 +91,7 @@ function UploadPage() {
       });
       toast.success(`${kind}: ${json.rowsInserted} rows ingested`);
       setFile(null);
-      (document.getElementById("file-input") as HTMLInputElement | null)?.value && ((document.getElementById("file-input") as HTMLInputElement).value = "");
+      if (fileInputRef.current) fileInputRef.current.value = "";
       await refreshBatches();
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -140,13 +142,46 @@ function UploadPage() {
                 </div>
               </div>
               <div>
-                <Label htmlFor="file-input" className="text-sm">{t("ফাইল / File")} (.csv, .xlsx)</Label>
-                <Input
+                <Label className="text-sm">{t("ফাইল / File")} (.csv, .xlsx)</Label>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => fileInputRef.current?.click()}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") fileInputRef.current?.click(); }}
+                  onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                  onDragLeave={() => setIsDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDragOver(false);
+                    const dropped = e.dataTransfer.files[0];
+                    if (dropped) setFile(dropped);
+                  }}
+                  className={cn(
+                    "mt-2 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-8 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    isDragOver ? "border-primary bg-primary/5" : "border-input hover:bg-accent/50"
+                  )}
+                >
+                  {file ? (
+                    <>
+                      <FileSpreadsheet className="h-8 w-8 text-primary" />
+                      <p className="text-sm font-medium text-foreground">{file.name}</p>
+                      <p className="text-xs text-muted-foreground">{t("ফাইল পরিবর্তন করতে ক্লিক করুন / Click to change file")}</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-8 w-8 text-muted-foreground" />
+                      <p className="text-sm font-medium text-foreground">{t("আপলোড করতে ক্লিক করুন বা টেনে আনুন / Click to upload or drag and drop")}</p>
+                      <p className="text-xs text-muted-foreground">CSV, XLSX, or XLS</p>
+                    </>
+                  )}
+                </div>
+                <input
+                  ref={fileInputRef}
                   id="file-input"
                   type="file"
                   accept=".csv,.xlsx,.xls"
+                  className="hidden"
                   onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                  className="mt-2"
                 />
               </div>
               <Button type="submit" disabled={!file || uploading}>
