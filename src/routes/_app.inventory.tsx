@@ -96,7 +96,7 @@ function InventoryPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription className="text-xs uppercase">{t("অতিরিক্ত স্টক / Overstock")}</CardDescription>
-              <CardTitle className="text-2xl text-warning-foreground">{over.length}</CardTitle>
+              <CardTitle className="text-2xl text-warning">{over.length}</CardTitle>
             </CardHeader>
             <CardContent className="text-xs text-muted-foreground">
               {t("প্রমো বা বান্ডেল বিবেচনা করুন / Consider promo or bundle")}
