@@ -311,22 +311,27 @@ function AssistantPage() {
             </CardContent>
             <div className="space-y-2 border-t p-3">
               <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Switch
-                    id="voice-mode"
-                    checked={voiceMode}
-                    onCheckedChange={(v) => {
-                      setVoiceMode(v);
-                      if (!v) stopAudio();
-                    }}
-                  />
-                  <Label htmlFor="voice-mode" className="cursor-pointer text-xs">
-                    {voiceMode ? (
-                      <span className="flex items-center gap-1"><Volume2 className="h-3.5 w-3.5" /> {t("ভয়েস রেসপন্স চালু / Voice replies on")}</span>
-                    ) : (
-                      <span className="flex items-center gap-1"><VolumeX className="h-3.5 w-3.5" /> {t("ভয়েস রেসপন্স বন্ধ / Voice replies off")}</span>
-                    )}
-                  </Label>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="voice-mode"
+                      checked={voiceMode}
+                      onCheckedChange={(v) => {
+                        setVoiceMode(v);
+                        if (!v) stopAudio();
+                      }}
+                    />
+                    <Label htmlFor="voice-mode" className="cursor-pointer text-xs">
+                      {voiceMode ? (
+                        <span className="flex items-center gap-1"><Volume2 className="h-3.5 w-3.5" /> {t("ভয়েস রেসপন্স চালু / Voice replies on")}</span>
+                      ) : (
+                        <span className="flex items-center gap-1"><VolumeX className="h-3.5 w-3.5" /> {t("ভয়েস রেসপন্স বন্ধ / Voice replies off")}</span>
+                      )}
+                    </Label>
+                  </div>
+                  <span className="rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                    {t("শুধু ইংরেজিতে / English only")}
+                  </span>
                 </div>
                 {speaking && (
                   <button
