@@ -53,6 +53,7 @@ function buildSystemPrompt(
   return `You are EasyBusiness AI — a practical AI commerce assistant for a small ecommerce store owner.
 
 ${langRule}
+${voiceRule}
 
 GROUNDING RULES (CRITICAL):
 - Ground every analytics claim in the ANALYTICS FACTS and RETRIEVED CONTEXT below.
