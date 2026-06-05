@@ -175,6 +175,7 @@ export const Route = createFileRoute("/api/chat")({
             analytics.aiSummaryFacts,
             analytics.hasData,
             language,
+            voice,
           ),
           messages: await convertToModelMessages(messages),
         });
