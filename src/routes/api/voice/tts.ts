@@ -7,8 +7,10 @@ import { getAuthedUser } from "@/lib/auth-route.server";
 // Voice selection by language. For Bangla we use a voice that handles
 // Indic/Bangla phonemes more naturally than the default English-trained Sarah.
 // Charlotte — multilingual, warm, good Bangla cadence.
-const VOICE_BN = "XB0fDUnXU5powFXDhCwa"; // Charlotte
-const VOICE_EN = "EXAVITQu4vr4xnSDxMaL"; // Sarah
+// Use premade voices (available on free plan). language_code on
+// eleven_turbo_v2_5 enforces correct Bangla pronunciation regardless of voice.
+const VOICE_BN = "EXAVITQu4vr4xnSDxMaL"; // Sarah — premade, multilingual
+const VOICE_EN = "EXAVITQu4vr4xnSDxMaL"; // Sarah — premade, multilingual
 
 export const Route = createFileRoute("/api/voice/tts")({
   server: {
