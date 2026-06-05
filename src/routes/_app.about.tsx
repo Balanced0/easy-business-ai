@@ -106,7 +106,7 @@ function AboutPage() {
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground leading-relaxed">
             {t(
-              "EasyBusiness AI একটি সম্পূর্ণ কার্যকর SaaS পণ্য — কোনও ডেমো নয়। এটি SME ইকমার্স টিমদের জন্য ডিজাইন করা হয়েছে যারা স্প্রেডশিটের ঝামেলা ছাড়াই পরিষ্কার, AI-চালিত উত্তর চান। আপনার ডেটা আপলোড করুন, বিশ্লেষণ দেখুন, প্রশ্ন করুন, এবং প্রতিযোগিতামূলক বাজারে দ্রুত ও স্মার্ট সিদ্ধান্ত নিন। / EasyBusiness AI is a fully functional SaaS product — not a demo. It is designed for SME ecommerce teams who want clear, AI-powered answers without wrestling spreadsheets. Upload your data, view analytics, ask questions, and make fast, smart decisions in a competitive market."
+              "EasyBusiness AI একটি সম্পূর্ণ কার্যকর SaaS পণ্য। এটি SME ইকমার্স টিমদের জন্য ডিজাইন করা হয়েছে যারা স্প্রেডশিটের ঝামেলা ছাড়াই পরিষ্কার, AI-চালিত উত্তর চান। আপনার ডেটা আপলোড করুন, বিশ্লেষণ দেখুন, প্রশ্ন করুন, এবং প্রতিযোগিতামূলক বাজারে দ্রুত ও স্মার্ট সিদ্ধান্ত নিন। / EasyBusiness AI is a fully functional SaaS product. It is designed for SME ecommerce teams who want clear, AI-powered answers without wrestling spreadsheets. Upload your data, view analytics, ask questions, and make fast, smart decisions in a competitive market."
             )}
           </CardContent>
         </Card>
