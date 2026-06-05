@@ -77,7 +77,7 @@ export const Route = createFileRoute("/api/chat")({
         const authed = await getAuthedUser(request);
         if (!authed) return new Response("Unauthorized", { status: 401 });
 
-        let payload: { messages?: UIMessage[]; language?: "bn" | "en" } = {};
+        let payload: { messages?: UIMessage[]; language?: "bn" | "en"; voice?: boolean } = {};
         try {
           payload = await request.json();
         } catch {
@@ -85,6 +85,7 @@ export const Route = createFileRoute("/api/chat")({
         }
         const messages = payload.messages;
         const language = payload.language === "en" ? "en" : "bn";
+        const voice = payload.voice === true;
         if (!Array.isArray(messages) || messages.length === 0) {
           return new Response("Messages are required", { status: 400 });
         }
