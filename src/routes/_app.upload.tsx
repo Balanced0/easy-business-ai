@@ -50,6 +50,8 @@ function UploadPage() {
   const [lastResult, setLastResult] = useState<{ ok: boolean; message: string } | null>(null);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [loadingBatches, setLoadingBatches] = useState(true);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const refreshBatches = async () => {
     setLoadingBatches(true);
