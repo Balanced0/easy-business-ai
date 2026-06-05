@@ -92,6 +92,7 @@ function AssistantPage() {
 
   // ---- Voice features ----
   const [voiceMode, setVoiceMode] = useState(false);
+  useEffect(() => { voiceModeRef.current = voiceMode; }, [voiceMode]);
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [speaking, setSpeaking] = useState(false);
