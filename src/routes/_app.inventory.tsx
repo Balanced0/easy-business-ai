@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertTriangle, TrendingDown, Package, Upload } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertTriangle, TrendingDown, Package, Upload, Sparkles, ShoppingCart } from "lucide-react";
 import { useT } from "@/hooks/use-language";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/inventory")({
   head: () => ({ meta: [{ title: "ইনভেন্টরি / Inventory — EasyBusiness AI" }] }),
@@ -31,6 +33,8 @@ function InventoryPage() {
   const t = useT();
   const [a, setA] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<InvItem | null>(null);
+  const [acting, setActing] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -43,6 +47,20 @@ function InventoryPage() {
       }
     })();
   }, []);
+
+  const handleConfirm = async () => {
+    if (!selected) return;
+    setActing(true);
+    await new Promise((r) => setTimeout(r, 600));
+    setActing(false);
+    setSelected(null);
+    toast.success(
+      selected.status === "low"
+        ? t(`রিস্টক অর্ডার তৈরি হয়েছে / Restock order created for ${selected.name} (${selected.recommend} units)`)
+        : t(`প্রমো ক্যাম্পেইন শুরু হয়েছে / Promo campaign started for ${selected.name}`),
+    );
+  };
+
 
   const items = [...(a?.inventory.low ?? []), ...(a?.inventory.overstock ?? [])];
   const low = a?.inventory.low ?? [];
@@ -134,7 +152,7 @@ function InventoryPage() {
                       </TableCell>
                       <TableCell className="text-right">{i.recommend > 0 ? `${i.recommend} units` : "—"}</TableCell>
                       <TableCell className="text-right">
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" onClick={() => setSelected(i)}>
                           <Package className="mr-1 h-3 w-3" />
                           {i.status === "low" ? t("রিস্টক / Restock") : t("প্রমোট / Promote")}
                         </Button>
@@ -147,6 +165,39 @@ function InventoryPage() {
           </CardContent>
         </Card>
       </main>
+
+      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {selected?.status === "low" ? (
+                <><ShoppingCart className="h-4 w-4" /> {t("রিস্টক নিশ্চিত করুন / Confirm restock")}</>
+              ) : (
+                <><Sparkles className="h-4 w-4" /> {t("প্রমোশন চালু করুন / Launch promotion")}</>
+              )}
+            </DialogTitle>
+            <DialogDescription>
+              {selected?.status === "low"
+                ? t(`${selected?.name} (SKU ${selected?.sku}) এর জন্য ${selected?.recommend} ইউনিট অর্ডার করুন / Place an order for ${selected?.recommend} units of ${selected?.name} (SKU ${selected?.sku}). Current stock: ${selected?.stock}.`)
+                : t(`${selected?.name} (SKU ${selected?.sku}) এর জন্য ১৫% ছাড়ের প্রমো শুরু করুন / Start a 15% promo on ${selected?.name} (SKU ${selected?.sku}) to clear ${selected?.stock} units in stock.`)}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-md border bg-muted/30 p-3 text-sm">
+            <div className="flex justify-between"><span className="text-muted-foreground">{t("পণ্য / Product")}</span><span className="font-medium">{selected?.name}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">SKU</span><span>{selected?.sku}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">{t("স্টক / Stock")}</span><span>{selected?.stock}</span></div>
+            {selected?.status === "low" && (
+              <div className="flex justify-between"><span className="text-muted-foreground">{t("সুপারিশ / Suggested")}</span><span className="font-medium">{selected?.recommend} units</span></div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelected(null)} disabled={acting}>{t("বাতিল / Cancel")}</Button>
+            <Button onClick={handleConfirm} disabled={acting}>
+              {acting ? t("প্রক্রিয়াকরণ... / Processing...") : selected?.status === "low" ? t("অর্ডার তৈরি করুন / Create order") : t("প্রমো শুরু করুন / Start promo")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
