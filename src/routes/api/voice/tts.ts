@@ -9,8 +9,10 @@ import { getAuthedUser } from "@/lib/auth-route.server";
 // Charlotte — multilingual, warm, good Bangla cadence.
 // Use premade voices (available on free plan). language_code on
 // eleven_turbo_v2_5 enforces correct Bangla pronunciation regardless of voice.
-const VOICE_BN = "EXAVITQu4vr4xnSDxMaL"; // Sarah — premade, multilingual
-const VOICE_EN = "EXAVITQu4vr4xnSDxMaL"; // Sarah — premade, multilingual
+// English-only TTS. Bangla was removed because library voices with proper
+// Bangla pronunciation require a paid ElevenLabs plan, and the multilingual
+// premade voices drift toward Hindi phonemes.
+const VOICE_EN = "XrExE9yKIg1WjnnlVkGX"; // Matilda — premade, warm & natural
 
 export const Route = createFileRoute("/api/voice/tts")({
   server: {
@@ -22,7 +24,7 @@ export const Route = createFileRoute("/api/voice/tts")({
         const apiKey = process.env.ELEVENLABS_API_KEY;
         if (!apiKey) return new Response("ElevenLabs not configured", { status: 500 });
 
-        let body: { text?: string; language?: string };
+        let body: { text?: string };
         try {
           body = await request.json();
         } catch {
@@ -31,14 +33,11 @@ export const Route = createFileRoute("/api/voice/tts")({
         const text = (body.text ?? "").trim();
         if (!text) return new Response("Missing text", { status: 400 });
         const clipped = text.length > 4000 ? text.slice(0, 4000) : text;
-        const lang = body.language === "en" ? "en" : "bn";
-        const voiceId = lang === "bn" ? VOICE_BN : VOICE_EN;
 
-        // eleven_turbo_v2_5 supports `language_code` enforcement, which fixes
-        // the common Bangla→Hindi pronunciation drift. Multilingual quality
-        // is on par with multilingual_v2 for short conversational replies.
+        // eleven_multilingual_v2 delivers the most natural, human-like English
+        // prosody. Tuned voice_settings prioritize expressiveness over rigidity.
         const res = await fetch(
-          `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_44100_128`,
+          `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_EN}/stream?output_format=mp3_44100_128`,
           {
             method: "POST",
             headers: {
@@ -47,14 +46,13 @@ export const Route = createFileRoute("/api/voice/tts")({
             },
             body: JSON.stringify({
               text: clipped,
-              model_id: "eleven_turbo_v2_5",
-              language_code: lang === "bn" ? "bn" : "en",
+              model_id: "eleven_multilingual_v2",
               voice_settings: {
-                stability: 0.75,
-                similarity_boost: 0.75,
-                style: 0.0,
+                stability: 0.4,
+                similarity_boost: 0.85,
+                style: 0.35,
                 use_speaker_boost: true,
-                speed: 0.95,
+                speed: 1.0,
               },
             }),
           },
@@ -75,3 +73,4 @@ export const Route = createFileRoute("/api/voice/tts")({
     },
   },
 });
+
