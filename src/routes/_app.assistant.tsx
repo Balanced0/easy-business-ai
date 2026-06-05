@@ -120,7 +120,7 @@ function AssistantPage() {
         const res = await fetch("/api/voice/tts", {
           method: "POST",
           headers: { ...headers, "Content-Type": "application/json" },
-          body: JSON.stringify({ text, language: lang }),
+          body: JSON.stringify({ text }),
         });
         if (!res.ok) throw new Error(`TTS failed (${res.status})`);
         const blob = await res.blob();
