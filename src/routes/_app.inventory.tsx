@@ -152,7 +152,7 @@ function InventoryPage() {
                       </TableCell>
                       <TableCell className="text-right">{i.recommend > 0 ? `${i.recommend} units` : "—"}</TableCell>
                       <TableCell className="text-right">
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" onClick={() => setSelected(i)}>
                           <Package className="mr-1 h-3 w-3" />
                           {i.status === "low" ? t("রিস্টক / Restock") : t("প্রমোট / Promote")}
                         </Button>
