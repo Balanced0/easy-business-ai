@@ -143,13 +143,46 @@ function UploadPage() {
                 </div>
               </div>
               <div>
-                <Label htmlFor="file-input" className="text-sm">{t("ফাইল / File")} (.csv, .xlsx)</Label>
-                <Input
+                <Label className="text-sm">{t("ফাইল / File")} (.csv, .xlsx)</Label>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => fileInputRef.current?.click()}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") fileInputRef.current?.click(); }}
+                  onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                  onDragLeave={() => setIsDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDragOver(false);
+                    const dropped = e.dataTransfer.files[0];
+                    if (dropped) setFile(dropped);
+                  }}
+                  className={cn(
+                    "mt-2 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-8 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    isDragOver ? "border-primary bg-primary/5" : "border-input hover:bg-accent/50"
+                  )}
+                >
+                  {file ? (
+                    <>
+                      <FileSpreadsheet className="h-8 w-8 text-primary" />
+                      <p className="text-sm font-medium text-foreground">{file.name}</p>
+                      <p className="text-xs text-muted-foreground">{t("ফাইল পরিবর্তন করতে ক্লিক করুন / Click to change file")}</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-8 w-8 text-muted-foreground" />
+                      <p className="text-sm font-medium text-foreground">{t("আপলোড করতে ক্লিক করুন বা টেনে আনুন / Click to upload or drag and drop")}</p>
+                      <p className="text-xs text-muted-foreground">CSV, XLSX, or XLS</p>
+                    </>
+                  )}
+                </div>
+                <input
+                  ref={fileInputRef}
                   id="file-input"
                   type="file"
                   accept=".csv,.xlsx,.xls"
+                  className="hidden"
                   onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                  className="mt-2"
                 />
               </div>
               <Button type="submit" disabled={!file || uploading}>
