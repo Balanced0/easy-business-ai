@@ -304,7 +304,35 @@ function AssistantPage() {
                 )}
               </div>
             </CardContent>
-            <div className="border-t p-3">
+            <div className="space-y-2 border-t p-3">
+              <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="voice-mode"
+                    checked={voiceMode}
+                    onCheckedChange={(v) => {
+                      setVoiceMode(v);
+                      if (!v) stopAudio();
+                    }}
+                  />
+                  <Label htmlFor="voice-mode" className="cursor-pointer text-xs">
+                    {voiceMode ? (
+                      <span className="flex items-center gap-1"><Volume2 className="h-3.5 w-3.5" /> {t("ভয়েস রেসপন্স চালু / Voice replies on")}</span>
+                    ) : (
+                      <span className="flex items-center gap-1"><VolumeX className="h-3.5 w-3.5" /> {t("ভয়েস রেসপন্স বন্ধ / Voice replies off")}</span>
+                    )}
+                  </Label>
+                </div>
+                {speaking && (
+                  <button
+                    type="button"
+                    onClick={stopAudio}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    {t("থামান / Stop")}
+                  </button>
+                )}
+              </div>
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -321,21 +349,45 @@ function AssistantPage() {
                       send(input);
                     }
                   }}
-                  placeholder={t("আপনার স্টোর সম্পর্কে কিছু জিজ্ঞাসা করুন... / Ask anything about your store...")}
+                  placeholder={
+                    recording
+                      ? t("শুনছি… ট্যাপ করে থামান / Listening… tap to stop")
+                      : transcribing
+                      ? t("ট্রান্সক্রাইব করছি… / Transcribing…")
+                      : t("আপনার স্টোর সম্পর্কে কিছু জিজ্ঞাসা করুন... / Ask anything about your store...")
+                  }
                   className="min-h-[42px] resize-none"
                   rows={1}
-                  disabled={isLoading}
+                  disabled={isLoading || recording || transcribing}
                 />
+                <Button
+                  type="button"
+                  size="icon"
+                  variant={recording ? "destructive" : "outline"}
+                  className="h-10 w-10 shrink-0"
+                  onClick={recording ? stopRecording : startRecording}
+                  disabled={isLoading || transcribing}
+                  title={t("ভয়েস ইনপুট / Voice input")}
+                >
+                  {transcribing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : recording ? (
+                    <Square className="h-4 w-4" />
+                  ) : (
+                    <Mic className="h-4 w-4" />
+                  )}
+                </Button>
                 <Button
                   type="submit"
                   size="icon"
                   className="h-10 w-10 shrink-0"
-                  disabled={isLoading || !input.trim()}
+                  disabled={isLoading || recording || transcribing || !input.trim()}
                 >
                   <Send className="h-4 w-4" />
                 </Button>
               </form>
             </div>
+
           </Card>
 
           <div className="space-y-4">
