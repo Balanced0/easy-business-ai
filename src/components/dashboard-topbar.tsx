@@ -1,4 +1,5 @@
-import { Search, Bell, LogOut, Moon, Sun } from "lucide-react";
+import { Search, LogOut, Moon, Sun } from "lucide-react";
+import { NotificationsPopover } from "@/components/notifications-popover";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -88,9 +89,7 @@ export function DashboardTopbar({ title }: { title: string }) {
         >
           {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </Button>
-        <Button variant="ghost" size="icon" className="h-9 w-9">
-          <Bell className="h-4 w-4" />
-        </Button>
+        <NotificationsPopover />
         <button
           type="button"
           onClick={goProfile}
