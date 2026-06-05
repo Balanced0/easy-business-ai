@@ -28,6 +28,8 @@ import { Route as AppCustomersRouteImport } from './routes/_app.customers'
 import { Route as AppCompetitorsRouteImport } from './routes/_app.competitors'
 import { Route as AppAssistantRouteImport } from './routes/_app.assistant'
 import { Route as AppAboutRouteImport } from './routes/_app.about'
+import { Route as ApiVoiceTtsRouteImport } from './routes/api/voice/tts'
+import { Route as ApiVoiceSttRouteImport } from './routes/api/voice/stt'
 import { Route as ApiCompetitorsValidateSeedsRouteImport } from './routes/api/competitors/validate-seeds'
 import { Route as ApiCompetitorsScrapeRouteImport } from './routes/api/competitors/scrape'
 import { Route as ApiCompetitorsListRouteImport } from './routes/api/competitors/list'
@@ -127,6 +129,16 @@ const AppAboutRoute = AppAboutRouteImport.update({
   path: '/about',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiVoiceTtsRoute = ApiVoiceTtsRouteImport.update({
+  id: '/api/voice/tts',
+  path: '/api/voice/tts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiVoiceSttRoute = ApiVoiceSttRouteImport.update({
+  id: '/api/voice/stt',
+  path: '/api/voice/stt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCompetitorsValidateSeedsRoute =
   ApiCompetitorsValidateSeedsRouteImport.update({
     id: '/api/competitors/validate-seeds',
@@ -172,6 +184,8 @@ export interface FileRoutesByFullPath {
   '/api/competitors/list': typeof ApiCompetitorsListRoute
   '/api/competitors/scrape': typeof ApiCompetitorsScrapeRoute
   '/api/competitors/validate-seeds': typeof ApiCompetitorsValidateSeedsRoute
+  '/api/voice/stt': typeof ApiVoiceSttRoute
+  '/api/voice/tts': typeof ApiVoiceTtsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -196,6 +210,8 @@ export interface FileRoutesByTo {
   '/api/competitors/list': typeof ApiCompetitorsListRoute
   '/api/competitors/scrape': typeof ApiCompetitorsScrapeRoute
   '/api/competitors/validate-seeds': typeof ApiCompetitorsValidateSeedsRoute
+  '/api/voice/stt': typeof ApiVoiceSttRoute
+  '/api/voice/tts': typeof ApiVoiceTtsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -222,6 +238,8 @@ export interface FileRoutesById {
   '/api/competitors/list': typeof ApiCompetitorsListRoute
   '/api/competitors/scrape': typeof ApiCompetitorsScrapeRoute
   '/api/competitors/validate-seeds': typeof ApiCompetitorsValidateSeedsRoute
+  '/api/voice/stt': typeof ApiVoiceSttRoute
+  '/api/voice/tts': typeof ApiVoiceTtsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -248,6 +266,8 @@ export interface FileRouteTypes {
     | '/api/competitors/list'
     | '/api/competitors/scrape'
     | '/api/competitors/validate-seeds'
+    | '/api/voice/stt'
+    | '/api/voice/tts'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -272,6 +292,8 @@ export interface FileRouteTypes {
     | '/api/competitors/list'
     | '/api/competitors/scrape'
     | '/api/competitors/validate-seeds'
+    | '/api/voice/stt'
+    | '/api/voice/tts'
   id:
     | '__root__'
     | '/'
@@ -297,6 +319,8 @@ export interface FileRouteTypes {
     | '/api/competitors/list'
     | '/api/competitors/scrape'
     | '/api/competitors/validate-seeds'
+    | '/api/voice/stt'
+    | '/api/voice/tts'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -315,6 +339,8 @@ export interface RootRouteChildren {
   ApiCompetitorsListRoute: typeof ApiCompetitorsListRoute
   ApiCompetitorsScrapeRoute: typeof ApiCompetitorsScrapeRoute
   ApiCompetitorsValidateSeedsRoute: typeof ApiCompetitorsValidateSeedsRoute
+  ApiVoiceSttRoute: typeof ApiVoiceSttRoute
+  ApiVoiceTtsRoute: typeof ApiVoiceTtsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -452,6 +478,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAboutRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/voice/tts': {
+      id: '/api/voice/tts'
+      path: '/api/voice/tts'
+      fullPath: '/api/voice/tts'
+      preLoaderRoute: typeof ApiVoiceTtsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/voice/stt': {
+      id: '/api/voice/stt'
+      path: '/api/voice/stt'
+      fullPath: '/api/voice/stt'
+      preLoaderRoute: typeof ApiVoiceSttRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/competitors/validate-seeds': {
       id: '/api/competitors/validate-seeds'
       path: '/api/competitors/validate-seeds'
@@ -523,6 +563,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCompetitorsListRoute: ApiCompetitorsListRoute,
   ApiCompetitorsScrapeRoute: ApiCompetitorsScrapeRoute,
   ApiCompetitorsValidateSeedsRoute: ApiCompetitorsValidateSeedsRoute,
+  ApiVoiceSttRoute: ApiVoiceSttRoute,
+  ApiVoiceTtsRoute: ApiVoiceTtsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

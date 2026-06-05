@@ -1,14 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { DashboardTopbar } from "@/components/dashboard-topbar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Sparkles, User, Database, Upload } from "lucide-react";
+import { Send, Sparkles, User, Database, Upload, Mic, Square, Volume2, VolumeX, Loader2 } from "lucide-react";
 import { useLanguage, useT } from "@/hooks/use-language";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 async function authHeaders(): Promise<Record<string, string>> {
   const { data } = await supabase.auth.getSession();
@@ -85,6 +88,137 @@ function AssistantPage() {
     void sendMessage({ text: q });
     setInput("");
   };
+
+  // ---- Voice features ----
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const spokenIdsRef = useRef<Set<string>>(new Set());
+
+  const stopAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+      audioRef.current = null;
+    }
+    setSpeaking(false);
+  }, []);
+
+  const speak = useCallback(
+    async (text: string) => {
+      if (!text.trim()) return;
+      try {
+        stopAudio();
+        setSpeaking(true);
+        const headers = await authHeaders();
+        const res = await fetch("/api/voice/tts", {
+          method: "POST",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: JSON.stringify({ text, language: lang }),
+        });
+        if (!res.ok) throw new Error(`TTS failed (${res.status})`);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        audio.onended = () => {
+          URL.revokeObjectURL(url);
+          setSpeaking(false);
+        };
+        audio.onerror = () => {
+          URL.revokeObjectURL(url);
+          setSpeaking(false);
+        };
+        await audio.play();
+      } catch (err) {
+        console.error("[voice] tts error", err);
+        toast.error(lang === "bn" ? "ভয়েস প্লে করা যায়নি" : "Could not play voice");
+        setSpeaking(false);
+      }
+    },
+    [lang, stopAudio],
+  );
+
+  const startRecording = useCallback(async () => {
+    if (recording || transcribing || isLoading) return;
+    try {
+      stopAudio();
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/webm")
+        ? "audio/webm"
+        : "";
+      const rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+      chunksRef.current = [];
+      rec.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      rec.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunksRef.current, { type: rec.mimeType || "audio/webm" });
+        chunksRef.current = [];
+        if (blob.size < 500) {
+          toast.error(lang === "bn" ? "কিছু শোনা যায়নি" : "Didn't catch that");
+          return;
+        }
+        setTranscribing(true);
+        try {
+          const headers = await authHeaders();
+          const fd = new FormData();
+          fd.append("audio", blob, "speech.webm");
+          fd.append("language", lang);
+          const res = await fetch("/api/voice/stt", { method: "POST", headers, body: fd });
+          if (!res.ok) throw new Error(`STT ${res.status}`);
+          const data = (await res.json()) as { text?: string; language?: string };
+          const text = (data.text ?? "").trim();
+          if (!text) {
+            toast.error(lang === "bn" ? "কোনো বাক্য চিহ্নিত হয়নি" : "No speech detected");
+            return;
+          }
+          void sendMessage({ text });
+        } catch (err) {
+          console.error("[voice] stt error", err);
+          toast.error(lang === "bn" ? "স্পিচ বুঝতে পারিনি" : "Could not transcribe");
+        } finally {
+          setTranscribing(false);
+        }
+      };
+      recorderRef.current = rec;
+      rec.start();
+      setRecording(true);
+    } catch (err) {
+      console.error("[voice] mic error", err);
+      toast.error(lang === "bn" ? "মাইক্রোফোন অ্যাক্সেস নেই" : "Microphone access denied");
+    }
+  }, [recording, transcribing, isLoading, lang, sendMessage, stopAudio]);
+
+  const stopRecording = useCallback(() => {
+    if (recorderRef.current && recorderRef.current.state !== "inactive") {
+      recorderRef.current.stop();
+    }
+    setRecording(false);
+  }, []);
+
+  // Auto-speak new assistant messages when voice mode is on and stream is done.
+  useEffect(() => {
+    if (!voiceMode) return;
+    if (status !== "ready") return;
+    const last = messages[messages.length - 1];
+    if (!last || last.role !== "assistant") return;
+    if (spokenIdsRef.current.has(last.id)) return;
+    const text = last.parts.map((p) => (p.type === "text" ? p.text : "")).join("").trim();
+    if (!text) return;
+    spokenIdsRef.current.add(last.id);
+    void speak(text);
+  }, [messages, status, voiceMode, speak]);
+
+  useEffect(() => () => stopAudio(), [stopAudio]);
+
 
   const welcomeBn = "হাই! আমি আপনার এআই কমার্স সহকারী। ট্রেন্ড, ইনভেন্টরি, মূল্য বা গ্রাহক সন্তুষ্টি সম্পর্কে জিজ্ঞাসা করুন।";
   const welcomeEn = "Hi! I'm your AI commerce assistant. Ask me about trends, inventory, pricing, or customer sentiment — I'll pull from your store data.";
@@ -170,7 +304,35 @@ function AssistantPage() {
                 )}
               </div>
             </CardContent>
-            <div className="border-t p-3">
+            <div className="space-y-2 border-t p-3">
+              <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="voice-mode"
+                    checked={voiceMode}
+                    onCheckedChange={(v) => {
+                      setVoiceMode(v);
+                      if (!v) stopAudio();
+                    }}
+                  />
+                  <Label htmlFor="voice-mode" className="cursor-pointer text-xs">
+                    {voiceMode ? (
+                      <span className="flex items-center gap-1"><Volume2 className="h-3.5 w-3.5" /> {t("ভয়েস রেসপন্স চালু / Voice replies on")}</span>
+                    ) : (
+                      <span className="flex items-center gap-1"><VolumeX className="h-3.5 w-3.5" /> {t("ভয়েস রেসপন্স বন্ধ / Voice replies off")}</span>
+                    )}
+                  </Label>
+                </div>
+                {speaking && (
+                  <button
+                    type="button"
+                    onClick={stopAudio}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    {t("থামান / Stop")}
+                  </button>
+                )}
+              </div>
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -187,21 +349,45 @@ function AssistantPage() {
                       send(input);
                     }
                   }}
-                  placeholder={t("আপনার স্টোর সম্পর্কে কিছু জিজ্ঞাসা করুন... / Ask anything about your store...")}
+                  placeholder={
+                    recording
+                      ? t("শুনছি… ট্যাপ করে থামান / Listening… tap to stop")
+                      : transcribing
+                      ? t("ট্রান্সক্রাইব করছি… / Transcribing…")
+                      : t("আপনার স্টোর সম্পর্কে কিছু জিজ্ঞাসা করুন... / Ask anything about your store...")
+                  }
                   className="min-h-[42px] resize-none"
                   rows={1}
-                  disabled={isLoading}
+                  disabled={isLoading || recording || transcribing}
                 />
+                <Button
+                  type="button"
+                  size="icon"
+                  variant={recording ? "destructive" : "outline"}
+                  className="h-10 w-10 shrink-0"
+                  onClick={recording ? stopRecording : startRecording}
+                  disabled={isLoading || transcribing}
+                  title={t("ভয়েস ইনপুট / Voice input")}
+                >
+                  {transcribing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : recording ? (
+                    <Square className="h-4 w-4" />
+                  ) : (
+                    <Mic className="h-4 w-4" />
+                  )}
+                </Button>
                 <Button
                   type="submit"
                   size="icon"
                   className="h-10 w-10 shrink-0"
-                  disabled={isLoading || !input.trim()}
+                  disabled={isLoading || recording || transcribing || !input.trim()}
                 >
                   <Send className="h-4 w-4" />
                 </Button>
               </form>
             </div>
+
           </Card>
 
           <div className="space-y-4">
