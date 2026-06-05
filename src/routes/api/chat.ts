@@ -22,11 +22,20 @@ function buildSystemPrompt(
   analyticsFacts: string,
   hasData: boolean,
   language: "bn" | "en",
+  voice: boolean,
 ) {
   const langRule =
     language === "bn"
       ? `LANGUAGE RULE (CRITICAL): Reply ONLY in Bangla (Bengali). Do NOT include English translations. Use natural, conversational Bangla.`
       : `LANGUAGE RULE (CRITICAL): Reply ONLY in English. Do NOT include Bangla translations. Use clear, conversational English.`;
+
+  const voiceRule = voice
+    ? `\nVOICE MODE (CRITICAL): The reply will be spoken aloud. Be extremely concise and conversational, like a human speaking.
+- Greetings or small-talk → reply in ONE short sentence only. Do not add follow-up questions, lists, or offers of help unless explicitly asked.
+- Analytical answers → max 2-3 short sentences. No markdown, no bullet points, no headings, no emojis.
+- Never read out URLs, code, tables, or long numbers. Round numbers naturally.
+- Do not restate the question. Get straight to the point.`
+    : "";
 
   const businessBlock = business
     ? `BUSINESS PROFILE:
@@ -44,6 +53,7 @@ function buildSystemPrompt(
   return `You are EasyBusiness AI — a practical AI commerce assistant for a small ecommerce store owner.
 
 ${langRule}
+${voiceRule}
 
 GROUNDING RULES (CRITICAL):
 - Ground every analytics claim in the ANALYTICS FACTS and RETRIEVED CONTEXT below.
@@ -67,7 +77,7 @@ export const Route = createFileRoute("/api/chat")({
         const authed = await getAuthedUser(request);
         if (!authed) return new Response("Unauthorized", { status: 401 });
 
-        let payload: { messages?: UIMessage[]; language?: "bn" | "en" } = {};
+        let payload: { messages?: UIMessage[]; language?: "bn" | "en"; voice?: boolean } = {};
         try {
           payload = await request.json();
         } catch {
@@ -75,6 +85,7 @@ export const Route = createFileRoute("/api/chat")({
         }
         const messages = payload.messages;
         const language = payload.language === "en" ? "en" : "bn";
+        const voice = payload.voice === true;
         if (!Array.isArray(messages) || messages.length === 0) {
           return new Response("Messages are required", { status: 400 });
         }
@@ -164,6 +175,7 @@ export const Route = createFileRoute("/api/chat")({
             analytics.aiSummaryFacts,
             analytics.hasData,
             language,
+            voice,
           ),
           messages: await convertToModelMessages(messages),
         });

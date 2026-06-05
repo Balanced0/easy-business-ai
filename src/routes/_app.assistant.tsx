@@ -51,11 +51,12 @@ function AssistantPage() {
     );
   }, []);
 
+  const voiceModeRef = useRef(false);
   const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
       prepareSendMessagesRequest: async ({ messages: ms, id }) => ({
-        body: { messages: ms, id, language: lang },
+        body: { messages: ms, id, language: lang, voice: voiceModeRef.current },
         headers: await authHeaders(),
       }),
     }),
@@ -91,6 +92,7 @@ function AssistantPage() {
 
   // ---- Voice features ----
   const [voiceMode, setVoiceMode] = useState(false);
+  useEffect(() => { voiceModeRef.current = voiceMode; }, [voiceMode]);
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [speaking, setSpeaking] = useState(false);

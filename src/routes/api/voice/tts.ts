@@ -4,8 +4,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getAuthedUser } from "@/lib/auth-route.server";
 
-// Sarah — multilingual, warm and natural in both Bangla and English.
-const VOICE_ID = "EXAVITQu4vr4xnSDxMaL";
+// Voice selection by language. For Bangla we use a voice that handles
+// Indic/Bangla phonemes more naturally than the default English-trained Sarah.
+// Charlotte — multilingual, warm, good Bangla cadence.
+const VOICE_BN = "XB0fDUnXU5powFXDhCwa"; // Charlotte
+const VOICE_EN = "EXAVITQu4vr4xnSDxMaL"; // Sarah
 
 export const Route = createFileRoute("/api/voice/tts")({
   server: {
@@ -25,11 +28,15 @@ export const Route = createFileRoute("/api/voice/tts")({
         }
         const text = (body.text ?? "").trim();
         if (!text) return new Response("Missing text", { status: 400 });
-        // Hard cap to avoid runaway costs.
         const clipped = text.length > 4000 ? text.slice(0, 4000) : text;
+        const lang = body.language === "en" ? "en" : "bn";
+        const voiceId = lang === "bn" ? VOICE_BN : VOICE_EN;
 
+        // eleven_turbo_v2_5 supports `language_code` enforcement, which fixes
+        // the common Bangla→Hindi pronunciation drift. Multilingual quality
+        // is on par with multilingual_v2 for short conversational replies.
         const res = await fetch(
-          `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}/stream?output_format=mp3_44100_128`,
+          `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_44100_128`,
           {
             method: "POST",
             headers: {
@@ -38,13 +45,14 @@ export const Route = createFileRoute("/api/voice/tts")({
             },
             body: JSON.stringify({
               text: clipped,
-              model_id: "eleven_multilingual_v2",
+              model_id: "eleven_turbo_v2_5",
+              language_code: lang === "bn" ? "bn" : "en",
               voice_settings: {
-                stability: 0.5,
-                similarity_boost: 0.8,
-                style: 0.35,
+                stability: 0.75,
+                similarity_boost: 0.75,
+                style: 0.0,
                 use_speaker_boost: true,
-                speed: 1.0,
+                speed: 0.95,
               },
             }),
           },
