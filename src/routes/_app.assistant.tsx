@@ -120,7 +120,7 @@ function AssistantPage() {
         const res = await fetch("/api/voice/tts", {
           method: "POST",
           headers: { ...headers, "Content-Type": "application/json" },
-          body: JSON.stringify({ text, language: lang }),
+          body: JSON.stringify({ text }),
         });
         if (!res.ok) throw new Error(`TTS failed (${res.status})`);
         const blob = await res.blob();
@@ -207,6 +207,7 @@ function AssistantPage() {
   }, []);
 
   // Auto-speak new assistant messages when voice mode is on and stream is done.
+  // English only — skip Bangla messages (TTS for Bangla is disabled).
   useEffect(() => {
     if (!voiceMode) return;
     if (status !== "ready") return;
@@ -216,6 +217,8 @@ function AssistantPage() {
     const text = last.parts.map((p) => (p.type === "text" ? p.text : "")).join("").trim();
     if (!text) return;
     spokenIdsRef.current.add(last.id);
+    // Detect Bangla characters (U+0980–U+09FF). If present, skip speaking.
+    if (/[\u0980-\u09FF]/.test(text)) return;
     void speak(text);
   }, [messages, status, voiceMode, speak]);
 
@@ -308,22 +311,27 @@ function AssistantPage() {
             </CardContent>
             <div className="space-y-2 border-t p-3">
               <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Switch
-                    id="voice-mode"
-                    checked={voiceMode}
-                    onCheckedChange={(v) => {
-                      setVoiceMode(v);
-                      if (!v) stopAudio();
-                    }}
-                  />
-                  <Label htmlFor="voice-mode" className="cursor-pointer text-xs">
-                    {voiceMode ? (
-                      <span className="flex items-center gap-1"><Volume2 className="h-3.5 w-3.5" /> {t("ভয়েস রেসপন্স চালু / Voice replies on")}</span>
-                    ) : (
-                      <span className="flex items-center gap-1"><VolumeX className="h-3.5 w-3.5" /> {t("ভয়েস রেসপন্স বন্ধ / Voice replies off")}</span>
-                    )}
-                  </Label>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="voice-mode"
+                      checked={voiceMode}
+                      onCheckedChange={(v) => {
+                        setVoiceMode(v);
+                        if (!v) stopAudio();
+                      }}
+                    />
+                    <Label htmlFor="voice-mode" className="cursor-pointer text-xs">
+                      {voiceMode ? (
+                        <span className="flex items-center gap-1"><Volume2 className="h-3.5 w-3.5" /> {t("ভয়েস রেসপন্স চালু / Voice replies on")}</span>
+                      ) : (
+                        <span className="flex items-center gap-1"><VolumeX className="h-3.5 w-3.5" /> {t("ভয়েস রেসপন্স বন্ধ / Voice replies off")}</span>
+                      )}
+                    </Label>
+                  </div>
+                  <span className="rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                    {t("শুধু ইংরেজিতে / English only")}
+                  </span>
                 </div>
                 {speaking && (
                   <button
