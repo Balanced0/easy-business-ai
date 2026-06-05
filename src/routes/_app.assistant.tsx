@@ -207,6 +207,7 @@ function AssistantPage() {
   }, []);
 
   // Auto-speak new assistant messages when voice mode is on and stream is done.
+  // English only — skip Bangla messages (TTS for Bangla is disabled).
   useEffect(() => {
     if (!voiceMode) return;
     if (status !== "ready") return;
@@ -216,6 +217,8 @@ function AssistantPage() {
     const text = last.parts.map((p) => (p.type === "text" ? p.text : "")).join("").trim();
     if (!text) return;
     spokenIdsRef.current.add(last.id);
+    // Detect Bangla characters (U+0980–U+09FF). If present, skip speaking.
+    if (/[\u0980-\u09FF]/.test(text)) return;
     void speak(text);
   }, [messages, status, voiceMode, speak]);
 
