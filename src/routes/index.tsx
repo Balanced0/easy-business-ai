@@ -231,7 +231,7 @@ function LandingPage() {
                 <div
                   key={i}
                   style={{ height: `${h}%` }}
-                  className="rounded-sm bg-primary/80 transition-[height] duration-[1400ms] ease-in-out"
+                  className="rounded-sm bg-primary/80 transition-[height] duration-[2200ms] ease-in-out"
                 />
               ))}
             </div>
