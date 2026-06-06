@@ -114,6 +114,46 @@ const features = [
 function LandingPage() {
   const { lang } = useLanguage();
   const t = useT();
+  const tick = useAnimatedHero();
+
+  // Bar wave: 12 bars, each oscillates with a phase offset so one rises while another falls.
+  const bars = Array.from({ length: 12 }, (_, i) => {
+    const phase = (tick + i) * (Math.PI / 6);
+    return 35 + (Math.sin(phase) * 0.5 + 0.5) * 65; // 35–100%
+  });
+
+  // Card numbers fluctuate around a base value.
+  const wave = (offset: number) => Math.sin((tick + offset) * (Math.PI / 4));
+  const totalSales = 248920 + wave(0) * 3200;
+  const revenue = 182540 + wave(1) * 2400;
+  const inventoryRisk = Math.max(3, Math.round(7 + wave(2) * 2));
+  const trending = Math.max(8, Math.round(12 + wave(3) * 2));
+  const salesDelta = 12.4 + wave(0) * 1.2;
+  const revenueDelta = 8.1 + wave(1) * 0.9;
+  const trendingDelta = Math.max(1, Math.round(4 + wave(3) * 2));
+
+  const cards: Array<[string, string, string]> = [
+    [
+      "মোট বিক্রয় / Total Sales",
+      `$${fmtNum(totalSales, lang)}`,
+      `${fmtSigned(salesDelta, lang)}%`,
+    ],
+    [
+      "রাজস্ব / Revenue",
+      `$${fmtNum(revenue, lang)}`,
+      `${fmtSigned(revenueDelta, lang)}%`,
+    ],
+    [
+      "ইনভেন্টরি ঝুঁকি / Inventory Risk",
+      `${fmtNum(inventoryRisk, lang)} ${lang === "bn" ? "items" : "items"}`,
+      t("পর্যালোচনা / review"),
+    ],
+    [
+      "ট্রেন্ডিং / Trending",
+      `${fmtNum(trending, lang)} SKUs`,
+      `${fmtSigned(trendingDelta, lang, 0)} ${lang === "bn" ? "this wk" : "this wk"}`,
+    ],
+  ];
 
   return (
     <div className="min-h-screen bg-background">
