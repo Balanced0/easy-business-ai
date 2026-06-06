@@ -27,6 +27,11 @@ function fmtSigned(n: number, lang: "bn" | "en", digits = 1) {
   return sign + (lang === "bn" ? toBnDigits(s) : s);
 }
 
+function seededRandom(seed: number) {
+  const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+
 function useAnimatedHero() {
   const [tick, setTick] = useState(0);
   useEffect(() => {
