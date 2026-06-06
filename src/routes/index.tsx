@@ -35,7 +35,7 @@ function seededRandom(seed: number) {
 function useAnimatedHero() {
   const [tick, setTick] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 1400);
+    const id = setInterval(() => setTick((t) => t + 1), 2200);
     return () => clearInterval(id);
   }, []);
   return tick;
@@ -221,8 +221,8 @@ function LandingPage() {
               {cards.map(([l, v, d]) => (
                 <div key={l} className="rounded-md border bg-card p-3 text-left">
                   <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{t(l)}</div>
-                  <div className="mt-1 text-lg font-semibold tabular-nums transition-all duration-700 ease-out">{v}</div>
-                  <div className="text-xs text-muted-foreground tabular-nums transition-all duration-700 ease-out">{d}</div>
+                  <div className="mt-1 text-lg font-semibold tabular-nums transition-all duration-[1200ms] ease-out">{v}</div>
+                  <div className="text-xs text-muted-foreground tabular-nums transition-all duration-[1200ms] ease-out">{d}</div>
                 </div>
               ))}
             </div>
@@ -231,7 +231,7 @@ function LandingPage() {
                 <div
                   key={i}
                   style={{ height: `${h}%` }}
-                  className="rounded-sm bg-primary/80 transition-[height] duration-[1400ms] ease-in-out"
+                  className="rounded-sm bg-primary/80 transition-[height] duration-[2200ms] ease-in-out"
                 />
               ))}
             </div>
