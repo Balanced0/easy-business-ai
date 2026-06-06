@@ -8,6 +8,7 @@ import {
   Info,
   BarChart3,
   Upload,
+  Tag,
 } from "lucide-react";
 import {
   Sidebar,
@@ -22,14 +23,18 @@ import {
 } from "@/components/ui/sidebar";
 import { useT } from "@/hooks/use-language";
 
-const items = [
+const workspaceItems = [
   { title: "ড্যাশবোর্ড / Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "ডেটা আপলোড / Upload Data", url: "/upload", icon: Upload },
   { title: "ইনভেন্টরি / Inventory", url: "/inventory", icon: Package },
   { title: "প্রতিযোগী / Competitors", url: "/competitors", icon: TrendingUp },
   { title: "গ্রাহক / Customers", url: "/customers", icon: Users },
   { title: "এআই সহকারী / AI Assistant", url: "/assistant", icon: MessageSquare },
+];
+
+const companyItems = [
   { title: "সম্পর্কে / About", url: "/about", icon: Info },
+  { title: "মূল্য / Pricing", url: "/pricing", icon: Tag },
 ];
 
 export function AppSidebar() {
@@ -54,7 +59,24 @@ export function AppSidebar() {
           <SidebarGroupLabel>{t("ওয়ার্কস্পেস / Workspace")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {workspaceItems.map((item) => (
+                <SidebarMenuItem key={item.url}>
+                  <SidebarMenuButton asChild isActive={pathname === item.url}>
+                    <Link to={item.url} className="flex items-center gap-2">
+                      <item.icon className="h-4 w-4" />
+                      <span>{t(item.title)}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>{t("কোম্পানি / Company")}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {companyItems.map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild isActive={pathname === item.url}>
                     <Link to={item.url} className="flex items-center gap-2">
