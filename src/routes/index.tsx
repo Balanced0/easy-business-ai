@@ -221,8 +221,8 @@ function LandingPage() {
               {cards.map(([l, v, d]) => (
                 <div key={l} className="rounded-md border bg-card p-3 text-left">
                   <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{t(l)}</div>
-                  <div className="mt-1 text-lg font-semibold tabular-nums transition-all duration-700 ease-out">{v}</div>
-                  <div className="text-xs text-muted-foreground tabular-nums transition-all duration-700 ease-out">{d}</div>
+                  <div className="mt-1 text-lg font-semibold tabular-nums transition-all duration-[1200ms] ease-out">{v}</div>
+                  <div className="text-xs text-muted-foreground tabular-nums transition-all duration-[1200ms] ease-out">{d}</div>
                 </div>
               ))}
             </div>
