@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -11,6 +12,29 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useLanguage, useT } from "@/hooks/use-language";
+
+const BN_DIGITS = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+function toBnDigits(s: string) {
+  return s.replace(/\d/g, (d) => BN_DIGITS[Number(d)]);
+}
+function fmtNum(n: number, lang: "bn" | "en") {
+  const s = Math.round(n).toLocaleString("en-US");
+  return lang === "bn" ? toBnDigits(s) : s;
+}
+function fmtSigned(n: number, lang: "bn" | "en", digits = 1) {
+  const sign = n >= 0 ? "+" : "−";
+  const s = Math.abs(n).toFixed(digits);
+  return sign + (lang === "bn" ? toBnDigits(s) : s);
+}
+
+function useAnimatedHero() {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 1400);
+    return () => clearInterval(id);
+  }, []);
+  return tick;
+}
 
 function LanguageToggle() {
   const { lang, toggleLang } = useLanguage();
@@ -90,6 +114,46 @@ const features = [
 function LandingPage() {
   const { lang } = useLanguage();
   const t = useT();
+  const tick = useAnimatedHero();
+
+  // Bar wave: 12 bars, each oscillates with a phase offset so one rises while another falls.
+  const bars = Array.from({ length: 12 }, (_, i) => {
+    const phase = (tick + i) * (Math.PI / 6);
+    return 35 + (Math.sin(phase) * 0.5 + 0.5) * 65; // 35–100%
+  });
+
+  // Card numbers fluctuate around a base value.
+  const wave = (offset: number) => Math.sin((tick + offset) * (Math.PI / 4));
+  const totalSales = 248920 + wave(0) * 3200;
+  const revenue = 182540 + wave(1) * 2400;
+  const inventoryRisk = Math.max(3, Math.round(7 + wave(2) * 2));
+  const trending = Math.max(8, Math.round(12 + wave(3) * 2));
+  const salesDelta = 12.4 + wave(0) * 1.2;
+  const revenueDelta = 8.1 + wave(1) * 0.9;
+  const trendingDelta = Math.max(1, Math.round(4 + wave(3) * 2));
+
+  const cards: Array<[string, string, string]> = [
+    [
+      "মোট বিক্রয় / Total Sales",
+      `$${fmtNum(totalSales, lang)}`,
+      `${fmtSigned(salesDelta, lang)}%`,
+    ],
+    [
+      "রাজস্ব / Revenue",
+      `$${fmtNum(revenue, lang)}`,
+      `${fmtSigned(revenueDelta, lang)}%`,
+    ],
+    [
+      "ইনভেন্টরি ঝুঁকি / Inventory Risk",
+      `${fmtNum(inventoryRisk, lang)} ${lang === "bn" ? "items" : "items"}`,
+      t("পর্যালোচনা / review"),
+    ],
+    [
+      "ট্রেন্ডিং / Trending",
+      `${fmtNum(trending, lang)} SKUs`,
+      `${fmtSigned(trendingDelta, lang, 0)} ${lang === "bn" ? "this wk" : "this wk"}`,
+    ],
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -150,25 +214,20 @@ function LandingPage() {
         <div className="mx-auto mt-16 max-w-5xl rounded-xl border bg-card p-2 shadow-sm">
           <div className="rounded-lg bg-muted/40 p-6">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              {[
-                ["মোট বিক্রয় / Total Sales", "$248,920", "+12.4%"],
-                ["রাজস্ব / Revenue", "$182,540", "+8.1%"],
-                ["ইনভেন্টরি ঝুঁকি / Inventory Risk", "৭ items", "review"],
-                ["ট্রেন্ডিং / Trending", "১২ SKUs", "+৪ this wk"],
-              ].map(([l, v, d]) => (
+              {cards.map(([l, v, d]) => (
                 <div key={l} className="rounded-md border bg-card p-3 text-left">
                   <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{t(l)}</div>
-                  <div className="mt-1 text-lg font-semibold">{v}</div>
-                  <div className="text-xs text-muted-foreground">{d}</div>
+                  <div className="mt-1 text-lg font-semibold tabular-nums transition-all duration-700 ease-out">{v}</div>
+                  <div className="text-xs text-muted-foreground tabular-nums transition-all duration-700 ease-out">{d}</div>
                 </div>
               ))}
             </div>
             <div className="mt-3 grid h-32 grid-cols-12 items-end gap-1.5">
-              {[40, 55, 48, 62, 70, 58, 72, 80, 76, 88, 92, 100].map((h, i) => (
+              {bars.map((h, i) => (
                 <div
                   key={i}
                   style={{ height: `${h}%` }}
-                  className="rounded-sm bg-primary/80"
+                  className="rounded-sm bg-primary/80 transition-[height] duration-[1400ms] ease-in-out"
                 />
               ))}
             </div>
