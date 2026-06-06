@@ -27,6 +27,11 @@ function fmtSigned(n: number, lang: "bn" | "en", digits = 1) {
   return sign + (lang === "bn" ? toBnDigits(s) : s);
 }
 
+function seededRandom(seed: number) {
+  const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+
 function useAnimatedHero() {
   const [tick, setTick] = useState(0);
   useEffect(() => {
@@ -116,21 +121,20 @@ function LandingPage() {
   const t = useT();
   const tick = useAnimatedHero();
 
-  // Bar wave: 12 bars, each oscillates with a phase offset so one rises while another falls.
+  // Random bars: each bar gets a pseudo-random height every tick.
   const bars = Array.from({ length: 12 }, (_, i) => {
-    const phase = (tick + i) * (Math.PI / 6);
-    return 35 + (Math.sin(phase) * 0.5 + 0.5) * 65; // 35–100%
+    const r = seededRandom(tick * 17 + i * 31);
+    return 20 + r * 80; // 20–100%
   });
 
-  // Card numbers fluctuate around a base value.
-  const wave = (offset: number) => Math.sin((tick + offset) * (Math.PI / 4));
-  const totalSales = 248920 + wave(0) * 3200;
-  const revenue = 182540 + wave(1) * 2400;
-  const inventoryRisk = Math.max(3, Math.round(7 + wave(2) * 2));
-  const trending = Math.max(8, Math.round(12 + wave(3) * 2));
-  const salesDelta = 12.4 + wave(0) * 1.2;
-  const revenueDelta = 8.1 + wave(1) * 0.9;
-  const trendingDelta = Math.max(1, Math.round(4 + wave(3) * 2));
+  // Card numbers jump to random values around a base every tick.
+  const totalSales = 240000 + seededRandom(tick * 7) * 16000;
+  const revenue = 175000 + seededRandom(tick * 11 + 1) * 16000;
+  const inventoryRisk = Math.max(3, Math.round(5 + seededRandom(tick * 13 + 2) * 6));
+  const trending = Math.max(8, Math.round(9 + seededRandom(tick * 19 + 3) * 8));
+  const salesDelta = 10 + seededRandom(tick * 23 + 4) * 6;
+  const revenueDelta = 6 + seededRandom(tick * 29 + 5) * 5;
+  const trendingDelta = Math.max(1, Math.round(2 + seededRandom(tick * 37 + 6) * 5));
 
   const cards: Array<[string, string, string]> = [
     [
