@@ -35,7 +35,7 @@ function seededRandom(seed: number) {
 function useAnimatedHero() {
   const [tick, setTick] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 1400);
+    const id = setInterval(() => setTick((t) => t + 1), 2200);
     return () => clearInterval(id);
   }, []);
   return tick;
