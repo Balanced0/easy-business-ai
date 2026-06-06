@@ -214,25 +214,20 @@ function LandingPage() {
         <div className="mx-auto mt-16 max-w-5xl rounded-xl border bg-card p-2 shadow-sm">
           <div className="rounded-lg bg-muted/40 p-6">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              {[
-                ["মোট বিক্রয় / Total Sales", "$248,920", "+12.4%"],
-                ["রাজস্ব / Revenue", "$182,540", "+8.1%"],
-                ["ইনভেন্টরি ঝুঁকি / Inventory Risk", "৭ items", "review"],
-                ["ট্রেন্ডিং / Trending", "১২ SKUs", "+৪ this wk"],
-              ].map(([l, v, d]) => (
+              {cards.map(([l, v, d]) => (
                 <div key={l} className="rounded-md border bg-card p-3 text-left">
                   <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{t(l)}</div>
-                  <div className="mt-1 text-lg font-semibold">{v}</div>
-                  <div className="text-xs text-muted-foreground">{d}</div>
+                  <div className="mt-1 text-lg font-semibold tabular-nums transition-all duration-700 ease-out">{v}</div>
+                  <div className="text-xs text-muted-foreground tabular-nums transition-all duration-700 ease-out">{d}</div>
                 </div>
               ))}
             </div>
             <div className="mt-3 grid h-32 grid-cols-12 items-end gap-1.5">
-              {[40, 55, 48, 62, 70, 58, 72, 80, 76, 88, 92, 100].map((h, i) => (
+              {bars.map((h, i) => (
                 <div
                   key={i}
                   style={{ height: `${h}%` }}
-                  className="rounded-sm bg-primary/80"
+                  className="rounded-sm bg-primary/80 transition-[height] duration-[1400ms] ease-in-out"
                 />
               ))}
             </div>
