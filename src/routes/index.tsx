@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -11,6 +12,29 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useLanguage, useT } from "@/hooks/use-language";
+
+const BN_DIGITS = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+function toBnDigits(s: string) {
+  return s.replace(/\d/g, (d) => BN_DIGITS[Number(d)]);
+}
+function fmtNum(n: number, lang: "bn" | "en") {
+  const s = Math.round(n).toLocaleString("en-US");
+  return lang === "bn" ? toBnDigits(s) : s;
+}
+function fmtSigned(n: number, lang: "bn" | "en", digits = 1) {
+  const sign = n >= 0 ? "+" : "−";
+  const s = Math.abs(n).toFixed(digits);
+  return sign + (lang === "bn" ? toBnDigits(s) : s);
+}
+
+function useAnimatedHero() {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 1400);
+    return () => clearInterval(id);
+  }, []);
+  return tick;
+}
 
 function LanguageToggle() {
   const { lang, toggleLang } = useLanguage();
