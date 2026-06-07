@@ -253,6 +253,20 @@ export async function ingestRows(opts: {
 
 // ============ ANALYTICS ============
 
+export type ValueGenerated = {
+  revenueOpportunities: number;
+  stockoutsAvoided: number;
+  inventorySavings: number;
+  timeSavedHours: number;
+  aiQueriesCount: number;
+};
+
+export type Reasoning = {
+  bullets: string[];
+  confidence: "high" | "medium" | "low";
+  confidenceScore: number;
+};
+
 export type Analytics = {
   hasData: boolean;
   dataAvailability: {
@@ -285,6 +299,8 @@ export type Analytics = {
   };
   summaryCards: Array<{ label: string; value: string; delta: string; positive: boolean }>;
   aiSummaryFacts: string;
+  valueGenerated: ValueGenerated;
+  reasoning: Reasoning;
   generatedAt: string;
 };
 
