@@ -20,7 +20,9 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { Sparkles, TrendingUp, TrendingDown, AlertTriangle, Loader2, Search, X, Upload } from "lucide-react";
+import { Sparkles, TrendingUp, TrendingDown, AlertTriangle, Loader2, Search, X, Upload, DollarSign, ShieldCheck, PackageMinus, Clock, Info } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage, useT } from "@/hooks/use-language";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "@tanstack/react-router";
