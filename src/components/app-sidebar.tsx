@@ -9,6 +9,7 @@ import {
   BarChart3,
   Upload,
   Tag,
+  ShieldCheck,
 } from "lucide-react";
 import {
   Sidebar,
@@ -30,6 +31,7 @@ const workspaceItems = [
   { title: "প্রতিযোগী / Competitors", url: "/competitors", icon: TrendingUp },
   { title: "গ্রাহক / Customers", url: "/customers", icon: Users },
   { title: "এআই সহকারী / AI Assistant", url: "/assistant", icon: MessageSquare },
+  { title: "গোপনীয়তা ও ডেটা / Privacy & Data", url: "/privacy", icon: ShieldCheck },
 ];
 
 const companyItems = [

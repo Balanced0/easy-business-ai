@@ -253,6 +253,20 @@ export async function ingestRows(opts: {
 
 // ============ ANALYTICS ============
 
+export type ValueGenerated = {
+  revenueOpportunities: number;
+  stockoutsAvoided: number;
+  inventorySavings: number;
+  timeSavedHours: number;
+  aiQueriesCount: number;
+};
+
+export type Reasoning = {
+  bullets: string[];
+  confidence: "high" | "medium" | "low";
+  confidenceScore: number;
+};
+
 export type Analytics = {
   hasData: boolean;
   dataAvailability: {
@@ -285,18 +299,21 @@ export type Analytics = {
   };
   summaryCards: Array<{ label: string; value: string; delta: string; positive: boolean }>;
   aiSummaryFacts: string;
+  valueGenerated: ValueGenerated;
+  reasoning: Reasoning;
   generatedAt: string;
 };
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export async function computeAnalyticsForUser(userId: string): Promise<Analytics> {
-  const [salesRes, invRes, ordersRes, reviewsRes, productsRes] = await Promise.all([
+  const [salesRes, invRes, ordersRes, reviewsRes, productsRes, chatRes] = await Promise.all([
     supabaseAdmin.from("sales_records").select("*").eq("user_id", userId).limit(10000),
     supabaseAdmin.from("inventory_items").select("*").eq("user_id", userId).limit(5000),
     supabaseAdmin.from("order_records").select("*").eq("user_id", userId).limit(10000),
     supabaseAdmin.from("review_records").select("*").eq("user_id", userId).limit(10000),
     supabaseAdmin.from("product_records").select("*").eq("user_id", userId).limit(5000),
+    supabaseAdmin.from("chat_messages").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("role", "user"),
   ]);
 
   const sales = (salesRes.data ?? []) as Array<{
@@ -305,6 +322,7 @@ export async function computeAnalyticsForUser(userId: string): Promise<Analytics
   }>;
   const inventory = (invRes.data ?? []) as Array<{
     sku: string; name: string | null; stock: number; reorder_threshold: number;
+    cost: number | null; price: number | null;
   }>;
   const orders = (ordersRes.data ?? []) as Array<{ total: number; ordered_at: string | null }>;
   const reviews = (reviewsRes.data ?? []) as Array<{
@@ -513,6 +531,78 @@ export async function computeAnalyticsForUser(userId: string): Promise<Analytics
     : "";
   const aiSummaryFacts = hasData ? `${bnFacts} / ${enFacts}` : "";
 
+  // ----- Value generated (Feature 1) -----
+  const margins = inventory
+    .filter((i) => i.price != null && i.cost != null && Number(i.price) > 0)
+    .map((i) => Math.max(0, Number(i.price) - Number(i.cost)));
+  const avgMargin = margins.length
+    ? margins.reduce((s, m) => s + m, 0) / margins.length
+    : totalUnits > 0
+      ? (totalRevenue / Math.max(1, totalUnits)) * 0.25
+      : 0;
+  const restockUnits = low.reduce((s, i) => s + (i.recommend || 0), 0);
+  const revenueOpportunities = Math.round(restockUnits * avgMargin);
+
+  const overstockSavings = Math.round(
+    overstock.reduce((s, o) => {
+      const item = inventory.find((i) => i.sku === o.sku);
+      const unitVal = item?.cost != null ? Number(item.cost) : item?.price != null ? Number(item.price) * 0.5 : 0;
+      return s + (Number(o.stock) || 0) * unitVal;
+    }, 0),
+  );
+
+  const aiQueriesCount = chatRes.count ?? 0;
+  const valueGenerated: ValueGenerated = {
+    revenueOpportunities,
+    stockoutsAvoided: low.length,
+    inventorySavings: overstockSavings,
+    timeSavedHours: Math.round(aiQueriesCount * 2.5 * 10) / 10,
+    aiQueriesCount,
+  };
+
+  // ----- Reasoning + confidence (Feature 2) -----
+  // Confidence: weighted by how many data sources are present and sample sizes.
+  let score = 0;
+  if (sales.length >= 200) score += 35; else if (sales.length >= 30) score += 22; else if (sales.length > 0) score += 10;
+  if (inventory.length >= 50) score += 25; else if (inventory.length >= 10) score += 15; else if (inventory.length > 0) score += 7;
+  if (reviews.length >= 30) score += 15; else if (reviews.length > 0) score += 7;
+  if (orders.length > 0) score += 10;
+  if (sortedMonths.length >= 3) score += 15;
+  const confidence: Reasoning["confidence"] = score >= 70 ? "high" : score >= 40 ? "medium" : "low";
+
+  const bullets: string[] = [];
+  if (sales.length > 0) {
+    bullets.push(
+      `গত ${sortedMonths.length || 1} মাসের ${sales.length} বিক্রয় রেকর্ড থেকে চাহিদা বেগ গণনা করা হয়েছে। / Demand velocity computed from ${sales.length} sales records over the last ${sortedMonths.length || 1} month(s).`,
+    );
+  }
+  if (low.length > 0) {
+    bullets.push(
+      `${low.length}টি SKU বর্তমান বিক্রয় গতিতে ১৪ দিনের কভারেজের নিচে — তাই রিঅর্ডার সুপারিশ করা হয়েছে। / ${low.length} SKUs are below 14-day cover at current velocity, triggering reorder recommendations.`,
+    );
+  }
+  if (overstock.length > 0) {
+    bullets.push(
+      `${overstock.length}টি SKU গড় স্টকের ৫× এর বেশি — ক্লিয়ারেন্সের সুযোগ চিহ্নিত। / ${overstock.length} SKUs hold >5× the average stock, flagged as clearance opportunities.`,
+    );
+  }
+  if (trendingProducts.length > 0) {
+    bullets.push(
+      `শীর্ষ পণ্য "${trendingProducts[0].name}" সাম্প্রতিক ৩০ দিন বনাম পূর্ববর্তী ৩০ দিনের ভিত্তিতে ${trendingProducts[0].growth} বৃদ্ধি দেখাচ্ছে। / Top product "${trendingProducts[0].name}" shows ${trendingProducts[0].growth} based on last 30 vs prior 30 days.`,
+    );
+  }
+  if (totalSentiment > 0) {
+    bullets.push(
+      `${totalSentiment} গ্রাহক রিভিউ থেকে সেন্টিমেন্ট মিশ্রণ সরাসরি একত্রিত করা হয়েছে। / Sentiment mix aggregated directly from ${totalSentiment} customer reviews.`,
+    );
+  }
+  if (bullets.length === 0) {
+    bullets.push(
+      "এখনও কোনও আপলোড নেই — বিশ্লেষণ চালু করতে বিক্রয়/ইনভেন্টরি ডেটা যোগ করুন। / No uploads yet — add sales/inventory data to activate analysis.",
+    );
+  }
+  const reasoning: Reasoning = { bullets: bullets.slice(0, 5), confidence, confidenceScore: Math.min(100, score) };
+
   return {
     hasData,
     dataAvailability,
@@ -532,6 +622,8 @@ export async function computeAnalyticsForUser(userId: string): Promise<Analytics
     sentiment: { breakdown, positive, complaints },
     summaryCards,
     aiSummaryFacts,
+    valueGenerated,
+    reasoning,
     generatedAt: new Date().toISOString(),
   };
 }
