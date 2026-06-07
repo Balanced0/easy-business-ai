@@ -9,6 +9,7 @@ import {
   BarChart3,
   Upload,
   Tag,
+  ShieldCheck,
 } from "lucide-react";
 import {
   Sidebar,
