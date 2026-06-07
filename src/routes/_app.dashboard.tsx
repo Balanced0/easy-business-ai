@@ -282,6 +282,78 @@ function DashboardPage() {
           </Card>
         )}
 
+        {/* Value Generated card */}
+        {(() => {
+          const vg = analytics?.valueGenerated;
+          const fmtCurrency = (n: number) => `$${(n || 0).toLocaleString()}`;
+          const items = [
+            {
+              key: "revenue",
+              icon: DollarSign,
+              label: "রাজস্ব সুযোগ / Revenue opportunities",
+              value: fmtCurrency(vg?.revenueOpportunities ?? 0),
+              hint: "রিস্টক সুপারিশ × গড় মার্জিন / Restock recommendations × avg margin",
+            },
+            {
+              key: "stockouts",
+              icon: ShieldCheck,
+              label: "স্টকআউট ঝুঁকি এড়ানো / Stockout risks avoided",
+              value: String(vg?.stockoutsAvoided ?? 0),
+              hint: "ফুরিয়ে যাওয়ার আগে চিহ্নিত কম-স্টক আইটেম / Low-stock items flagged before running out",
+            },
+            {
+              key: "savings",
+              icon: PackageMinus,
+              label: "ইনভেন্টরি সাশ্রয় / Inventory savings",
+              value: fmtCurrency(vg?.inventorySavings ?? 0),
+              hint: "ক্লিয়ারেন্সের জন্য চিহ্নিত অতিরিক্ত স্টকের মূল্য / Overstocked value identified for clearance",
+            },
+            {
+              key: "time",
+              icon: Clock,
+              label: "সময় সাশ্রয় / Time saved",
+              value: `${vg?.timeSavedHours ?? 0} ${t("ঘণ্টা / hrs")}`,
+              hint: `${vg?.aiQueriesCount ?? 0} ${t("এআই প্রশ্ন × ২.৫ ঘণ্টা / AI queries × 2.5 hrs")}`,
+            },
+          ];
+          return (
+            <Card className="border-success/30 bg-gradient-to-br from-success/[0.06] to-primary/[0.04]">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-md bg-success/15 text-success">
+                    <Sparkles className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base">
+                      {t("ইজিবিজনেস এআই এই মাসে যে মূল্য তৈরি করেছে / Value EasyBusiness AI Generated This Month")}
+                    </CardTitle>
+                    <CardDescription>
+                      {t("আপনার আপলোডকৃত ডেটা থেকে গণনা করা / Computed from your uploaded data")}
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {items.map((it) => (
+                    <div key={it.key} className="rounded-lg border bg-card/60 p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-success/10 text-success">
+                          <it.icon className="h-4 w-4" />
+                        </div>
+                        <TrendingUp className="h-4 w-4 text-success" />
+                      </div>
+                      <div className="mt-3 text-2xl font-semibold tracking-tight">{it.value}</div>
+                      <div className="mt-1 text-xs font-medium">{t(it.label)}</div>
+                      <div className="mt-1 text-xs text-muted-foreground">{t(it.hint)}</div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
+
         {/* Summary cards */}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {summaryCards.length === 0 ? (
@@ -309,24 +381,77 @@ function DashboardPage() {
         </div>
 
         {/* AI summary */}
-        <Card className="border-primary/20 bg-primary/[0.03]">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
-                <Sparkles className="h-4 w-4" />
-              </div>
-              <CardTitle className="text-base">{t("এআই বিজনেস সারাংশ / AI business summary")}</CardTitle>
-              <Badge variant="secondary" className="ml-auto text-xs">
-                {hasData ? t("রিয়েল ডেটা / Real data") : t("ডেটা প্রয়োজন / Data required")}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
-              {visibleAiSummary ? t(visibleAiSummary) : t("বিশ্লেষণ পেতে আপনার বিক্রয়/ইনভেন্টরি/রিভিউ ডেটা আপলোড করুন / Upload your sales/inventory/review data to see analytics.")}
-            </p>
-          </CardContent>
-        </Card>
+        {(() => {
+          const reasoning = analytics?.reasoning;
+          const conf = reasoning?.confidence ?? "low";
+          const confClass =
+            conf === "high"
+              ? "bg-success/15 text-success border-success/30"
+              : conf === "medium"
+              ? "bg-warning/15 text-warning-foreground border-warning/30"
+              : "bg-destructive/10 text-destructive border-destructive/30";
+          const confLabel =
+            conf === "high"
+              ? t("উচ্চ / High")
+              : conf === "medium"
+              ? t("মাঝারি / Medium")
+              : t("নিম্ন / Low");
+          const confExplain =
+            conf === "high"
+              ? t("ব্যাপক ডেটা ও ধারাবাহিক সংকেতের ভিত্তিতে উচ্চ নির্ভরতা। / High confidence: based on broad data and consistent signals.")
+              : conf === "medium"
+              ? t("পর্যাপ্ত ডেটা, তবে আরও আপলোডে নির্ভরতা বাড়বে। / Medium confidence: enough data, more uploads will improve reliability.")
+              : t("সীমিত ডেটা — নির্ভরতা বাড়াতে আরও ডেটা আপলোড করুন। / Low confidence: limited data — upload more for stronger reliability.");
+          return (
+            <Card className="border-primary/20 bg-primary/[0.03]">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
+                    <Sparkles className="h-4 w-4" />
+                  </div>
+                  <CardTitle className="text-base">{t("এআই বিজনেস সারাংশ / AI business summary")}</CardTitle>
+                  <div className="ml-auto flex items-center gap-2">
+                    <TooltipProvider delayDuration={150}>
+                      <UITooltip>
+                        <TooltipTrigger asChild>
+                          <Badge variant="outline" className={`text-xs gap-1 cursor-help ${confClass}`}>
+                            <Info className="h-3 w-3" />
+                            {t("আত্মবিশ্বাস / Confidence")}: {confLabel}
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs text-xs">{confExplain}</TooltipContent>
+                      </UITooltip>
+                    </TooltipProvider>
+                    <Badge variant="secondary" className="text-xs">
+                      {hasData ? t("রিয়েল ডেটা / Real data") : t("ডেটা প্রয়োজন / Data required")}
+                    </Badge>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
+                  {visibleAiSummary ? t(visibleAiSummary) : t("বিশ্লেষণ পেতে আপনার বিক্রয়/ইনভেন্টরি/রিভিউ ডেটা আপলোড করুন / Upload your sales/inventory/review data to see analytics.")}
+                </p>
+                {reasoning && reasoning.bullets.length > 0 && (
+                  <Accordion type="single" collapsible>
+                    <AccordionItem value="why" className="border-t">
+                      <AccordionTrigger className="text-sm">
+                        {t("এই সুপারিশ কেন? / Why this recommendation?")}
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
+                          {reasoning.bullets.map((b, i) => (
+                            <li key={i}>{b}</li>
+                          ))}
+                        </ul>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })()}
 
         {/* Charts row */}
         <div className="grid gap-4 lg:grid-cols-3">
