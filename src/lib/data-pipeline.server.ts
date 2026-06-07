@@ -307,12 +307,13 @@ export type Analytics = {
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export async function computeAnalyticsForUser(userId: string): Promise<Analytics> {
-  const [salesRes, invRes, ordersRes, reviewsRes, productsRes] = await Promise.all([
+  const [salesRes, invRes, ordersRes, reviewsRes, productsRes, chatRes] = await Promise.all([
     supabaseAdmin.from("sales_records").select("*").eq("user_id", userId).limit(10000),
     supabaseAdmin.from("inventory_items").select("*").eq("user_id", userId).limit(5000),
     supabaseAdmin.from("order_records").select("*").eq("user_id", userId).limit(10000),
     supabaseAdmin.from("review_records").select("*").eq("user_id", userId).limit(10000),
     supabaseAdmin.from("product_records").select("*").eq("user_id", userId).limit(5000),
+    supabaseAdmin.from("chat_messages").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("role", "user"),
   ]);
 
   const sales = (salesRes.data ?? []) as Array<{
@@ -321,6 +322,7 @@ export async function computeAnalyticsForUser(userId: string): Promise<Analytics
   }>;
   const inventory = (invRes.data ?? []) as Array<{
     sku: string; name: string | null; stock: number; reorder_threshold: number;
+    cost: number | null; price: number | null;
   }>;
   const orders = (ordersRes.data ?? []) as Array<{ total: number; ordered_at: string | null }>;
   const reviews = (reviewsRes.data ?? []) as Array<{
