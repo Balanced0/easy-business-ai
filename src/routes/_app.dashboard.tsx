@@ -63,6 +63,18 @@ type Analytics = {
   sentiment: { breakdown: Array<{ name: string; value: number }>; positive: string[]; complaints: string[] };
   summaryCards: Array<{ label: string; value: string; delta: string; positive: boolean }>;
   aiSummaryFacts: string;
+  valueGenerated: {
+    revenueOpportunities: number;
+    stockoutsAvoided: number;
+    inventorySavings: number;
+    timeSavedHours: number;
+    aiQueriesCount: number;
+  };
+  reasoning: {
+    bullets: string[];
+    confidence: "high" | "medium" | "low";
+    confidenceScore: number;
+  };
 };
 
 type SearchResponse = {
