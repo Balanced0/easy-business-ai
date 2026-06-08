@@ -1,10 +1,18 @@
-import { Search, LogOut, Moon, Sun } from "lucide-react";
+import { Search, LogOut, Moon, Sun, ChevronDown } from "lucide-react";
 import { NotificationsPopover } from "@/components/notifications-popover";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useLanguage, useT } from "@/hooks/use-language";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useLanguage, useT, SUPPORTED_LOCALES, LOCALE_META, type LocaleKey } from "@/hooks/use-language";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +20,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState, type KeyboardEvent } from "react";
 
 export function DashboardTopbar({ title }: { title: string }) {
-  const { lang, toggleLang } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const t = useT();
   const { user } = useAuth();
@@ -72,13 +79,8 @@ export function DashboardTopbar({ title }: { title: string }) {
           />
         </div>
 
-        <button
-          onClick={toggleLang}
-          className="flex h-8 items-center overflow-hidden rounded-md border text-xs"
-        >
-          <span className={`${lang === "bn" ? "bg-primary text-primary-foreground rounded py-[4px] px-[8px] mx-[4px]" : "px-2 py-1 text-muted-foreground rounded-xl"}`}>বাং</span>
-          <span className={`${lang === "en" ? "bg-primary text-primary-foreground rounded py-[4px] px-[8px] mx-[4px]" : "px-2 py-1 text-muted-foreground rounded-xl"}`}>En</span>
-        </button>
+        <LocaleSwitcher />
+
         <Button
           variant="ghost"
           size="icon"
@@ -108,3 +110,49 @@ export function DashboardTopbar({ title }: { title: string }) {
     </header>
   );
 }
+
+function LocaleSwitcher() {
+  const { locale, setLocale } = useLanguage();
+  const meta = LOCALE_META[locale as LocaleKey] ?? LOCALE_META.en;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="h-9 gap-1.5 px-2.5">
+          <span className="text-base leading-none">{meta.flag}</span>
+          <span className="text-xs font-medium">{meta.nativeLabel}</span>
+          <ChevronDown className="h-3 w-3 opacity-60" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuLabel className="text-xs">Language</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {SUPPORTED_LOCALES.map((code) => {
+          const m = LOCALE_META[code];
+          const isActive = m.active;
+          return (
+            <DropdownMenuItem
+              key={code}
+              disabled={!isActive}
+              onSelect={(e) => {
+                if (!isActive) {
+                  e.preventDefault();
+                  return;
+                }
+                setLocale(code);
+              }}
+              className="flex items-center justify-between"
+            >
+              <span className="flex items-center gap-2">
+                <span className="text-base leading-none">{m.flag}</span>
+                <span className={isActive ? "" : "text-muted-foreground"}>{m.nativeLabel}</span>
+              </span>
+              {!isActive && <span className="text-[10px] text-muted-foreground">soon</span>}
+              {isActive && code === locale && <span className="text-[10px] text-primary">●</span>}
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+

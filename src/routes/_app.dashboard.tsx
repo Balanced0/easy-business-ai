@@ -24,6 +24,7 @@ import { Sparkles, TrendingUp, TrendingDown, AlertTriangle, Loader2, Search, X, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage, useT } from "@/hooks/use-language";
+import { useCurrency } from "@/hooks/use-currency";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "@tanstack/react-router";
 
@@ -97,6 +98,7 @@ const SENTIMENT_COLORS = ["var(--color-chart-2)", "var(--color-chart-3)", "var(-
 function DashboardPage() {
   const t = useT();
   const { lang } = useLanguage();
+  const { formatCurrency } = useCurrency();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
@@ -285,7 +287,7 @@ function DashboardPage() {
         {/* Value Generated card */}
         {(() => {
           const vg = analytics?.valueGenerated;
-          const fmtCurrency = (n: number) => `$${(n || 0).toLocaleString()}`;
+          const fmtCurrency = (n: number) => formatCurrency(n || 0, "USD");
           const items = [
             {
               key: "revenue",

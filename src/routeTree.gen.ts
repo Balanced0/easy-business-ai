@@ -25,6 +25,7 @@ import { Route as AppUploadRouteImport } from './routes/_app.upload'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppPrivacyRouteImport } from './routes/_app.privacy'
 import { Route as AppInventoryRouteImport } from './routes/_app.inventory'
+import { Route as AppIntegrationsRouteImport } from './routes/_app.integrations'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppCustomersRouteImport } from './routes/_app.customers'
 import { Route as AppCompetitorsRouteImport } from './routes/_app.competitors'
@@ -117,6 +118,11 @@ const AppInventoryRoute = AppInventoryRouteImport.update({
   path: '/inventory',
   getParentRoute: () => AppRoute,
 } as any)
+const AppIntegrationsRoute = AppIntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -190,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/competitors': typeof AppCompetitorsRoute
   '/customers': typeof AppCustomersRoute
   '/dashboard': typeof AppDashboardRoute
+  '/integrations': typeof AppIntegrationsRoute
   '/inventory': typeof AppInventoryRoute
   '/privacy': typeof AppPrivacyRoute
   '/profile': typeof AppProfileRoute
@@ -219,6 +226,7 @@ export interface FileRoutesByTo {
   '/competitors': typeof AppCompetitorsRoute
   '/customers': typeof AppCustomersRoute
   '/dashboard': typeof AppDashboardRoute
+  '/integrations': typeof AppIntegrationsRoute
   '/inventory': typeof AppInventoryRoute
   '/privacy': typeof AppPrivacyRoute
   '/profile': typeof AppProfileRoute
@@ -250,6 +258,7 @@ export interface FileRoutesById {
   '/_app/competitors': typeof AppCompetitorsRoute
   '/_app/customers': typeof AppCustomersRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/integrations': typeof AppIntegrationsRoute
   '/_app/inventory': typeof AppInventoryRoute
   '/_app/privacy': typeof AppPrivacyRoute
   '/_app/profile': typeof AppProfileRoute
@@ -281,6 +290,7 @@ export interface FileRouteTypes {
     | '/competitors'
     | '/customers'
     | '/dashboard'
+    | '/integrations'
     | '/inventory'
     | '/privacy'
     | '/profile'
@@ -310,6 +320,7 @@ export interface FileRouteTypes {
     | '/competitors'
     | '/customers'
     | '/dashboard'
+    | '/integrations'
     | '/inventory'
     | '/privacy'
     | '/profile'
@@ -340,6 +351,7 @@ export interface FileRouteTypes {
     | '/_app/competitors'
     | '/_app/customers'
     | '/_app/dashboard'
+    | '/_app/integrations'
     | '/_app/inventory'
     | '/_app/privacy'
     | '/_app/profile'
@@ -495,6 +507,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInventoryRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/integrations': {
+      id: '/_app/integrations'
+      path: '/integrations'
+      fullPath: '/integrations'
+      preLoaderRoute: typeof AppIntegrationsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/dashboard': {
       id: '/_app/dashboard'
       path: '/dashboard'
@@ -588,6 +607,7 @@ interface AppRouteChildren {
   AppCompetitorsRoute: typeof AppCompetitorsRoute
   AppCustomersRoute: typeof AppCustomersRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppIntegrationsRoute: typeof AppIntegrationsRoute
   AppInventoryRoute: typeof AppInventoryRoute
   AppPrivacyRoute: typeof AppPrivacyRoute
   AppProfileRoute: typeof AppProfileRoute
@@ -600,6 +620,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCompetitorsRoute: AppCompetitorsRoute,
   AppCustomersRoute: AppCustomersRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppIntegrationsRoute: AppIntegrationsRoute,
   AppInventoryRoute: AppInventoryRoute,
   AppPrivacyRoute: AppPrivacyRoute,
   AppProfileRoute: AppProfileRoute,

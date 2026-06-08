@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 import { useT } from "@/hooks/use-language";
+import { useCurrency, SUPPORTED_CURRENCIES, CURRENCY_META, type CurrencyCode } from "@/hooks/use-currency";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -152,6 +154,8 @@ function ProfilePage() {
                   <Input value={form.monthly_revenue} onChange={update("monthly_revenue")} />
                 </div>
               </div>
+              <CurrencyPreference />
+
               <div className="flex gap-2">
                 <Button type="submit" disabled={busy}>
                   {t("সংরক্ষণ করুন / Save changes")}
@@ -167,3 +171,30 @@ function ProfilePage() {
     </>
   );
 }
+
+function CurrencyPreference() {
+  const t = useT();
+  const { currency, setCurrency } = useCurrency();
+  const handleChange = async (value: string) => {
+    await setCurrency(value as CurrencyCode);
+    toast.success(t("মুদ্রা পছন্দ আপডেট হয়েছে / Currency preference updated"));
+  };
+  return (
+    <div className="space-y-1 max-w-sm">
+      <Label>{t("profile.currency")}</Label>
+      <Select value={currency} onValueChange={handleChange}>
+        <SelectTrigger><SelectValue /></SelectTrigger>
+        <SelectContent>
+          {SUPPORTED_CURRENCIES.map((code) => (
+            <SelectItem key={code} value={code}>
+              <span className="font-medium">{code}</span>
+              <span className="text-muted-foreground ml-2">{CURRENCY_META[code].symbol} · {CURRENCY_META[code].label}</span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <p className="text-xs text-muted-foreground">{t("profile.currencyHelp")}</p>
+    </div>
+  );
+}
+

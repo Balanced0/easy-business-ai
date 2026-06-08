@@ -10,6 +10,7 @@ import {
   Upload,
   Tag,
   ShieldCheck,
+  Plug,
 } from "lucide-react";
 import {
   Sidebar,
@@ -31,6 +32,7 @@ const workspaceItems = [
   { title: "প্রতিযোগী / Competitors", url: "/competitors", icon: TrendingUp },
   { title: "গ্রাহক / Customers", url: "/customers", icon: Users },
   { title: "এআই সহকারী / AI Assistant", url: "/assistant", icon: MessageSquare },
+  { title: "ইন্টিগ্রেশন / Integrations", url: "/integrations", icon: Plug },
   { title: "গোপনীয়তা ও ডেটা / Privacy & Data", url: "/privacy", icon: ShieldCheck },
 ];
 

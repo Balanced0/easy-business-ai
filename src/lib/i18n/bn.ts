@@ -1,0 +1,37 @@
+import type { TranslationMap } from "./types";
+
+const bn: TranslationMap = {
+  "common.save": "সংরক্ষণ করুন",
+  "common.cancel": "বাতিল",
+  "common.loading": "লোড হচ্ছে...",
+  "common.back": "ফিরে যান",
+  "common.search": "খুঁজুন",
+  "common.connect": "সংযুক্ত করুন",
+  "common.connected": "সংযুক্ত",
+  "common.comingSoon": "শীঘ্রই আসছে",
+  "nav.dashboard": "ড্যাশবোর্ড",
+  "nav.upload": "ডেটা আপলোড",
+  "nav.inventory": "ইনভেন্টরি",
+  "nav.competitors": "প্রতিযোগী",
+  "nav.customers": "গ্রাহক",
+  "nav.assistant": "এআই সহকারী",
+  "nav.privacy": "গোপনীয়তা ও ডেটা",
+  "nav.about": "সম্পর্কে",
+  "nav.pricing": "মূল্য",
+  "nav.integrations": "ইন্টিগ্রেশন",
+  "nav.workspace": "ওয়ার্কস্পেস",
+  "nav.company": "কোম্পানি",
+  "profile.currency": "পছন্দের মুদ্রা",
+  "profile.currencyHelp": "আপনার ড্যাশবোর্ডের সমস্ত আর্থিক মান প্রদর্শনের জন্য ব্যবহৃত হয়।",
+  "integrations.title": "মার্কেটপ্লেস ইন্টিগ্রেশন",
+  "integrations.subtitle": "আপনার বিক্রয় চ্যানেল সংযুক্ত করে স্বয়ংক্রিয়ভাবে অর্ডার, পণ্য ও ইনভেন্টরি সিঙ্ক করুন।",
+  "integrations.darazTitle": "আপনার দারাজ স্টোর সংযুক্ত করুন",
+  "integrations.darazSellerId": "সেলার আইডি",
+  "integrations.darazApiKey": "এপিআই কী",
+  "integrations.darazRegion": "অঞ্চল",
+  "integrations.testConnection": "সংযোগ পরীক্ষা করুন",
+  "integrations.testSuccess": "সংযোগ সফল হয়েছে",
+  "integrations.saveAndSync": "সংরক্ষণ ও সিঙ্ক",
+};
+
+export default bn;
