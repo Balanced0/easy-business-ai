@@ -20,7 +20,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState, type KeyboardEvent } from "react";
 
 export function DashboardTopbar({ title }: { title: string }) {
-  const { lang, toggleLang } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const t = useT();
   const { user } = useAuth();
