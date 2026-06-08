@@ -171,3 +171,30 @@ function ProfilePage() {
     </>
   );
 }
+
+function CurrencyPreference() {
+  const t = useT();
+  const { currency, setCurrency } = useCurrency();
+  const handleChange = async (value: string) => {
+    await setCurrency(value as CurrencyCode);
+    toast.success(t("মুদ্রা পছন্দ আপডেট হয়েছে / Currency preference updated"));
+  };
+  return (
+    <div className="space-y-1 max-w-sm">
+      <Label>{t("profile.currency")}</Label>
+      <Select value={currency} onValueChange={handleChange}>
+        <SelectTrigger><SelectValue /></SelectTrigger>
+        <SelectContent>
+          {SUPPORTED_CURRENCIES.map((code) => (
+            <SelectItem key={code} value={code}>
+              <span className="font-medium">{code}</span>
+              <span className="text-muted-foreground ml-2">{CURRENCY_META[code].symbol} · {CURRENCY_META[code].label}</span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <p className="text-xs text-muted-foreground">{t("profile.currencyHelp")}</p>
+    </div>
+  );
+}
+
