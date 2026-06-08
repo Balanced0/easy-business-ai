@@ -111,3 +111,49 @@ export function DashboardTopbar({ title }: { title: string }) {
     </header>
   );
 }
+
+function LocaleSwitcher() {
+  const { locale, setLocale } = useLanguage();
+  const meta = LOCALE_META[locale as LocaleKey] ?? LOCALE_META.en;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="h-9 gap-1.5 px-2.5">
+          <span className="text-base leading-none">{meta.flag}</span>
+          <span className="text-xs font-medium">{meta.nativeLabel}</span>
+          <ChevronDown className="h-3 w-3 opacity-60" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuLabel className="text-xs">Language</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {SUPPORTED_LOCALES.map((code) => {
+          const m = LOCALE_META[code];
+          const isActive = m.active;
+          return (
+            <DropdownMenuItem
+              key={code}
+              disabled={!isActive}
+              onSelect={(e) => {
+                if (!isActive) {
+                  e.preventDefault();
+                  return;
+                }
+                setLocale(code);
+              }}
+              className="flex items-center justify-between"
+            >
+              <span className="flex items-center gap-2">
+                <span className="text-base leading-none">{m.flag}</span>
+                <span className={isActive ? "" : "text-muted-foreground"}>{m.nativeLabel}</span>
+              </span>
+              {!isActive && <span className="text-[10px] text-muted-foreground">soon</span>}
+              {isActive && code === locale && <span className="text-[10px] text-primary">●</span>}
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
