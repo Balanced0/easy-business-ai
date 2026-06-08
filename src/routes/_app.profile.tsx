@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 import { useT } from "@/hooks/use-language";
+import { useCurrency, SUPPORTED_CURRENCIES, CURRENCY_META, type CurrencyCode } from "@/hooks/use-currency";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
