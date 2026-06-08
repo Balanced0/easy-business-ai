@@ -162,6 +162,8 @@ function KpiCard({
 
 function CompetitorsPage() {
   const t = useT();
+  const { formatCurrency } = useCurrency();
+  const fmtUsd = (n: number | null | undefined) => (n == null ? "—" : formatCurrency(n, "USD"));
   const [query, setQuery] = useState("");
   const [myPrice, setMyPrice] = useState("");
   const [loading, setLoading] = useState(false);
