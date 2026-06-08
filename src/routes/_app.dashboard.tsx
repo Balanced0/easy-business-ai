@@ -287,7 +287,7 @@ function DashboardPage() {
         {/* Value Generated card */}
         {(() => {
           const vg = analytics?.valueGenerated;
-          const fmtCurrency = (n: number) => `$${(n || 0).toLocaleString()}`;
+          const fmtCurrency = (n: number) => formatCurrency(n || 0, "USD");
           const items = [
             {
               key: "revenue",
