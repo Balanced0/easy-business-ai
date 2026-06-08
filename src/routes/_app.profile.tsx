@@ -154,6 +154,8 @@ function ProfilePage() {
                   <Input value={form.monthly_revenue} onChange={update("monthly_revenue")} />
                 </div>
               </div>
+              <CurrencyPreference />
+
               <div className="flex gap-2">
                 <Button type="submit" disabled={busy}>
                   {t("সংরক্ষণ করুন / Save changes")}
