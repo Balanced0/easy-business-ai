@@ -1,0 +1,37 @@
+import type { TranslationMap } from "./types";
+
+const en: TranslationMap = {
+  "common.save": "Save",
+  "common.cancel": "Cancel",
+  "common.loading": "Loading...",
+  "common.back": "Back",
+  "common.search": "Search",
+  "common.connect": "Connect",
+  "common.connected": "Connected",
+  "common.comingSoon": "Coming soon",
+  "nav.dashboard": "Dashboard",
+  "nav.upload": "Upload Data",
+  "nav.inventory": "Inventory",
+  "nav.competitors": "Competitors",
+  "nav.customers": "Customers",
+  "nav.assistant": "AI Assistant",
+  "nav.privacy": "Privacy & Data",
+  "nav.about": "About",
+  "nav.pricing": "Pricing",
+  "nav.integrations": "Integrations",
+  "nav.workspace": "Workspace",
+  "nav.company": "Company",
+  "profile.currency": "Preferred currency",
+  "profile.currencyHelp": "Used to display all monetary values across your dashboard.",
+  "integrations.title": "Marketplace Integrations",
+  "integrations.subtitle": "Connect your sales channels to sync orders, products, and inventory automatically.",
+  "integrations.darazTitle": "Connect your Daraz store",
+  "integrations.darazSellerId": "Seller ID",
+  "integrations.darazApiKey": "API Key",
+  "integrations.darazRegion": "Region",
+  "integrations.testConnection": "Test connection",
+  "integrations.testSuccess": "Connection successful",
+  "integrations.saveAndSync": "Save & sync",
+};
+
+export default en;
