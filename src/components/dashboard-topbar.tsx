@@ -1,10 +1,18 @@
-import { Search, LogOut, Moon, Sun } from "lucide-react";
+import { Search, LogOut, Moon, Sun, ChevronDown } from "lucide-react";
 import { NotificationsPopover } from "@/components/notifications-popover";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useLanguage, useT } from "@/hooks/use-language";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useLanguage, useT, SUPPORTED_LOCALES, LOCALE_META, type LocaleKey } from "@/hooks/use-language";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
