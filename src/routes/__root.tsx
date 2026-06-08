@@ -116,8 +116,10 @@ function RootComponent() {
       <ThemeProvider>
         <LanguageProvider>
           <AuthProvider>
-            <LanguageKeyedOutlet />
-            <Toaster />
+            <CurrencyProvider>
+              <LanguageKeyedOutlet />
+              <Toaster />
+            </CurrencyProvider>
           </AuthProvider>
         </LanguageProvider>
       </ThemeProvider>
