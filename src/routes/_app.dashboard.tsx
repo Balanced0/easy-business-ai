@@ -98,6 +98,7 @@ const SENTIMENT_COLORS = ["var(--color-chart-2)", "var(--color-chart-3)", "var(-
 function DashboardPage() {
   const t = useT();
   const { lang } = useLanguage();
+  const { formatCurrency } = useCurrency();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
