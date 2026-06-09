@@ -173,12 +173,20 @@ function PricingNav() {
               En
             </span>
           </button>
-          <Button asChild size="sm" variant="ghost">
-            <Link to="/login">{t("লগইন / Log in")}</Link>
-          </Button>
-          <Button asChild size="sm">
-            <Link to="/signup">{t("সাইন আপ / Sign up")}</Link>
-          </Button>
+          {loading ? null : user ? (
+            <Button asChild size="sm">
+              <Link to="/dashboard">{t("ড্যাশবোর্ডে ফিরে যান / Back to dashboard")}</Link>
+            </Button>
+          ) : (
+            <>
+              <Button asChild size="sm" variant="ghost">
+                <Link to="/login">{t("লগইন / Log in")}</Link>
+              </Button>
+              <Button asChild size="sm">
+                <Link to="/signup">{t("সাইন আপ / Sign up")}</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>
