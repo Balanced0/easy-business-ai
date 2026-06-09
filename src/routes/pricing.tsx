@@ -139,6 +139,7 @@ function toBn(s: string) {
 function PricingNav() {
   const { lang, toggleLang } = useLanguage();
   const t = useT();
+  const { user, loading } = useAuth();
   return (
     <header className="border-b bg-background/80 backdrop-blur sticky top-0 z-40">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
