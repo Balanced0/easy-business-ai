@@ -11,6 +11,7 @@ import {
   Tag,
   ShieldCheck,
   Plug,
+  Cpu,
 } from "lucide-react";
 import {
   Sidebar,
