@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useLanguage, useT } from "@/hooks/use-language";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -138,6 +139,7 @@ function toBn(s: string) {
 function PricingNav() {
   const { lang, toggleLang } = useLanguage();
   const t = useT();
+  const { user, loading } = useAuth();
   return (
     <header className="border-b bg-background/80 backdrop-blur sticky top-0 z-40">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
@@ -171,12 +173,20 @@ function PricingNav() {
               En
             </span>
           </button>
-          <Button asChild size="sm" variant="ghost">
-            <Link to="/login">{t("লগইন / Log in")}</Link>
-          </Button>
-          <Button asChild size="sm">
-            <Link to="/signup">{t("সাইন আপ / Sign up")}</Link>
-          </Button>
+          {loading ? null : user ? (
+            <Button asChild size="sm">
+              <Link to="/dashboard">{t("ড্যাশবোর্ডে ফিরে যান / Back to dashboard")}</Link>
+            </Button>
+          ) : (
+            <>
+              <Button asChild size="sm" variant="ghost">
+                <Link to="/login">{t("লগইন / Log in")}</Link>
+              </Button>
+              <Button asChild size="sm">
+                <Link to="/signup">{t("সাইন আপ / Sign up")}</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>

@@ -32,6 +32,11 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  Lock,
+  BrainCircuit,
+  Eye,
+  SlidersHorizontal,
+  Award,
 } from "lucide-react";
 import { useT } from "@/hooks/use-language";
 import { useAuth } from "@/hooks/use-auth";
@@ -212,6 +217,75 @@ function PrivacyPage() {
     <>
       <DashboardTopbar title="গোপনীয়তা ও ডেটা / Privacy & Data" />
       <main className="flex-1 space-y-4 p-4 md:p-6">
+        {/* Section 0: Responsible AI Commitment */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              {t("দায়িত্বশীল এআই অঙ্গীকার / Responsible AI Commitment")}
+            </CardTitle>
+            <CardDescription>
+              {t("আমরা কীভাবে আপনার ডেটা এবং এআই-কে নৈতিকভাবে পরিচালনা করি / How we handle your data and AI responsibly")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {[
+                {
+                  icon: Lock,
+                  title: t("ডেটা আইসোলেশন / Data isolation"),
+                  body: t(
+                    "আপনার ডেটা Supabase Row Level Security ব্যবহার করে আপনার অ্যাকাউন্টের জন্য একচেটিয়াভাবে স্কোপড সেশনে প্রক্রিয়া করা হয়। / Your data is processed in sessions scoped exclusively to your account using Supabase Row Level Security.",
+                  ),
+                },
+                {
+                  icon: BrainCircuit,
+                  title: t("কোন মডেল ট্রেনিং নেই / No model training"),
+                  body: t(
+                    "Anthropic, Google, OpenAI বা EasyBusiness AI কেউই আপনার ব্যবসার ডেটা কোন এআই মডেল ফাইন-টিউন বা ট্রেন করতে ব্যবহার করে না। / Your business data is never used to fine-tune or train any AI model, by Anthropic, Google, OpenAI, or EasyBusiness AI.",
+                  ),
+                },
+                {
+                  icon: Eye,
+                  title: t("ব্যাখ্যাযোগ্য এআই / Explainable AI"),
+                  body: t(
+                    "প্রতিটি রিকমেন্ডেশনে যে ডেটা থেকে এসেছে এবং একটি কনফিডেন্স স্কোর দেখানো হয় যাতে আপনি সবসময় জানেন কেন। / Every recommendation shows the data it was derived from and a confidence score so you always know why.",
+                  ),
+                },
+                {
+                  icon: SlidersHorizontal,
+                  title: t("পক্ষপাত সচেতনতা / Bias awareness"),
+                  body: t(
+                    "প্রতিযোগী মূল্য তুলনায় আউটলায়ার বায়াস প্রতিরোধ করতে মিডিয়ান-ভিত্তিক নর্মালাইজেশন ব্যবহার করা হয়। / Competitor pricing comparisons use median-based normalization to prevent outlier bias in recommendations.",
+                  ),
+                },
+                {
+                  icon: Award,
+                  title: t("অডিট ট্রেইল / Audit trail"),
+                  body: t(
+                    "সমস্ত এআই কর্ম টাইমস্ট্যাম্প সহ লগ করা হয়। আপনি যেকোনো সময় আপনার সম্পূর্ণ ডেটা ইতিহাস রপ্তানি বা মুছে ফেলতে পারেন। / All AI actions are logged with timestamps. You can export or delete your complete data history at any time.",
+                  ),
+                },
+              ].map((item, i) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={i}
+                    className="flex items-start gap-3 rounded-md border border-success/20 bg-success/[0.04] p-3"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-success/10 text-success">
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold">{item.title}</div>
+                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{item.body}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Section 1: Datasets */}
         <Card>
           <CardHeader>

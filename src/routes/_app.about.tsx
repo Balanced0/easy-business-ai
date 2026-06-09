@@ -84,25 +84,25 @@ const customers = [
 const roadmap = [
   {
     phase: "ফেজ ১ / Phase 1",
-    when: "এখন / Now",
+    when: "২০২৫ (সম্পন্ন) / 2025 (completed)",
     region: "বাংলাদেশ / Bangladesh",
     desc: "Daraz, Shopify ও স্থানীয় বিক্রেতাদের জন্য চালু। / Live for Daraz, Shopify, and local sellers.",
   },
   {
     phase: "ফেজ ২ / Phase 2",
-    when: "Q3 2025",
+    when: "২০২৬ (চলমান) / 2026 (in progress)",
     region: "দক্ষিণ এশিয়া / South Asia",
     desc: "ভারত, পাকিস্তান, শ্রীলঙ্কা — হিন্দি ও উর্দু সাপোর্ট। / Expand to India, Pakistan, Sri Lanka with Hindi and Urdu support.",
   },
   {
     phase: "ফেজ ৩ / Phase 3",
-    when: "Q1 2026",
+    when: "Q4 ২০২৬ (আসন্ন) / Q4 2026 (upcoming)",
     region: "দক্ষিণ-পূর্ব এশিয়া / Southeast Asia",
     desc: "ইন্দোনেশিয়া, ভিয়েতনাম, থাইল্যান্ড, ফিলিপাইন। / Indonesia, Vietnam, Thailand, Philippines via Shopee and Lazada.",
   },
   {
     phase: "ফেজ ৪ / Phase 4",
-    when: "2027",
+    when: "২০২৭ (ভিশন) / 2027 (vision)",
     region: "গ্লোবাল / Global",
     desc: "মধ্যপ্রাচ্য, আফ্রিকা, লাতিন আমেরিকা। / MEA and LATAM with full multilingual coverage.",
   },
