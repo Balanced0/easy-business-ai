@@ -32,6 +32,11 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  Lock,
+  BrainCircuit,
+  Eye,
+  SlidersHorizontal,
+  Award,
 } from "lucide-react";
 import { useT } from "@/hooks/use-language";
 import { useAuth } from "@/hooks/use-auth";
