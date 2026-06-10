@@ -247,6 +247,7 @@ src/
 ├── hooks/
 │   ├── use-auth.tsx
 │   ├── use-language.tsx
+│   ├── use-currency.tsx         # multi-currency formatting & FX rates
 │   ├── use-theme.tsx
 │   └── use-mobile.tsx
 ├── integrations/
