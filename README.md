@@ -269,6 +269,7 @@ src/
 │   ├── error-capture.ts
 │   ├── error-page.ts
 │   ├── firecrawl.server.ts
+│   ├── i18n/                      # structured translations (en.ts, bn.ts, types.ts, index.ts)
 │   └── utils.ts
 ├── routes/
 │   ├── __root.tsx               # SSR shell, providers
