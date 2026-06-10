@@ -19,6 +19,7 @@ AI Gateway**, deployed to **Cloudflare Workers** via TanStack Start.
 ## Table of Contents
 
 - [Features](#features)
+- [Business Model, Pricing & Ethics](#business-model-pricing--ethics)
 - [Tech Stack](#tech-stack)
 - [Architecture](#architecture)
 - [Project Structure](#project-structure)
