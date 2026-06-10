@@ -393,9 +393,10 @@ never committed to source.
 
 Managed via Lovable Cloud (Supabase). Key tables:
 
-- `profiles` — user profile / onboarding data.
+- `profiles` — user profile / onboarding data (includes `preferred_currency`).
 - `knowledge_documents` — uploaded docs + `vector(1536)` embeddings for RAG.
 - `notifications` — in-app notification feed.
+- `upload_batches` — tracks uploaded datasets for privacy management and audit.
 - Plus sales / inventory / customer tables populated by the upload pipeline.
 
 All `public.*` tables have RLS enabled and explicit `GRANT`s for
