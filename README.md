@@ -45,7 +45,16 @@ AI Gateway**, deployed to **Cloudflare Workers** via TanStack Start.
 - **AI Assistant** — chat with your data using retrieval over your uploaded documents (RAG), powered by the Lovable AI Gateway.
 - **Voice** — speech-to-text and text-to-speech endpoints for the assistant.
 - **Notifications** — in-app notifications popover in the topbar.
-- **Profile / settings** — manage account, language, theme.
+- **Profile / settings** — manage account, language, theme, and preferred currency.
+- **Pricing** — public `/pricing` route with 4 tiers (Free, Starter $19/mo, Pro $49/mo, Enterprise), monthly/annual billing toggle, feature comparison table, and demo checkout flow.
+- **About / Investor overview** — public `/about` route with market opportunity metrics, revenue streams, competitive advantages, target customer segments, and a global expansion roadmap.
+- **Value Generated** — dashboard card computing `revenueOpportunities`, `inventorySavings`, `timeSavedHours`, and AI recommendations derived from uploaded data.
+- **Explainable AI** — confidence badges (High / Medium / Low) on dashboard summaries with an accordion revealing data-driven reasoning for each insight.
+- **Privacy & Data** — `/privacy` route for dataset management, AI usage policy review, a paginated audit log of the last 50 AI actions, and JSON export of all uploaded data.
+- **Multi-currency** — 8-currency support (USD, BDT, INR, GBP, EUR, MYR, SGD, AED) with static FX rates and `Intl.NumberFormat` formatting; preference stored in `profiles.preferred_currency`.
+- **Marketplace Integrations** — `/integrations` grid for Shopify, Amazon, Daraz, Etsy, TikTok Shop, etc.; includes a live Daraz connection dialog (Seller ID, API Key, Region).
+- **AI Intelligence Core** — `/intelligence` route visualizing the 6-stage pipeline (Ingestion → Embeddings → RAG → Model Routing → Explainability → Competitor Intelligence) with live system status from `knowledge_documents`, `chat_messages`, and `upload_batches`.
+- **Responsible AI** — 5-pillar ethical commitment in the Privacy page: data isolation (RLS), no model training on user data, explainable outputs, bias-aware median normalization, and full audit trails.
 
 ### Competitor analysis pipeline
 1. **Firecrawl `/v2/search`** scrapes top web results for the searched product to markdown.
