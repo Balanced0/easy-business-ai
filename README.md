@@ -72,6 +72,37 @@ AI Gateway**, deployed to **Cloudflare Workers** via TanStack Start.
 
 ---
 
+## Business Model, Pricing & Ethics
+
+### Pricing tiers
+| Plan | Monthly | Annual | Key limits |
+|------|---------|--------|------------|
+| **Free** | $0 | $0 | 1 marketplace, 100 orders/mo, basic dashboard |
+| **Starter** | $19 | ~$15 (20% off) | 3 marketplaces, 1,000 orders/mo, 50 AI queries, 5 competitor searches |
+| **Pro** | $49 | ~$39 (20% off) | Unlimited marketplaces, 10,000 orders/mo, unlimited AI & competitor analysis, RAG, voice, priority support |
+| **Enterprise** | Custom | Custom | Everything in Pro + custom integrations, dedicated support, SLA, white-label, API access |
+
+### Revenue streams
+1. **SaaS subscriptions** — tiered monthly and annual plans from Free to Enterprise.
+2. **Marketplace API revenue share** — partner revenue from Daraz, Shopify, Amazon integrations.
+3. **White-label licensing** — custom-branded dashboards for agencies and large retailers.
+4. **Enterprise data insights** — anonymized market intelligence reports for brands and investors.
+
+### Global expansion roadmap
+- **Phase 1 — Bangladesh (2025, completed)** — Live for Daraz, Shopify, and local sellers.
+- **Phase 2 — South Asia (2026, in progress)** — Expand to India, Pakistan, Sri Lanka with Hindi and Urdu support.
+- **Phase 3 — Southeast Asia (Q4 2026, upcoming)** — Indonesia, Vietnam, Thailand, Philippines via Shopee and Lazada.
+- **Phase 4 — Global (2027, vision)** — MEA and LATAM with full multilingual coverage.
+
+### Responsible AI commitments
+- **Data isolation** — every user’s data is scoped by Row-Level Security (RLS); no cross-tenant access.
+- **No model training on user data** — uploaded datasets are never used to train or fine-tune foundation models.
+- **Explainable outputs** — every AI insight surfaces its reasoning and confidence level.
+- **Bias awareness** — competitor price comparisons use median-based normalization to avoid outlier skew.
+- **Audit trails** — a complete log of AI actions and data access is available for export and review in the Privacy page.
+
+---
+
 ## Tech Stack
 
 ### Framework & runtime
