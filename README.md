@@ -226,7 +226,11 @@ AI Gateway**, deployed to **Cloudflare Workers** via TanStack Start.
 - `useLanguage()` (`src/hooks/use-language.tsx`) provides a `t()` translator
   for Bangla ↔ English; bilingual strings are stored as
   `"<bn> / <en>"` so a single source of truth renders correctly in either mode.
+  Structured key-based translations live under `src/lib/i18n/` (English and Bangla modules)
+  with a `getTranslation()` helper for scalable locale management.
 - `useAuth()` exposes the Supabase session and gating logic for protected routes.
+- `useCurrency()` (`src/hooks/use-currency.tsx`) provides multi-currency formatting
+  (USD, BDT, INR, GBP, EUR, MYR, SGD, AED) with static FX rates and `Intl.NumberFormat`.
 - `useTheme()` handles dark/light tokens defined in `src/styles.css`.
 
 ---
