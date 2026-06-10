@@ -19,6 +19,7 @@ AI Gateway**, deployed to **Cloudflare Workers** via TanStack Start.
 ## Table of Contents
 
 - [Features](#features)
+- [Business Model, Pricing & Ethics](#business-model-pricing--ethics)
 - [Tech Stack](#tech-stack)
 - [Architecture](#architecture)
 - [Project Structure](#project-structure)
@@ -44,7 +45,16 @@ AI Gateway**, deployed to **Cloudflare Workers** via TanStack Start.
 - **AI Assistant** — chat with your data using retrieval over your uploaded documents (RAG), powered by the Lovable AI Gateway.
 - **Voice** — speech-to-text and text-to-speech endpoints for the assistant.
 - **Notifications** — in-app notifications popover in the topbar.
-- **Profile / settings** — manage account, language, theme.
+- **Profile / settings** — manage account, language, theme, and preferred currency.
+- **Pricing** — public `/pricing` route with 4 tiers (Free, Starter $19/mo, Pro $49/mo, Enterprise), monthly/annual billing toggle, feature comparison table, and demo checkout flow.
+- **About / Investor overview** — public `/about` route with market opportunity metrics, revenue streams, competitive advantages, target customer segments, and a global expansion roadmap.
+- **Value Generated** — dashboard card computing `revenueOpportunities`, `inventorySavings`, `timeSavedHours`, and AI recommendations derived from uploaded data.
+- **Explainable AI** — confidence badges (High / Medium / Low) on dashboard summaries with an accordion revealing data-driven reasoning for each insight.
+- **Privacy & Data** — `/privacy` route for dataset management, AI usage policy review, a paginated audit log of the last 50 AI actions, and JSON export of all uploaded data.
+- **Multi-currency** — 8-currency support (USD, BDT, INR, GBP, EUR, MYR, SGD, AED) with static FX rates and `Intl.NumberFormat` formatting; preference stored in `profiles.preferred_currency`.
+- **Marketplace Integrations** — `/integrations` grid for Shopify, Amazon, Daraz, Etsy, TikTok Shop, etc.; includes a live Daraz connection dialog (Seller ID, API Key, Region).
+- **AI Intelligence Core** — `/intelligence` route visualizing the 6-stage pipeline (Ingestion → Embeddings → RAG → Model Routing → Explainability → Competitor Intelligence) with live system status from `knowledge_documents`, `chat_messages`, and `upload_batches`.
+- **Responsible AI** — 5-pillar ethical commitment in the Privacy page: data isolation (RLS), no model training on user data, explainable outputs, bias-aware median normalization, and full audit trails.
 
 ### Competitor analysis pipeline
 1. **Firecrawl `/v2/search`** scrapes top web results for the searched product to markdown.
@@ -59,6 +69,37 @@ AI Gateway**, deployed to **Cloudflare Workers** via TanStack Start.
 - Stored in the `knowledge_documents` table with pgvector.
 - Retrieval uses a Postgres `match_documents` RPC for cosine similarity search, scoped per user.
 - The assistant calls Gemini / GPT models through the Lovable AI Gateway with the retrieved context.
+
+---
+
+## Business Model, Pricing & Ethics
+
+### Pricing tiers
+| Plan | Monthly | Annual | Key limits |
+|------|---------|--------|------------|
+| **Free** | $0 | $0 | 1 marketplace, 100 orders/mo, basic dashboard |
+| **Starter** | $19 | ~$15 (20% off) | 3 marketplaces, 1,000 orders/mo, 50 AI queries, 5 competitor searches |
+| **Pro** | $49 | ~$39 (20% off) | Unlimited marketplaces, 10,000 orders/mo, unlimited AI & competitor analysis, RAG, voice, priority support |
+| **Enterprise** | Custom | Custom | Everything in Pro + custom integrations, dedicated support, SLA, white-label, API access |
+
+### Revenue streams
+1. **SaaS subscriptions** — tiered monthly and annual plans from Free to Enterprise.
+2. **Marketplace API revenue share** — partner revenue from Daraz, Shopify, Amazon integrations.
+3. **White-label licensing** — custom-branded dashboards for agencies and large retailers.
+4. **Enterprise data insights** — anonymized market intelligence reports for brands and investors.
+
+### Global expansion roadmap
+- **Phase 1 — Bangladesh (2025, completed)** — Live for Daraz, Shopify, and local sellers.
+- **Phase 2 — South Asia (2026, in progress)** — Expand to India, Pakistan, Sri Lanka with Hindi and Urdu support.
+- **Phase 3 — Southeast Asia (Q4 2026, upcoming)** — Indonesia, Vietnam, Thailand, Philippines via Shopee and Lazada.
+- **Phase 4 — Global (2027, vision)** — MEA and LATAM with full multilingual coverage.
+
+### Responsible AI commitments
+- **Data isolation** — every user’s data is scoped by Row-Level Security (RLS); no cross-tenant access.
+- **No model training on user data** — uploaded datasets are never used to train or fine-tune foundation models.
+- **Explainable outputs** — every AI insight surfaces its reasoning and confidence level.
+- **Bias awareness** — competitor price comparisons use median-based normalization to avoid outlier skew.
+- **Audit trails** — a complete log of AI actions and data access is available for export and review in the Privacy page.
 
 ---
 
@@ -185,7 +226,11 @@ AI Gateway**, deployed to **Cloudflare Workers** via TanStack Start.
 - `useLanguage()` (`src/hooks/use-language.tsx`) provides a `t()` translator
   for Bangla ↔ English; bilingual strings are stored as
   `"<bn> / <en>"` so a single source of truth renders correctly in either mode.
+  Structured key-based translations live under `src/lib/i18n/` (English and Bangla modules)
+  with a `getTranslation()` helper for scalable locale management.
 - `useAuth()` exposes the Supabase session and gating logic for protected routes.
+- `useCurrency()` (`src/hooks/use-currency.tsx`) provides multi-currency formatting
+  (USD, BDT, INR, GBP, EUR, MYR, SGD, AED) with static FX rates and `Intl.NumberFormat`.
 - `useTheme()` handles dark/light tokens defined in `src/styles.css`.
 
 ---
@@ -202,6 +247,7 @@ src/
 ├── hooks/
 │   ├── use-auth.tsx
 │   ├── use-language.tsx
+│   ├── use-currency.tsx         # multi-currency formatting & FX rates
 │   ├── use-theme.tsx
 │   └── use-mobile.tsx
 ├── integrations/
@@ -223,6 +269,7 @@ src/
 │   ├── error-capture.ts
 │   ├── error-page.ts
 │   ├── firecrawl.server.ts
+│   ├── i18n/                      # structured translations (en.ts, bn.ts, types.ts, index.ts)
 │   └── utils.ts
 ├── routes/
 │   ├── __root.tsx               # SSR shell, providers
@@ -239,6 +286,10 @@ src/
 │   ├── _app.assistant.tsx
 │   ├── _app.profile.tsx
 │   ├── _app.about.tsx
+│   ├── _app.privacy.tsx
+│   ├── _app.integrations.tsx
+│   ├── _app.intelligence.tsx
+│   ├── pricing.tsx
 │   └── api/
 │       ├── analytics.ts
 │       ├── chat.ts
@@ -342,9 +393,10 @@ never committed to source.
 
 Managed via Lovable Cloud (Supabase). Key tables:
 
-- `profiles` — user profile / onboarding data.
+- `profiles` — user profile / onboarding data (includes `preferred_currency`).
 - `knowledge_documents` — uploaded docs + `vector(1536)` embeddings for RAG.
 - `notifications` — in-app notification feed.
+- `upload_batches` — tracks uploaded datasets for privacy management and audit.
 - Plus sales / inventory / customer tables populated by the upload pipeline.
 
 All `public.*` tables have RLS enabled and explicit `GRANT`s for
