@@ -286,6 +286,10 @@ src/
 │   ├── _app.assistant.tsx
 │   ├── _app.profile.tsx
 │   ├── _app.about.tsx
+│   ├── _app.privacy.tsx
+│   ├── _app.integrations.tsx
+│   ├── _app.intelligence.tsx
+│   ├── pricing.tsx
 │   └── api/
 │       ├── analytics.ts
 │       ├── chat.ts
