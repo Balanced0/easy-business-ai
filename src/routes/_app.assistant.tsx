@@ -53,6 +53,7 @@ function AssistantPage() {
     );
   }, []);
 
+  const { showOutOfCredits, refresh: refreshCredits } = useCredits();
   const voiceModeRef = useRef(false);
   const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({
@@ -61,6 +62,17 @@ function AssistantPage() {
         body: { messages: ms, id, language: lang, voice: voiceModeRef.current },
         headers: await authHeaders(),
       }),
+      fetch: async (input, init) => {
+        const res = await fetch(input, init);
+        if (res.status === 402) {
+          showOutOfCredits("chat", CREDIT_COSTS.chat);
+        } else if (res.ok) {
+          // Refresh balance after a successful charge (slight delay so the
+          // server-side decrement is committed).
+          setTimeout(() => refreshCredits(), 500);
+        }
+        return res;
+      },
     }),
   });
 
