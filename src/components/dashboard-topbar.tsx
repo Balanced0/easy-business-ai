@@ -1,4 +1,4 @@
-import { Search, LogOut, Moon, Sun, ChevronDown } from "lucide-react";
+import { Search, LogOut, Moon, Sun, ChevronDown, Zap } from "lucide-react";
 import { NotificationsPopover } from "@/components/notifications-popover";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
@@ -15,8 +15,9 @@ import {
 import { useLanguage, useT, SUPPORTED_LOCALES, LOCALE_META, type LocaleKey } from "@/hooks/use-language";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
+import { useCredits } from "@/hooks/use-credits";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useState, type KeyboardEvent } from "react";
 
 export function DashboardTopbar({ title }: { title: string }) {
@@ -79,6 +80,8 @@ export function DashboardTopbar({ title }: { title: string }) {
           />
         </div>
 
+        <CreditsBadge />
+
         <LocaleSwitcher />
 
         <Button
@@ -108,6 +111,26 @@ export function DashboardTopbar({ title }: { title: string }) {
         </Button>
       </div>
     </header>
+  );
+}
+
+function CreditsBadge() {
+  const { total, loading } = useCredits();
+  const t = useT();
+  const low = total <= 10;
+  return (
+    <Link
+      to="/billing"
+      title={t("এআই ক্রেডিট / AI credits")}
+      className={`hidden sm:flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition hover:bg-accent ${
+        low
+          ? "border-destructive/40 bg-destructive/5 text-destructive"
+          : "border-border bg-muted/40 text-foreground"
+      }`}
+    >
+      <Zap className="h-3.5 w-3.5" />
+      <span className="tabular-nums">{loading ? "—" : total.toLocaleString()}</span>
+    </Link>
   );
 }
 
