@@ -183,8 +183,13 @@ function CompetitorsPage() {
           currency: "USD",
         }),
       });
+      if (res.status === 402) {
+        showOutOfCredits("competitor_analyze", 5);
+        return;
+      }
       const json = (await res.json()) as AnalyzeResponse;
       if (!res.ok) throw new Error(json.error || "analysis failed");
+      refreshCredits();
       setResult(json);
       if (json.products.length === 0) {
         toast.warning("No closely matching competitor products found.");
