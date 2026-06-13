@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useT } from "@/hooks/use-language";
 import { useCurrency } from "@/hooks/use-currency";
+import { useCredits } from "@/hooks/use-credits";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -163,6 +164,7 @@ function KpiCard({
 function CompetitorsPage() {
   const t = useT();
   const { formatCurrency } = useCurrency();
+  const { showOutOfCredits, refresh: refreshCredits } = useCredits();
   const fmtUsd = (n: number | null | undefined) => (n == null ? "—" : formatCurrency(n, "USD"));
   const [query, setQuery] = useState("");
   const [myPrice, setMyPrice] = useState("");
@@ -183,8 +185,13 @@ function CompetitorsPage() {
           currency: "USD",
         }),
       });
+      if (res.status === 402) {
+        showOutOfCredits("competitor_analyze", 5);
+        return;
+      }
       const json = (await res.json()) as AnalyzeResponse;
       if (!res.ok) throw new Error(json.error || "analysis failed");
+      refreshCredits();
       setResult(json);
       if (json.products.length === 0) {
         toast.warning("No closely matching competitor products found.");

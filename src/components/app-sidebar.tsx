@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   Plug,
   Cpu,
+  Zap,
 } from "lucide-react";
 import {
   Sidebar,
@@ -36,6 +37,7 @@ const workspaceItems = [
   { title: "ইন্টেলিজেন্স কোর / Intelligence Core", url: "/intelligence", icon: Cpu },
   { title: "ইন্টিগ্রেশন / Integrations", url: "/integrations", icon: Plug },
   { title: "গোপনীয়তা ও ডেটা / Privacy & Data", url: "/privacy", icon: ShieldCheck },
+  { title: "বিলিং ও ক্রেডিট / Billing & Credits", url: "/billing", icon: Zap },
 ];
 
 const companyItems = [

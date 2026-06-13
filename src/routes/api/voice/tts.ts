@@ -3,6 +3,7 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { getAuthedUser } from "@/lib/auth-route.server";
+import { chargeCredits, refundCredits, InsufficientCreditsError, insufficientCreditsResponse } from "@/lib/credits.server";
 
 // Voice selection by language. For Bangla we use a voice that handles
 // Indic/Bangla phonemes more naturally than the default English-trained Sarah.
@@ -34,6 +35,14 @@ export const Route = createFileRoute("/api/voice/tts")({
         if (!text) return new Response("Missing text", { status: 400 });
         const clipped = text.length > 4000 ? text.slice(0, 4000) : text;
 
+        try {
+          await chargeCredits(authed.userId, "voice_tts", { chars: clipped.length });
+        } catch (err) {
+          if (err instanceof InsufficientCreditsError) return insufficientCreditsResponse(err);
+          throw err;
+        }
+
+
         // eleven_multilingual_v2 delivers the most natural, human-like English
         // prosody. Tuned voice_settings prioritize expressiveness over rigidity.
         const res = await fetch(
@@ -60,6 +69,7 @@ export const Route = createFileRoute("/api/voice/tts")({
         if (!res.ok || !res.body) {
           const err = await res.text().catch(() => "");
           console.error("[/api/voice/tts] elevenlabs error", res.status, err);
+          await refundCredits(authed.userId, "voice_tts", { status: res.status });
           return new Response("TTS failed", { status: 502 });
         }
         return new Response(res.body, {

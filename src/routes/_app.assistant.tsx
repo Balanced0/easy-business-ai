@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { useCredits } from "@/hooks/use-credits";
+import { CREDIT_COSTS } from "@/lib/credit-costs";
 
 async function authHeaders(): Promise<Record<string, string>> {
   const { data } = await supabase.auth.getSession();
@@ -51,6 +53,7 @@ function AssistantPage() {
     );
   }, []);
 
+  const { showOutOfCredits, refresh: refreshCredits } = useCredits();
   const voiceModeRef = useRef(false);
   const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({
@@ -59,6 +62,17 @@ function AssistantPage() {
         body: { messages: ms, id, language: lang, voice: voiceModeRef.current },
         headers: await authHeaders(),
       }),
+      fetch: async (input, init) => {
+        const res = await fetch(input, init);
+        if (res.status === 402) {
+          showOutOfCredits("chat", CREDIT_COSTS.chat);
+        } else if (res.ok) {
+          // Refresh balance after a successful charge (slight delay so the
+          // server-side decrement is committed).
+          setTimeout(() => refreshCredits(), 500);
+        }
+        return res;
+      },
     }),
   });
 
@@ -122,7 +136,13 @@ function AssistantPage() {
           headers: { ...headers, "Content-Type": "application/json" },
           body: JSON.stringify({ text }),
         });
+        if (res.status === 402) {
+          showOutOfCredits("voice_tts", CREDIT_COSTS.voice_tts);
+          setSpeaking(false);
+          return;
+        }
         if (!res.ok) throw new Error(`TTS failed (${res.status})`);
+        refreshCredits();
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
@@ -142,7 +162,7 @@ function AssistantPage() {
         setSpeaking(false);
       }
     },
-    [lang, stopAudio],
+    [lang, stopAudio, showOutOfCredits, refreshCredits],
   );
 
   const startRecording = useCallback(async () => {
@@ -175,7 +195,12 @@ function AssistantPage() {
           fd.append("audio", blob, "speech.webm");
           fd.append("language", lang);
           const res = await fetch("/api/voice/stt", { method: "POST", headers, body: fd });
+          if (res.status === 402) {
+            showOutOfCredits("voice_stt", CREDIT_COSTS.voice_stt);
+            return;
+          }
           if (!res.ok) throw new Error(`STT ${res.status}`);
+          refreshCredits();
           const data = (await res.json()) as { text?: string; language?: string };
           const text = (data.text ?? "").trim();
           if (!text) {
@@ -197,7 +222,7 @@ function AssistantPage() {
       console.error("[voice] mic error", err);
       toast.error(lang === "bn" ? "মাইক্রোফোন অ্যাক্সেস নেই" : "Microphone access denied");
     }
-  }, [recording, transcribing, isLoading, lang, sendMessage, stopAudio]);
+  }, [recording, transcribing, isLoading, lang, sendMessage, stopAudio, showOutOfCredits, refreshCredits]);
 
   const stopRecording = useCallback(() => {
     if (recorderRef.current && recorderRef.current.state !== "inactive") {

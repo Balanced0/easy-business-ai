@@ -3,6 +3,8 @@ import { LanguageProvider, useLanguage } from "@/hooks/use-language";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { AuthProvider } from "@/hooks/use-auth";
 import { CurrencyProvider } from "@/hooks/use-currency";
+import { CreditsProvider } from "@/hooks/use-credits";
+import { InsufficientCreditsDialog } from "@/components/insufficient-credits-dialog";
 import {
   Outlet,
   Link,
@@ -118,8 +120,11 @@ function RootComponent() {
         <LanguageProvider>
           <AuthProvider>
             <CurrencyProvider>
-              <LanguageKeyedOutlet />
-              <Toaster />
+              <CreditsProvider>
+                <LanguageKeyedOutlet />
+                <InsufficientCreditsDialog />
+                <Toaster />
+              </CreditsProvider>
             </CurrencyProvider>
           </AuthProvider>
         </LanguageProvider>

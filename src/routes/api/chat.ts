@@ -6,6 +6,7 @@ import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { searchSimilar } from "@/lib/embeddings.server";
 import { getAuthedUser } from "@/lib/auth-route.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { chargeCredits, InsufficientCreditsError, insufficientCreditsResponse } from "@/lib/credits.server";
 
 type BusinessProfile = {
   business_name: string | null;
@@ -92,6 +93,15 @@ export const Route = createFileRoute("/api/chat")({
 
         const key = process.env.LOVABLE_API_KEY;
         if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
+
+        // Charge the user's per-account credit ledger BEFORE invoking the model.
+        try {
+          await chargeCredits(authed.userId, "chat", { messages: messages.length });
+        } catch (err) {
+          if (err instanceof InsufficientCreditsError) return insufficientCreditsResponse(err);
+          throw err;
+        }
+
 
         // Load this user's business profile (RLS via authed.supabase).
         const { data: business } = await authed.supabase

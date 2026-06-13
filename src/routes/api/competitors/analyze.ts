@@ -4,6 +4,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getAuthedUser } from "@/lib/auth-route.server";
 import { analyzeCompetitors } from "@/lib/competitor-analyze.server";
+import { chargeCredits, refundCredits, InsufficientCreditsError, insufficientCreditsResponse } from "@/lib/credits.server";
 
 const FX: Record<string, number> = {
   USD: 1, EUR: 1.08, GBP: 1.27, INR: 0.012, BDT: 0.0085,
@@ -36,11 +37,19 @@ export const Route = createFileRoute("/api/competitors/analyze")({
         }
 
         try {
+          await chargeCredits(authed.userId, "competitor_analyze", { query });
+        } catch (err) {
+          if (err instanceof InsufficientCreditsError) return insufficientCreditsResponse(err);
+          throw err;
+        }
+
+        try {
           const result = await analyzeCompetitors(query, { myPriceUsd });
           return Response.json({ ok: true, ...result });
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           console.error("[/api/competitors/analyze]", msg);
+          await refundCredits(authed.userId, "competitor_analyze", { error: msg });
           return Response.json({ error: msg }, { status: 500 });
         }
       },

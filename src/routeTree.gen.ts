@@ -30,6 +30,7 @@ import { Route as AppIntegrationsRouteImport } from './routes/_app.integrations'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppCustomersRouteImport } from './routes/_app.customers'
 import { Route as AppCompetitorsRouteImport } from './routes/_app.competitors'
+import { Route as AppBillingRouteImport } from './routes/_app.billing'
 import { Route as AppAssistantRouteImport } from './routes/_app.assistant'
 import { Route as AppAboutRouteImport } from './routes/_app.about'
 import { Route as ApiVoiceTtsRouteImport } from './routes/api/voice/tts'
@@ -144,6 +145,11 @@ const AppCompetitorsRoute = AppCompetitorsRouteImport.update({
   path: '/competitors',
   getParentRoute: () => AppRoute,
 } as any)
+const AppBillingRoute = AppBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAssistantRoute = AppAssistantRouteImport.update({
   id: '/assistant',
   path: '/assistant',
@@ -199,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/about': typeof AppAboutRoute
   '/assistant': typeof AppAssistantRoute
+  '/billing': typeof AppBillingRoute
   '/competitors': typeof AppCompetitorsRoute
   '/customers': typeof AppCustomersRoute
   '/dashboard': typeof AppDashboardRoute
@@ -230,6 +237,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/about': typeof AppAboutRoute
   '/assistant': typeof AppAssistantRoute
+  '/billing': typeof AppBillingRoute
   '/competitors': typeof AppCompetitorsRoute
   '/customers': typeof AppCustomersRoute
   '/dashboard': typeof AppDashboardRoute
@@ -263,6 +271,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_app/about': typeof AppAboutRoute
   '/_app/assistant': typeof AppAssistantRoute
+  '/_app/billing': typeof AppBillingRoute
   '/_app/competitors': typeof AppCompetitorsRoute
   '/_app/customers': typeof AppCustomersRoute
   '/_app/dashboard': typeof AppDashboardRoute
@@ -296,6 +305,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/about'
     | '/assistant'
+    | '/billing'
     | '/competitors'
     | '/customers'
     | '/dashboard'
@@ -327,6 +337,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/about'
     | '/assistant'
+    | '/billing'
     | '/competitors'
     | '/customers'
     | '/dashboard'
@@ -359,6 +370,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_app/about'
     | '/_app/assistant'
+    | '/_app/billing'
     | '/_app/competitors'
     | '/_app/customers'
     | '/_app/dashboard'
@@ -554,6 +566,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCompetitorsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/billing': {
+      id: '/_app/billing'
+      path: '/billing'
+      fullPath: '/billing'
+      preLoaderRoute: typeof AppBillingRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/assistant': {
       id: '/_app/assistant'
       path: '/assistant'
@@ -623,6 +642,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAboutRoute: typeof AppAboutRoute
   AppAssistantRoute: typeof AppAssistantRoute
+  AppBillingRoute: typeof AppBillingRoute
   AppCompetitorsRoute: typeof AppCompetitorsRoute
   AppCustomersRoute: typeof AppCustomersRoute
   AppDashboardRoute: typeof AppDashboardRoute
@@ -637,6 +657,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAboutRoute: AppAboutRoute,
   AppAssistantRoute: AppAssistantRoute,
+  AppBillingRoute: AppBillingRoute,
   AppCompetitorsRoute: AppCompetitorsRoute,
   AppCustomersRoute: AppCustomersRoute,
   AppDashboardRoute: AppDashboardRoute,
@@ -674,13 +695,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -213,6 +213,78 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_packs: {
+        Row: {
+          active: boolean
+          created_at: string
+          credits: number
+          currency: string
+          id: string
+          name: string
+          price_cents: number
+          slug: string
+          sort_order: number
+          stripe_price_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          credits: number
+          currency?: string
+          id?: string
+          name: string
+          price_cents: number
+          slug: string
+          sort_order?: number
+          stripe_price_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          credits?: number
+          currency?: string
+          id?: string
+          name?: string
+          price_cents?: number
+          slug?: string
+          sort_order?: number
+          stripe_price_id?: string | null
+        }
+        Relationships: []
+      }
+      credit_transactions: {
+        Row: {
+          action_meta: Json
+          balance_after: number
+          created_at: string
+          delta: number
+          id: string
+          reason: string
+          stripe_session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          action_meta?: Json
+          balance_after: number
+          created_at?: string
+          delta: number
+          id?: string
+          reason: string
+          stripe_session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          action_meta?: Json
+          balance_after?: number
+          created_at?: string
+          delta?: number
+          id?: string
+          reason?: string
+          stripe_session_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       inventory_items: {
         Row: {
           batch_id: string | null
@@ -489,11 +561,54 @@ export type Database = {
         }
         Relationships: []
       }
+      user_credits: {
+        Row: {
+          balance: number
+          created_at: string
+          free_quota_monthly: number
+          free_quota_remaining: number
+          lifetime_purchased: number
+          quota_reset_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          free_quota_monthly?: number
+          free_quota_remaining?: number
+          lifetime_purchased?: number
+          quota_reset_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          free_quota_monthly?: number
+          free_quota_remaining?: number
+          lifetime_purchased?: number
+          quota_reset_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      grant_credits: {
+        Args: {
+          _amount: number
+          _meta?: Json
+          _reason: string
+          _stripe_session_id?: string
+          _user_id: string
+        }
+        Returns: number
+      }
       match_documents:
         | {
             Args: {
@@ -526,6 +641,18 @@ export type Database = {
               title: string
             }[]
           }
+      spend_credits: {
+        Args: {
+          _amount: number
+          _meta?: Json
+          _reason: string
+          _user_id: string
+        }
+        Returns: {
+          new_balance: number
+          new_quota: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
