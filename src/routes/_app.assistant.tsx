@@ -195,7 +195,12 @@ function AssistantPage() {
           fd.append("audio", blob, "speech.webm");
           fd.append("language", lang);
           const res = await fetch("/api/voice/stt", { method: "POST", headers, body: fd });
+          if (res.status === 402) {
+            showOutOfCredits("voice_stt", CREDIT_COSTS.voice_stt);
+            return;
+          }
           if (!res.ok) throw new Error(`STT ${res.status}`);
+          refreshCredits();
           const data = (await res.json()) as { text?: string; language?: string };
           const text = (data.text ?? "").trim();
           if (!text) {
@@ -217,7 +222,7 @@ function AssistantPage() {
       console.error("[voice] mic error", err);
       toast.error(lang === "bn" ? "মাইক্রোফোন অ্যাক্সেস নেই" : "Microphone access denied");
     }
-  }, [recording, transcribing, isLoading, lang, sendMessage, stopAudio]);
+  }, [recording, transcribing, isLoading, lang, sendMessage, stopAudio, showOutOfCredits, refreshCredits]);
 
   const stopRecording = useCallback(() => {
     if (recorderRef.current && recorderRef.current.state !== "inactive") {
