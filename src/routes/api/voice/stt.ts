@@ -3,6 +3,7 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { getAuthedUser } from "@/lib/auth-route.server";
+import { chargeCredits, refundCredits, InsufficientCreditsError, insufficientCreditsResponse } from "@/lib/credits.server";
 
 export const Route = createFileRoute("/api/voice/stt")({
   server: {
@@ -28,6 +29,19 @@ export const Route = createFileRoute("/api/voice/stt")({
           return Response.json({ error: "Missing audio" }, { status: 400 });
         }
 
+        try {
+          await chargeCredits(authed.userId, "voice_stt", {});
+        } catch (err) {
+          if (err instanceof InsufficientCreditsError) {
+            return Response.json(
+              { error: "INSUFFICIENT_CREDITS", message: err.message, action: err.action, cost: err.cost },
+              { status: 402 },
+            );
+          }
+          throw err;
+        }
+
+
         const apiForm = new FormData();
         apiForm.append("file", audio, "audio.webm");
         apiForm.append("model_id", "scribe_v2");
@@ -45,6 +59,7 @@ export const Route = createFileRoute("/api/voice/stt")({
         if (!res.ok) {
           const err = await res.text();
           console.error("[/api/voice/stt] elevenlabs error", res.status, err);
+          await refundCredits(authed.userId, "voice_stt", { status: res.status });
           return Response.json({ error: "Transcription failed" }, { status: 502 });
         }
         const json = (await res.json()) as {
