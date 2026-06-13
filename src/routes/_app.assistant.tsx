@@ -136,7 +136,13 @@ function AssistantPage() {
           headers: { ...headers, "Content-Type": "application/json" },
           body: JSON.stringify({ text }),
         });
+        if (res.status === 402) {
+          showOutOfCredits("voice_tts", CREDIT_COSTS.voice_tts);
+          setSpeaking(false);
+          return;
+        }
         if (!res.ok) throw new Error(`TTS failed (${res.status})`);
+        refreshCredits();
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
@@ -156,7 +162,7 @@ function AssistantPage() {
         setSpeaking(false);
       }
     },
-    [lang, stopAudio],
+    [lang, stopAudio, showOutOfCredits, refreshCredits],
   );
 
   const startRecording = useCallback(async () => {
