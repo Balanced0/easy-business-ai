@@ -58,22 +58,21 @@ export type MyTransaction = {
   reason: string;
   balance_after: number;
   created_at: string;
-  action_meta: Record<string, unknown>;
 };
 
 export const getMyTransactions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<MyTransaction[]> => {
+  .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { data, error } = await supabase
       .from("credit_transactions")
-      .select("id,delta,reason,balance_after,created_at,action_meta")
+      .select("id,delta,reason,balance_after,created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(50);
     if (error) {
       console.error("[getMyTransactions]", error);
-      return [];
+      return [] as MyTransaction[];
     }
     return (data ?? []) as MyTransaction[];
   });

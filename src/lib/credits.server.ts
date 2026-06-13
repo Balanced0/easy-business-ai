@@ -30,7 +30,8 @@ export async function chargeCredits(
     _user_id: userId,
     _amount: cost,
     _reason: reason,
-    _meta: meta,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    _meta: meta as any,
   });
 
   if (error) {
@@ -63,8 +64,8 @@ export async function refundCredits(
     _user_id: userId,
     _amount: amount,
     _reason: "refund",
-    _stripe_session_id: null,
-    _meta: { refunded_action: action, ...meta },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    _meta: { refunded_action: action, ...meta } as any,
   });
   if (error) console.error("[credits] refund failed", error);
 }
