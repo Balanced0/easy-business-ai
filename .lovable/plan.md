@@ -1,92 +1,111 @@
-## Goal
+## Part 1 — Why your new account still says "payment required" (and the real fix)
 
-Move AI usage off the shared workspace `LOVABLE_API_KEY` pool and onto a **per-account credit ledger**. Each EasyBusiness AI user gets a free monthly quota, sees their balance in the app, and can buy top-up credit packs through Stripe when they run out. The Lovable AI key stays server-side (it still pays the underlying Gemini bill) — but the *app* decides whether a given user is allowed to spend.
+### Diagnosis
 
----
+The per-account **credit ledger** I shipped last turn is working — new accounts get 100 free credits via a DB trigger, and `/api/chat` charges that user's row before calling the model. I verified the trigger, the `spend_credits` function, and the route wiring.
 
-## 1. Database (one migration)
+But there's a second layer underneath that the ledger can't isolate: **the actual Gemini call goes through Lovable AI Gateway using a single workspace key (`LOVABLE_API_KEY`)**. When that workspace key returns a 402 from the gateway (workspace credits low, rate-limited, or model unavailable), every signed-in user sees the same upstream error mid-stream — regardless of how much credit they have in *our* ledger. The Assistant page renders `error.message` from `useChat`, which is where "Payment Required" is coming from. That's why creating a new account didn't help.
 
-New tables, all RLS-scoped to `auth.uid()`:
+So we need to do two things to make AI truly per-account:
 
-- **`user_credits`** — `user_id` (PK, FK auth.users), `balance` int, `free_quota_remaining` int, `quota_reset_at` timestamptz, `lifetime_purchased` int, `updated_at`. Auto-created via a `handle_new_user`-style trigger seeded with the free monthly quota (e.g. 100).
-- **`credit_transactions`** — `id`, `user_id`, `delta` int (negative = spend, positive = grant/purchase), `reason` text (`'free_grant' | 'monthly_reset' | 'purchase' | 'spend:chat' | 'spend:competitor' | 'spend:voice_tts' | 'spend:voice_stt' | 'spend:embedding' | 'refund'`), `action_meta` jsonb, `stripe_session_id` text nullable, `created_at`. Append-only audit log.
-- **`credit_packs`** — `id`, `name`, `credits` int, `price_cents` int, `currency`, `stripe_price_id`, `active` bool. Seeded with 3 packs (e.g. Starter 500 cr / $5, Growth 2 000 cr / $15, Scale 10 000 cr / $50).
+1. **Refund + clearly distinguish** the two failure modes so the user isn't told *they* are out of credits when it's actually the workspace pool.
+2. **Add a per-user BYOK option** — let each user paste their own Google AI Studio (Gemini) API key in their profile. When set, `/api/chat`, `/api/voice/tts`, `/api/voice/stt`, and competitor analyze use **that** key instead of the shared workspace key. With a personal key (Google's free tier covers most usage), each account is fully independent of the workspace pool.
 
-Plus a **`spend_credits(user_id, amount, reason, meta)`** SECURITY DEFINER SQL function that atomically: checks balance+quota, decrements quota first then balance, inserts a transaction row, raises if insufficient. Returns the new balance. This avoids races between concurrent AI calls.
+### Implementation
 
-GRANTs: `authenticated` gets SELECT on own rows; all writes go through the function or service role. `service_role` ALL.
-
-## 2. Flat cost table (server constant)
-
-```
-chat message        = 1
-voice TTS reply     = 2
-voice STT           = 1
-competitor analyze  = 5
-competitor discover = 3
-embedding (per doc) = 1
-dashboard summary   = 2
-```
-
-Lives in `src/lib/credit-costs.ts` (shared) so the UI can show "This will cost N credits" before the call.
-
-## 3. Server enforcement (wrap every AI entry point)
-
-Add `src/lib/credits.server.ts` with `chargeCredits(userId, action, meta)` which calls the SQL function and **throws a typed `InsufficientCreditsError`** on failure. Then update each AI route/server-fn to:
-
-1. Authenticate user (already done via `requireSupabaseAuth` / bearer).
-2. Call `chargeCredits` **before** invoking the Lovable AI Gateway.
-3. If the gateway itself returns 402/429 from Lovable's side, refund the credit (insert positive `refund` transaction) and surface the error.
-
-Files touched (additive — no refactor of existing logic):
-- `src/routes/api/chat.ts` — charge 1 per user message.
-- `src/routes/api/voice/tts.ts` — charge 2.
-- `src/routes/api/voice/stt.ts` — charge 1.
-- `src/routes/api/competitors/analyze.ts`, `discover.ts`, `scrape.ts` — charge per their cost.
-- `src/routes/api/embeddings.ts` and `src/lib/data-pipeline.server.ts` — charge per embedded doc on upload.
-- Dashboard summary server-fn — charge 2.
-
-The shared 402/429 error from Lovable AI Gateway now becomes a **per-user** error, not a global one.
-
-## 4. Stripe top-ups (built-in Lovable Payments)
-
-Enable **Stripe (seamless)** via `payments--enable_stripe_payments`. With seller country dependent: default to `automatic_tax` (tax calc only) since EasyBusiness AI sells globally and the seller country may not be eligible for full managed_payments; switch to `managed_payments` if eligible.
-
-Then:
-- Create the 3 credit packs as Stripe products via `batch_create_product` (one-time prices, digital — tax code `txcd_10000000`).
-- New server route `src/routes/api/public/stripe-webhook.ts` — verifies Stripe signature, on `checkout.session.completed` reads `metadata.user_id` + `metadata.credits`, inserts a positive `credit_transactions` row and increments `user_credits.balance` (via service role). Idempotent on `stripe_session_id`.
-- New server fn `createCreditCheckout(packId)` — creates a Stripe Checkout Session with `client_reference_id = user.id`, `metadata.user_id`, `metadata.credits`, success/cancel URLs back to `/billing`.
-
-## 5. Free quota reset
-
-A SQL function `reset_monthly_quotas()` that resets `free_quota_remaining` and bumps `quota_reset_at` for any row past 30 days. Called lazily inside `spend_credits` (cheap, per-call) so we don't need pg_cron.
-
-## 6. UI
-
-- **New route `src/routes/_app.billing.tsx`** — Bilingual page:
-  - Current balance + free quota remaining + next reset date.
-  - Recent 20 transactions table.
-  - 3 credit-pack cards with "Buy" buttons → call `createCreditCheckout`.
-- **Topbar badge** in `src/components/dashboard-topbar.tsx` — small "⚡ {balance} credits" chip, links to `/billing`. Pulls from a `useCredits()` hook backed by a `getMyCredits` server-fn (cached via TanStack Query, invalidated on auth events and after each AI call).
-- **`InsufficientCreditsDialog`** component — when any AI call throws `InsufficientCreditsError`, show a modal explaining "You're out of AI credits" with a CTA to `/billing`. Wired into the assistant chat error handler, competitors page, voice button.
-- **Sidebar** — add "Billing & Credits" under the existing user/account group in `app-sidebar.tsx`.
-
-## 7. Bilingual strings
-
-All new copy added to `src/lib/i18n/en.ts` and `bn.ts` (keys: `credits.balance`, `credits.outOfCredits`, `credits.buyMore`, `billing.title`, `billing.packs.*`, etc.). Existing `t()` keeps working.
+- **Migration**: add `byok_gemini_key_encrypted text` to `profiles` (encrypted with `pgcrypto` using a server-side key, decrypted only inside server functions). Also add `byok_provider text default 'lovable'`.
+- **`src/lib/ai-gateway.server.ts`**: add a `resolveUserGateway(userId)` helper. If the user has a BYOK key, return a Google-direct provider (`@ai-sdk/google` with their key, base URL `https://generativelanguage.googleapis.com`). Otherwise return the existing Lovable gateway provider.
+- **Charge logic**: when BYOK is used, **skip** `chargeCredits` (they're paying Google directly). Log the action in `credit_transactions` with `reason: 'byok_free'` and `delta: 0` so it shows in history.
+- **Refund on upstream 402**: wrap the `streamText` call in `/api/chat` (and the others) — if the stream errors with a Lovable gateway 402/429 *after* we charged the user, call `refundCredits` and surface a distinct error code (`WORKSPACE_AI_UNAVAILABLE`) so the assistant shows a clearer message ("AI service is temporarily unavailable — your credits were not charged. Add your own Gemini key in Profile to bypass this.").
+- **UI**: in `src/routes/_app.profile.tsx`, add a "Bring your own AI key" card — input for Gemini key, "Test connection" button, save/clear. Bilingual copy.
+- **Fix existing bug**: `refundCredits` currently calls `grant_credits` with 4 positional args, but the SQL signature is `(_user_id, _amount, _reason, _stripe_session_id, _meta)`. The meta is being passed as `_stripe_session_id`. Fix the call site to pass `null` for stripe id and meta as 5th arg.
 
 ---
 
-## Technical details
+## Part 2 — Enable Stripe and wire up real "Buy credits" checkout
 
-- **Atomicity**: balance check + decrement + audit insert all happen inside the `spend_credits` PL/pgSQL function in one transaction. Prevents double-spend on concurrent requests.
-- **Refund safety**: only refund if `chargeCredits` succeeded *and* the AI call failed with a Lovable-side 402/429 or network error. Don't refund on user-aborted streams or app bugs.
-- **Webhook security**: standard Stripe signature verification with `STRIPE_WEBHOOK_SECRET` (Lovable seamless Stripe provides this automatically). Idempotency key = `stripe_session_id` on `credit_transactions` with a unique index.
-- **No breaking changes**: every existing AI route keeps the same request/response shape; we just add a charging step at the top and a new error type. The shared `LOVABLE_API_KEY` continues to pay Lovable; the ledger decides *who* is allowed to spend it.
-- **Order of execution**: (1) migration → (2) ledger + cost table + `credits.server.ts` → (3) wrap AI routes + add error dialog → (4) enable Stripe + create packs + checkout + webhook → (5) billing page + topbar badge + sidebar entry + i18n strings.
+### Steps
 
-## Out of scope (call out for later)
+1. Call `payments--recommend_payment_provider` → expect Stripe recommendation for a digital SaaS product. Then `payments--enable_stripe_payments`.
+2. **Create the 3 credit packs as Stripe one-time products** via `batch_create_product` (Starter 500 cr / $5, Growth 2000 cr / $15, Scale 10000 cr / $50). Tax code `txcd_10000000` (digital service).
+3. **Migration**: backfill `credit_packs.stripe_price_id` with the IDs returned by step 2.
+4. **New server function** `createCreditCheckout(packId)` in `src/lib/credits.functions.ts`:
+   - Authenticated via `requireSupabaseAuth`.
+   - Calls Stripe Checkout sessions API with `mode: 'payment'`, `line_items: [{ price: stripe_price_id, quantity: 1 }]`, `client_reference_id: user.id`, `metadata: { user_id, credits, pack_id }`, success URL `/billing?success=1`, cancel URL `/billing`.
+   - Returns `{ url }`. Frontend redirects.
+5. **New webhook route** `src/routes/api/public/stripe-webhook.ts`:
+   - Verifies Stripe signature with `STRIPE_WEBHOOK_SECRET`.
+   - On `checkout.session.completed`, reads `metadata.user_id` + `metadata.credits`, calls `grant_credits(user_id, credits, 'purchase', session.id, {...})`. Idempotent on `stripe_session_id` unique index (already there).
+   - Returns 200 quickly; logs failures.
+6. **Billing page**: wire "Buy" buttons to call `createCreditCheckout` and redirect. Show success toast on `?success=1`.
+7. Tax handling: default to `automatic_tax: { enabled: true }` (calculate + collect only, since seller country eligibility for `managed_payments` may not apply — safest default for a global digital product).
 
-- Subscription tiers tied to the existing `/pricing` page (you picked "free quota + top-ups only" — pricing page stays marketing-only for now).
-- Token-based metering (you picked flat per-action).
-- Admin dashboard to grant/revoke credits manually.
+---
+
+## Part 3 — Handwritten-copy camera scan → AI data extraction
+
+### New feature: `/scan` route under `_app` layout
+
+A third data-entry path alongside CSV/XLSX upload and Integrations. User points their phone/laptop camera at a handwritten sales register / inventory sheet / order list; AI extracts structured rows and lets them review + commit to their existing tables.
+
+### UX flow
+
+1. **Capture step** — full-screen camera view (uses `navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })`). Big shutter button. Alternative: "Upload image" file picker (for desktop or pre-taken photos). Multiple pages supported (snap 1..N, then "Extract all").
+2. **Choose data type** — radio: Sales / Inventory / Orders / Products / Customers. Drives which schema the AI extracts to.
+3. **Extract step** — preview thumbnails → "Extract data" button → calls `/api/scan/extract` with base64 JPEGs.
+4. **Review step** — editable table of extracted rows (column headers matching the chosen type). User can fix mistakes, delete bad rows, then "Save to my data".
+5. **Commit step** — inserts rows into the existing table (`sales_records`, `inventory_items`, etc.) and re-runs the embedding pipeline so the new data is searchable by the assistant.
+
+### Components and files
+
+- **`src/routes/_app.scan.tsx`** — the route + multi-step UI (capture / type / review / done). Bilingual via existing `useT()`.
+- **`src/components/scan-camera.tsx`** — camera capture component with shutter, retake, page thumbnails, file-upload fallback. Handles `getUserMedia` errors (permission denied, no camera).
+- **`src/components/scan-review-table.tsx`** — editable grid (`<input>` per cell), row delete, validation hints (e.g. numeric for quantity).
+- **`src/routes/api/scan/extract.ts`** — POST. Authed. Charges new credit action `scan_extract` (cost: **3 credits per page**). Sends images to Gemini 2.5 Pro (best vision/handwriting) via Lovable Gateway with structured output (AI SDK `Output.object` + Zod schema per data type). Returns `{ rows: [...], confidence_per_row }`.
+- **`src/routes/api/scan/commit.ts`** — POST. Authed. Inserts user-confirmed rows into the appropriate table (RLS scoped to `auth.uid()`), then triggers embedding re-index via existing `data-pipeline.server.ts` helpers. No AI cost.
+
+### Cost table addition
+
+In `src/lib/credit-costs.ts`:
+```
+scan_extract = 3   // per page; reflects vision-model cost
+```
+Plus bilingual labels.
+
+### Sidebar + navigation
+
+- Add **"Scan handwriting"** entry in `src/components/app-sidebar.tsx` under the existing "Data" group, with a `ScanLine` lucide icon.
+- Add a "Scan handwritten copy" card on the existing Upload page that deep-links to `/scan`, so users discover the third option from the same place they upload CSVs today.
+
+### Prompt design (server-side)
+
+System prompt explains: "Extract every row from this handwritten {datatype} sheet. Output strict JSON matching the schema. If a column is unclear, mark it null and add it to `unclear_fields`. Numbers in Bangla or English numerals both accepted; normalize to ASCII digits. Dates → ISO 8601." Then attach images as `image_url` parts. Use `google/gemini-2.5-pro` (best handwriting accuracy in the Lovable catalog).
+
+### Out of scope (call out)
+
+- No "live OCR overlay" / bounding boxes — just snap → extract.
+- No PDF multi-page OCR (yet) — image upload only.
+- No auto-deduplication against existing rows — user reviews and commits.
+
+---
+
+## Execution order
+
+1. Migration: BYOK column on `profiles` + `scan_extract` credit cost (TS only, no migration).
+2. Fix `refundCredits` arg bug + add typed `WORKSPACE_AI_UNAVAILABLE` error path + per-user gateway resolver.
+3. Profile UI for BYOK Gemini key (with test button).
+4. Enable Stripe (`recommend` → `enable_stripe_payments`) → create products → backfill `stripe_price_id` → implement `createCreditCheckout` + webhook → wire billing page Buy buttons.
+5. Handwriting scan: cost table → API routes → camera + review components → `/scan` route → sidebar entry + Upload-page card → bilingual strings.
+
+## Files touched (additive, no refactor)
+
+**New**: `src/routes/_app.scan.tsx`, `src/components/scan-camera.tsx`, `src/components/scan-review-table.tsx`, `src/routes/api/scan/extract.ts`, `src/routes/api/scan/commit.ts`, `src/routes/api/public/stripe-webhook.ts`, plus one migration.
+
+**Edited**: `src/lib/credit-costs.ts`, `src/lib/credits.server.ts` (refund fix + workspace-unavailable error), `src/lib/credits.functions.ts` (add `createCreditCheckout`), `src/lib/ai-gateway.server.ts` (per-user resolver), `src/routes/api/chat.ts`, `src/routes/api/voice/{tts,stt}.ts`, `src/routes/api/competitors/analyze.ts` (use resolver + clearer error), `src/routes/_app.profile.tsx` (BYOK card), `src/routes/_app.billing.tsx` (live Buy), `src/routes/_app.upload.tsx` (Scan card), `src/routes/_app.assistant.tsx` (distinct error UX), `src/components/app-sidebar.tsx`, `src/lib/i18n/{en,bn}.ts`, `src/integrations/supabase/types.ts` (regenerated post-migration).
+
+## Risks / things you should know
+
+- **BYOK keys live in your database** encrypted with `pgcrypto` — safer than localStorage, but still: if your Supabase service role key leaks, the BYOK keys are decryptable. That's the same trust model as any SaaS storing third-party API keys.
+- **Stripe in test mode** until you complete Stripe verification — buying credits will work end-to-end but with test cards only. Live mode needs you to claim the Stripe account.
+- **Handwriting accuracy** depends heavily on legibility. Confidence column lets users sanity-check before committing. Gemini 2.5 Pro is the best available — but neat printing > cursive for accuracy.
+- **No subscription plans** still — sticking to free quota + top-ups as you chose.
