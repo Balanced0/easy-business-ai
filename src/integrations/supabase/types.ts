@@ -431,6 +431,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          byok_gemini_key: string | null
           created_at: string
           email: string | null
           full_name: string | null
@@ -440,6 +441,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          byok_gemini_key?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
@@ -449,6 +451,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          byok_gemini_key?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
