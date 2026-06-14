@@ -11,6 +11,7 @@ export const CREDIT_COSTS = {
   competitor_scrape: 2,
   embedding: 1,
   dashboard_summary: 2,
+  scan_extract: 3, // per page; reflects vision-model cost
 } as const;
 
 export type CreditAction = keyof typeof CREDIT_COSTS;
@@ -27,4 +28,5 @@ export const ACTION_LABELS: Record<CreditAction, { en: string; bn: string }> = {
   competitor_scrape: { en: "Competitor scrape", bn: "প্রতিযোগী স্ক্র্যাপ" },
   embedding: { en: "Data indexing", bn: "ডেটা ইন্ডেক্সিং" },
   dashboard_summary: { en: "Dashboard summary", bn: "ড্যাশবোর্ড সারসংক্ষেপ" },
+  scan_extract: { en: "Handwriting scan (per page)", bn: "হাতের লেখা স্ক্যান (প্রতি পেজ)" },
 };
