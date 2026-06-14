@@ -2,11 +2,17 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { resolveUserGateway } from "@/lib/ai-gateway.server";
 import { searchSimilar } from "@/lib/embeddings.server";
 import { getAuthedUser } from "@/lib/auth-route.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { chargeCredits, InsufficientCreditsError, insufficientCreditsResponse } from "@/lib/credits.server";
+import {
+  chargeCredits,
+  refundCredits,
+  isWorkspaceAiError,
+  InsufficientCreditsError,
+  insufficientCreditsResponse,
+} from "@/lib/credits.server";
 
 type BusinessProfile = {
   business_name: string | null;
