@@ -75,7 +75,7 @@ export async function refundCredits(
     _user_id: userId,
     _amount: amount,
     _reason: "refund",
-    _stripe_session_id: null,
+    _stripe_session_id: undefined,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _meta: { refunded_action: action, ...meta } as any,
   });
