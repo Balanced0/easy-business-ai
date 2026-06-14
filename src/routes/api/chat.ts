@@ -97,17 +97,25 @@ export const Route = createFileRoute("/api/chat")({
           return new Response("Messages are required", { status: 400 });
         }
 
-        const key = process.env.LOVABLE_API_KEY;
-        if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
-
-        // Charge the user's per-account credit ledger BEFORE invoking the model.
+        // Resolve the per-user AI gateway (BYOK Gemini key OR shared Lovable pool).
+        let gw;
         try {
-          await chargeCredits(authed.userId, "chat", { messages: messages.length });
+          gw = await resolveUserGateway(authed.userId);
         } catch (err) {
-          if (err instanceof InsufficientCreditsError) return insufficientCreditsResponse(err);
-          throw err;
+          console.error("[/api/chat] no gateway", err);
+          return new Response("AI gateway not configured", { status: 500 });
         }
 
+        // Charge the user's per-account credit ledger BEFORE invoking the model.
+        // Users on their own Gemini key are NOT charged (they pay Google directly).
+        if (!gw.usedByok) {
+          try {
+            await chargeCredits(authed.userId, "chat", { messages: messages.length });
+          } catch (err) {
+            if (err instanceof InsufficientCreditsError) return insufficientCreditsResponse(err);
+            throw err;
+          }
+        }
 
         // Load this user's business profile (RLS via authed.supabase).
         const { data: business } = await authed.supabase
@@ -141,7 +149,6 @@ export const Route = createFileRoute("/api/chat")({
         // Persist the latest user message to history (best-effort).
         if (lastUserText) {
           try {
-            // Ensure a conversation exists (one per user for now).
             let conversationId: string | null = null;
             const { data: conv } = await supabaseAdmin
               .from("chat_conversations")
@@ -182,9 +189,8 @@ export const Route = createFileRoute("/api/chat")({
         const { computeAnalyticsForUser } = await import("@/lib/data-pipeline.server");
         const analytics = await computeAnalyticsForUser(authed.userId);
 
-        const gateway = createLovableAiGatewayProvider(key);
         const result = streamText({
-          model: gateway("google/gemini-3-flash-preview"),
+          model: gw.provider(gw.modelFor("chat")),
           system: buildSystemPrompt(
             retrievedBlock,
             business as BusinessProfile | null,
@@ -194,6 +200,18 @@ export const Route = createFileRoute("/api/chat")({
             voice,
           ),
           messages: await convertToModelMessages(messages),
+          onError: async ({ error }) => {
+            console.error("[/api/chat] stream error", error);
+            // If the upstream provider exhausted credits / rate-limited AFTER
+            // we charged the user, refund them so they aren't penalized for
+            // a service-side outage.
+            if (!gw.usedByok && isWorkspaceAiError(error)) {
+              await refundCredits(authed.userId, "chat", {
+                reason: "workspace_ai_unavailable",
+                detail: error instanceof Error ? error.message : String(error),
+              });
+            }
+          },
         });
 
         return result.toUIMessageStreamResponse({ originalMessages: messages });
