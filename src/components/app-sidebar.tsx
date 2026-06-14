@@ -13,6 +13,7 @@ import {
   Plug,
   Cpu,
   Zap,
+  ScanLine,
 } from "lucide-react";
 import {
   Sidebar,
@@ -30,6 +31,7 @@ import { useT } from "@/hooks/use-language";
 const workspaceItems = [
   { title: "ড্যাশবোর্ড / Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "ডেটা আপলোড / Upload Data", url: "/upload", icon: Upload },
+  { title: "হাতের লেখা স্ক্যান / Scan handwriting", url: "/scan", icon: ScanLine },
   { title: "ইনভেন্টরি / Inventory", url: "/inventory", icon: Package },
   { title: "প্রতিযোগী / Competitors", url: "/competitors", icon: TrendingUp },
   { title: "গ্রাহক / Customers", url: "/customers", icon: Users },

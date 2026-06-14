@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { DashboardTopbar } from "@/components/dashboard-topbar";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Loader2, ScanLine, ArrowRight } from "lucide-react";
 import { useT } from "@/hooks/use-language";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -106,6 +106,32 @@ function UploadPage() {
     <>
       <DashboardTopbar title="ডেটা আপলোড / Upload Data" />
       <main className="flex-1 space-y-4 p-4 md:p-6">
+        <Card className="border-primary/40 bg-gradient-to-br from-primary/5 to-transparent">
+          <CardHeader>
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                <ScanLine className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <CardTitle className="text-base">
+                  {t("ফাইল নেই? হাতের লেখা স্ক্যান করুন / No file? Scan handwritten copies")}
+                </CardTitle>
+                <CardDescription>
+                  {t(
+                    "ক্যামেরায় আপনার বিক্রয়/স্টক খাতা দেখান — এআই প্রতিটি সারি বের করবে। / Point your camera at a sales / inventory sheet — AI will extract every row.",
+                  )}
+                </CardDescription>
+              </div>
+              <Button asChild className="shrink-0">
+                <Link to="/scan">
+                  {t("স্ক্যান করুন / Start scan")}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </CardHeader>
+        </Card>
+
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">

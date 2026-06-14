@@ -40,10 +40,11 @@ function BillingPage() {
     : "—";
 
   const handleBuy = (pack: CreditPack) => {
-    // Stripe checkout flow is wired in a follow-up step.
+    // Stripe sandbox could not be enabled (seller country not yet supported).
+    // The full checkout flow is wired and waiting for Stripe to come online.
     toast.info(
       t(
-        "পেমেন্ট ইন্টিগ্রেশন শীঘ্রই আসছে — আমরা Stripe সেটআপ সম্পন্ন করছি। / Payments are being set up — Stripe checkout is coming next.",
+        "পেমেন্ট সক্রিয় হলেই এখান থেকে কিনতে পারবেন। ইতোমধ্যে আপনার Profile থেকে নিজের Gemini API key যোগ করে আনলিমিটেড AI ব্যবহার করুন। / Stripe will be enabled shortly. In the meantime, add your own Gemini key on Profile for unlimited AI use.",
       ),
       { description: `${pack.name} • ${pack.credits.toLocaleString()} credits` },
     );
