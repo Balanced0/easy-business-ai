@@ -1,5 +1,4 @@
-// Client-callable server functions for the credit ledger.
-// Imported by hooks, the billing page, and the topbar badge.
+// Client-callable server functions for the credit ledger + BYOK key management.
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -27,7 +26,6 @@ export const getMyCredits = createServerFn({ method: "GET" })
     }
 
     if (!data) {
-      // Lazy backfill if the trigger missed (e.g. user created before migration).
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       await supabaseAdmin
         .from("user_credits")
@@ -101,3 +99,56 @@ export const getCreditPacks = createServerFn({ method: "GET" }).handler(
     return (data ?? []) as CreditPack[];
   },
 );
+
+// ===== BYOK key management =====
+
+export type ByokStatus = { hasKey: boolean; preview: string | null };
+
+export const getByokStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<ByokStatus> => {
+    const { supabase, userId } = context;
+    const { data } = await supabase
+      .from("profiles")
+      .select("byok_gemini_key")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const key = data?.byok_gemini_key ?? null;
+    if (!key) return { hasKey: false, preview: null };
+    const preview = key.length > 8 ? `${key.slice(0, 4)}…${key.slice(-4)}` : "••••";
+    return { hasKey: true, preview };
+  });
+
+export const saveByokKey = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { key: string }) => {
+    const key = (input?.key ?? "").trim();
+    if (!key || key.length < 10) throw new Error("Key looks too short");
+    if (key.length > 500) throw new Error("Key looks too long");
+    return { key };
+  })
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    // Validate the key against Google first so we don't store garbage.
+    const { testGeminiKey } = await import("@/lib/ai-gateway.server");
+    const result = await testGeminiKey(data.key);
+    if (!result.ok) throw new Error(result.error ?? "Could not verify the key with Google");
+
+    const { supabase, userId } = context;
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({ user_id: userId, byok_gemini_key: data.key }, { onConflict: "user_id" });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const clearByokKey = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ ok: true }> => {
+    const { supabase, userId } = context;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ byok_gemini_key: null })
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
