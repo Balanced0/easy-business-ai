@@ -22,6 +22,7 @@ import { Route as ApiEmbeddingsRouteImport } from './routes/api/embeddings'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiAnalyticsRouteImport } from './routes/api/analytics'
 import { Route as AppUploadRouteImport } from './routes/_app.upload'
+import { Route as AppScanRouteImport } from './routes/_app.scan'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppPrivacyRouteImport } from './routes/_app.privacy'
 import { Route as AppInventoryRouteImport } from './routes/_app.inventory'
@@ -35,6 +36,8 @@ import { Route as AppAssistantRouteImport } from './routes/_app.assistant'
 import { Route as AppAboutRouteImport } from './routes/_app.about'
 import { Route as ApiVoiceTtsRouteImport } from './routes/api/voice/tts'
 import { Route as ApiVoiceSttRouteImport } from './routes/api/voice/stt'
+import { Route as ApiScanExtractRouteImport } from './routes/api/scan/extract'
+import { Route as ApiScanCommitRouteImport } from './routes/api/scan/commit'
 import { Route as ApiCompetitorsValidateSeedsRouteImport } from './routes/api/competitors/validate-seeds'
 import { Route as ApiCompetitorsScrapeRouteImport } from './routes/api/competitors/scrape'
 import { Route as ApiCompetitorsListRouteImport } from './routes/api/competitors/list'
@@ -105,6 +108,11 @@ const AppUploadRoute = AppUploadRouteImport.update({
   path: '/upload',
   getParentRoute: () => AppRoute,
 } as any)
+const AppScanRoute = AppScanRouteImport.update({
+  id: '/scan',
+  path: '/scan',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -170,6 +178,16 @@ const ApiVoiceSttRoute = ApiVoiceSttRouteImport.update({
   path: '/api/voice/stt',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiScanExtractRoute = ApiScanExtractRouteImport.update({
+  id: '/api/scan/extract',
+  path: '/api/scan/extract',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiScanCommitRoute = ApiScanCommitRouteImport.update({
+  id: '/api/scan/commit',
+  path: '/api/scan/commit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCompetitorsValidateSeedsRoute =
   ApiCompetitorsValidateSeedsRouteImport.update({
     id: '/api/competitors/validate-seeds',
@@ -214,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/inventory': typeof AppInventoryRoute
   '/privacy': typeof AppPrivacyRoute
   '/profile': typeof AppProfileRoute
+  '/scan': typeof AppScanRoute
   '/upload': typeof AppUploadRoute
   '/api/analytics': typeof ApiAnalyticsRoute
   '/api/chat': typeof ApiChatRoute
@@ -226,6 +245,8 @@ export interface FileRoutesByFullPath {
   '/api/competitors/list': typeof ApiCompetitorsListRoute
   '/api/competitors/scrape': typeof ApiCompetitorsScrapeRoute
   '/api/competitors/validate-seeds': typeof ApiCompetitorsValidateSeedsRoute
+  '/api/scan/commit': typeof ApiScanCommitRoute
+  '/api/scan/extract': typeof ApiScanExtractRoute
   '/api/voice/stt': typeof ApiVoiceSttRoute
   '/api/voice/tts': typeof ApiVoiceTtsRoute
 }
@@ -246,6 +267,7 @@ export interface FileRoutesByTo {
   '/inventory': typeof AppInventoryRoute
   '/privacy': typeof AppPrivacyRoute
   '/profile': typeof AppProfileRoute
+  '/scan': typeof AppScanRoute
   '/upload': typeof AppUploadRoute
   '/api/analytics': typeof ApiAnalyticsRoute
   '/api/chat': typeof ApiChatRoute
@@ -258,6 +280,8 @@ export interface FileRoutesByTo {
   '/api/competitors/list': typeof ApiCompetitorsListRoute
   '/api/competitors/scrape': typeof ApiCompetitorsScrapeRoute
   '/api/competitors/validate-seeds': typeof ApiCompetitorsValidateSeedsRoute
+  '/api/scan/commit': typeof ApiScanCommitRoute
+  '/api/scan/extract': typeof ApiScanExtractRoute
   '/api/voice/stt': typeof ApiVoiceSttRoute
   '/api/voice/tts': typeof ApiVoiceTtsRoute
 }
@@ -280,6 +304,7 @@ export interface FileRoutesById {
   '/_app/inventory': typeof AppInventoryRoute
   '/_app/privacy': typeof AppPrivacyRoute
   '/_app/profile': typeof AppProfileRoute
+  '/_app/scan': typeof AppScanRoute
   '/_app/upload': typeof AppUploadRoute
   '/api/analytics': typeof ApiAnalyticsRoute
   '/api/chat': typeof ApiChatRoute
@@ -292,6 +317,8 @@ export interface FileRoutesById {
   '/api/competitors/list': typeof ApiCompetitorsListRoute
   '/api/competitors/scrape': typeof ApiCompetitorsScrapeRoute
   '/api/competitors/validate-seeds': typeof ApiCompetitorsValidateSeedsRoute
+  '/api/scan/commit': typeof ApiScanCommitRoute
+  '/api/scan/extract': typeof ApiScanExtractRoute
   '/api/voice/stt': typeof ApiVoiceSttRoute
   '/api/voice/tts': typeof ApiVoiceTtsRoute
 }
@@ -314,6 +341,7 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/privacy'
     | '/profile'
+    | '/scan'
     | '/upload'
     | '/api/analytics'
     | '/api/chat'
@@ -326,6 +354,8 @@ export interface FileRouteTypes {
     | '/api/competitors/list'
     | '/api/competitors/scrape'
     | '/api/competitors/validate-seeds'
+    | '/api/scan/commit'
+    | '/api/scan/extract'
     | '/api/voice/stt'
     | '/api/voice/tts'
   fileRoutesByTo: FileRoutesByTo
@@ -346,6 +376,7 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/privacy'
     | '/profile'
+    | '/scan'
     | '/upload'
     | '/api/analytics'
     | '/api/chat'
@@ -358,6 +389,8 @@ export interface FileRouteTypes {
     | '/api/competitors/list'
     | '/api/competitors/scrape'
     | '/api/competitors/validate-seeds'
+    | '/api/scan/commit'
+    | '/api/scan/extract'
     | '/api/voice/stt'
     | '/api/voice/tts'
   id:
@@ -379,6 +412,7 @@ export interface FileRouteTypes {
     | '/_app/inventory'
     | '/_app/privacy'
     | '/_app/profile'
+    | '/_app/scan'
     | '/_app/upload'
     | '/api/analytics'
     | '/api/chat'
@@ -391,6 +425,8 @@ export interface FileRouteTypes {
     | '/api/competitors/list'
     | '/api/competitors/scrape'
     | '/api/competitors/validate-seeds'
+    | '/api/scan/commit'
+    | '/api/scan/extract'
     | '/api/voice/stt'
     | '/api/voice/tts'
   fileRoutesById: FileRoutesById
@@ -413,6 +449,8 @@ export interface RootRouteChildren {
   ApiCompetitorsListRoute: typeof ApiCompetitorsListRoute
   ApiCompetitorsScrapeRoute: typeof ApiCompetitorsScrapeRoute
   ApiCompetitorsValidateSeedsRoute: typeof ApiCompetitorsValidateSeedsRoute
+  ApiScanCommitRoute: typeof ApiScanCommitRoute
+  ApiScanExtractRoute: typeof ApiScanExtractRoute
   ApiVoiceSttRoute: typeof ApiVoiceSttRoute
   ApiVoiceTtsRoute: typeof ApiVoiceTtsRoute
 }
@@ -510,6 +548,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppUploadRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/scan': {
+      id: '/_app/scan'
+      path: '/scan'
+      fullPath: '/scan'
+      preLoaderRoute: typeof AppScanRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/profile': {
       id: '/_app/profile'
       path: '/profile'
@@ -601,6 +646,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiVoiceSttRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/scan/extract': {
+      id: '/api/scan/extract'
+      path: '/api/scan/extract'
+      fullPath: '/api/scan/extract'
+      preLoaderRoute: typeof ApiScanExtractRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/scan/commit': {
+      id: '/api/scan/commit'
+      path: '/api/scan/commit'
+      fullPath: '/api/scan/commit'
+      preLoaderRoute: typeof ApiScanCommitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/competitors/validate-seeds': {
       id: '/api/competitors/validate-seeds'
       path: '/api/competitors/validate-seeds'
@@ -651,6 +710,7 @@ interface AppRouteChildren {
   AppInventoryRoute: typeof AppInventoryRoute
   AppPrivacyRoute: typeof AppPrivacyRoute
   AppProfileRoute: typeof AppProfileRoute
+  AppScanRoute: typeof AppScanRoute
   AppUploadRoute: typeof AppUploadRoute
 }
 
@@ -666,6 +726,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppInventoryRoute: AppInventoryRoute,
   AppPrivacyRoute: AppPrivacyRoute,
   AppProfileRoute: AppProfileRoute,
+  AppScanRoute: AppScanRoute,
   AppUploadRoute: AppUploadRoute,
 }
 
@@ -689,9 +750,21 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCompetitorsListRoute: ApiCompetitorsListRoute,
   ApiCompetitorsScrapeRoute: ApiCompetitorsScrapeRoute,
   ApiCompetitorsValidateSeedsRoute: ApiCompetitorsValidateSeedsRoute,
+  ApiScanCommitRoute: ApiScanCommitRoute,
+  ApiScanExtractRoute: ApiScanExtractRoute,
   ApiVoiceSttRoute: ApiVoiceSttRoute,
   ApiVoiceTtsRoute: ApiVoiceTtsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
