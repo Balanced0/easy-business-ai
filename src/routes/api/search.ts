@@ -1,7 +1,7 @@
 // POST /api/search — RAG-only semantic search over the user's uploaded data.
 import { createFileRoute } from "@tanstack/react-router";
 import { generateText } from "ai";
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { resolveUserGateway } from "@/lib/ai-gateway.server";
 import { getAuthedUser } from "@/lib/auth-route.server";
 import { searchSimilar } from "@/lib/embeddings.server";
 import { computeAnalyticsForUser } from "@/lib/data-pipeline.server";
@@ -23,6 +23,7 @@ export const Route = createFileRoute("/api/search")({
         const query = payload.query?.trim();
         const language = payload.language === "en" ? "en" : "bn";
         if (!query) return Response.json({ error: "Query is required" }, { status: 400 });
+        if (query.length > 500) return Response.json({ error: "Query too long" }, { status: 400 });
 
         const analytics = await computeAnalyticsForUser(authed.userId);
 
@@ -59,13 +60,11 @@ export const Route = createFileRoute("/api/search")({
           const matches = await searchSimilar(query, authed.userId, { matchCount: 4 });
           ragMatches = matches.map((m) => ({ title: m.title, source_type: m.source_type, content: m.content }));
 
-          const key = process.env.LOVABLE_API_KEY;
-          if (key) {
-            const gateway = createLovableAiGatewayProvider(key);
-            const retrieved = ragMatches
-              .map((m, i) => `#${i + 1} [${m.source_type}] ${m.title ?? ""}\n${m.content}`)
-              .join("\n\n");
-            const prompt = `You are EasyBusiness AI generating a concise dashboard search summary.
+          const gw = await resolveUserGateway(authed.userId);
+          const retrieved = ragMatches
+            .map((m, i) => `#${i + 1} [${m.source_type}] ${m.title ?? ""}\n${m.content}`)
+            .join("\n\n");
+          const prompt = `You are EasyBusiness AI generating a concise dashboard search summary.
 
 ${language === "bn" ? "Reply only in Bangla. No English translation." : "Reply only in English."}
 
@@ -81,9 +80,8 @@ Rules:
 - Ground every claim in the facts and retrieved context above.
 - Never invent numbers, SKUs, or trends. If data is missing for the query, say so briefly.
 - 2-4 short bullet-style lines.`;
-            const result = await generateText({ model: gateway("google/gemini-3-flash-preview"), prompt });
-            aiSummary = result.text.trim() || null;
-          }
+          const result = await generateText({ model: gw.provider(gw.modelFor("chat")), prompt });
+          aiSummary = result.text.trim() || null;
         } catch (error) {
           console.warn("[/api/search] AI/RAG step skipped:", error);
         }

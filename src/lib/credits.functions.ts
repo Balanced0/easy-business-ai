@@ -137,7 +137,10 @@ export const saveByokKey = createServerFn({ method: "POST" })
     const { error } = await supabase
       .from("profiles")
       .upsert({ user_id: userId, byok_gemini_key: data.key }, { onConflict: "user_id" });
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[saveByokKey] db error", error);
+      throw new Error("Could not save your key. Please try again.");
+    }
     return { ok: true };
   });
 
@@ -149,6 +152,9 @@ export const clearByokKey = createServerFn({ method: "POST" })
       .from("profiles")
       .update({ byok_gemini_key: null })
       .eq("user_id", userId);
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[clearByokKey] db error", error);
+      throw new Error("Could not remove your key. Please try again.");
+    }
     return { ok: true };
   });

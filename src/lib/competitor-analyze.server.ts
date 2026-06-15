@@ -1,27 +1,21 @@
-// Product-level competitor analysis with semantic similarity filtering and
-// my-product comparison. Pipeline:
+// Product-level competitor analysis using Google Gemini directly.
 //   1. Firecrawl /v2/search → top web results scraped to markdown
-//   2. Gemini extracts structured products {title, price, rating, reviews, ...}
-//   3. Lovable AI embeddings → cosine similarity vs query; weak matches dropped
-//   4. Compare vs user-supplied price (or median baseline): cheaper/similar/pricier
-//   5. Return ranked products + summary stats for clean charts
+//   2. Gemini extracts structured products
+//   3. Gemini embeddings → cosine similarity vs query; weak matches dropped
+//   4. Compare vs user-supplied price (or median baseline)
+
+import { resolveUserGateway } from "@/lib/ai-gateway.server";
+import { embedTextForUser } from "@/lib/embeddings.server";
+import { generateText } from "ai";
 
 const FIRECRAWL_BASE = "https://api.firecrawl.dev/v2";
-const AI_CHAT_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const EMBED_URL = "https://ai.gateway.lovable.dev/v1/embeddings";
 
 function firecrawlKey(): string {
   const k = process.env.FIRECRAWL_API_KEY;
   if (!k) throw new Error("FIRECRAWL_API_KEY missing — connect Firecrawl in Connectors");
   return k;
 }
-function lovableKey(): string {
-  const k = process.env.LOVABLE_API_KEY;
-  if (!k) throw new Error("LOVABLE_API_KEY missing");
-  return k;
-}
 
-// ── Currency normalization ────────────────────────────────────────
 const FX: Record<string, number> = {
   USD: 1, $: 1,
   EUR: 1.08, "€": 1.08,
@@ -37,16 +31,12 @@ function toUsd(price: number, currency?: string): number {
   return price * rate;
 }
 
-// ── 1. Firecrawl Search ───────────────────────────────────────────
 type SearchResult = { url: string; title?: string; markdown?: string };
 
 async function firecrawlSearch(query: string, limit = 8): Promise<SearchResult[]> {
   const res = await fetch(`${FIRECRAWL_BASE}/search`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${firecrawlKey()}`,
-      "Content-Type": "application/json",
-    },
+    headers: { Authorization: `Bearer ${firecrawlKey()}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       query: `${query} buy price review`,
       limit,
@@ -54,18 +44,15 @@ async function firecrawlSearch(query: string, limit = 8): Promise<SearchResult[]
     }),
   });
   if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`Firecrawl /search ${res.status}: ${t.slice(0, 200)}`);
+    console.error("[analyze] Firecrawl /search failed", res.status);
+    throw new Error("Search provider unavailable");
   }
-  const json = (await res.json()) as {
-    data?: { web?: SearchResult[] } | SearchResult[];
-  };
+  const json = (await res.json()) as { data?: { web?: SearchResult[] } | SearchResult[] };
   const data = json.data;
   const list = Array.isArray(data) ? data : (data?.web ?? []);
   return list.filter((r) => r.url);
 }
 
-// ── 2. Gemini structured extraction ──────────────────────────────
 export type RawProduct = {
   title: string;
   price?: number;
@@ -78,6 +65,7 @@ export type RawProduct = {
 };
 
 async function extractProductsLLM(
+  userId: string,
   query: string,
   pageUrl: string,
   markdown: string,
@@ -102,58 +90,29 @@ Markdown:
 ${trimmed}
 """`;
 
-  const res = await fetch(AI_CHAT_URL, {
-    method: "POST",
-    headers: {
-      "Lovable-API-Key": lovableKey(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+  try {
+    const gw = await resolveUserGateway(userId);
+    const result = await generateText({
+      model: gw.provider(gw.modelFor("chat")),
       messages: [
         { role: "system", content: sys },
         { role: "user", content: user },
       ],
-      response_format: { type: "json_object" },
-      temperature: 0.1,
-    }),
-  });
-  if (!res.ok) {
-    console.warn(`[analyze] LLM extract failed ${res.status} for ${pageUrl}`);
-    return [];
-  }
-  const json = (await res.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
-  const content = json.choices?.[0]?.message?.content ?? "{}";
-  try {
+    });
+    let content = result.text.trim();
+    const fence = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (fence) content = fence[1].trim();
     const parsed = JSON.parse(content) as { products?: RawProduct[] };
     return Array.isArray(parsed.products) ? parsed.products : [];
-  } catch {
+  } catch (err) {
+    console.warn(`[analyze] LLM extract failed for ${pageUrl}`, err);
     return [];
   }
 }
 
-// ── 3. Embeddings + cosine similarity ────────────────────────────
-async function embed(inputs: string[]): Promise<number[][]> {
+async function embed(userId: string, inputs: string[]): Promise<number[][]> {
   if (inputs.length === 0) return [];
-  const res = await fetch(EMBED_URL, {
-    method: "POST",
-    headers: {
-      "Lovable-API-Key": lovableKey(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "openai/text-embedding-3-small",
-      input: inputs,
-    }),
-  });
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`Embedding ${res.status}: ${t.slice(0, 200)}`);
-  }
-  const json = (await res.json()) as { data: Array<{ embedding: number[] }> };
-  return json.data.map((d) => d.embedding);
+  return embedTextForUser(userId, inputs);
 }
 
 function cosine(a: number[], b: number[]): number {
@@ -222,8 +181,9 @@ function median(nums: number[]): number | null {
 
 export async function analyzeCompetitors(
   query: string,
-  opts: { myPriceUsd?: number; minSimilarity?: number; maxResults?: number } = {},
+  opts: { userId: string; myPriceUsd?: number; minSimilarity?: number; maxResults?: number },
 ): Promise<AnalyzeResult> {
+  const userId = opts.userId;
   const minSim = opts.minSimilarity ?? 0.55;
   const maxResults = opts.maxResults ?? 24;
 
@@ -239,7 +199,7 @@ export async function analyzeCompetitors(
         return [] as RawProduct[];
       }
       try {
-        const items = await extractProductsLLM(query, r.url, r.markdown);
+        const items = await extractProductsLLM(userId, query, r.url, r.markdown);
         diagnostics.push({ url: r.url, products_found: items.length });
         return items.map((p) => ({
           ...p,
@@ -283,8 +243,8 @@ export async function analyzeCompetitors(
   });
 
   // 4. Embed + similarity filter
-  const [queryEmb] = await embed([query]);
-  const titleEmbs = await embed(deduped.map((p) => `${p.brand ?? ""} ${p.title}`.trim()));
+  const [queryEmb] = await embed(userId, [query]);
+  const titleEmbs = await embed(userId, deduped.map((p) => `${p.brand ?? ""} ${p.title}`.trim()));
 
   const scored = deduped.map((p, i) => ({
     p,
