@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+
 import { KeyRound, ExternalLink, Trash2, CheckCircle2, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useT } from "@/hooks/use-language";
