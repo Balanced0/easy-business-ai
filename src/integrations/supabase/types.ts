@@ -336,7 +336,7 @@ export type Database = {
           metadata: Json
           source_type: string
           title: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           content: string
@@ -346,7 +346,7 @@ export type Database = {
           metadata?: Json
           source_type: string
           title?: string | null
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           content?: string
@@ -356,7 +356,7 @@ export type Database = {
           metadata?: Json
           source_type?: string
           title?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
