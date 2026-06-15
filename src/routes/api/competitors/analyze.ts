@@ -44,13 +44,12 @@ export const Route = createFileRoute("/api/competitors/analyze")({
         }
 
         try {
-          const result = await analyzeCompetitors(query, { myPriceUsd });
+          const result = await analyzeCompetitors(query, { userId: authed.userId, myPriceUsd });
           return Response.json({ ok: true, ...result });
         } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          console.error("[/api/competitors/analyze]", msg);
-          await refundCredits(authed.userId, "competitor_analyze", { error: msg });
-          return Response.json({ error: msg }, { status: 500 });
+          console.error("[/api/competitors/analyze]", err);
+          await refundCredits(authed.userId, "competitor_analyze", {});
+          return Response.json({ error: "Competitor analysis failed. Please try again." }, { status: 500 });
         }
       },
     },

@@ -46,9 +46,8 @@ export const Route = createFileRoute("/api/competitors/discover")({
           });
 
         } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          console.error("[/api/competitors/discover]", msg);
-          return Response.json({ error: msg }, { status: 500 });
+          console.error("[/api/competitors/discover]", err);
+          return Response.json({ error: "Competitor discovery failed. Please try again." }, { status: 500 });
         }
       },
     },

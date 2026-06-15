@@ -47,9 +47,9 @@ export const Route = createFileRoute("/api/scrape")({
           );
 
           if (!fcRes.ok) {
-            const txt = await fcRes.text();
+            console.error("[/api/scrape] firecrawl status", fcRes.status);
             return Response.json(
-              { error: `Firecrawl error (${fcRes.status}): ${txt}` },
+              { error: "Unable to fetch that URL right now." },
               { status: 502 },
             );
           }
@@ -69,7 +69,7 @@ export const Route = createFileRoute("/api/scrape")({
 
           if (!markdown.trim()) {
             return Response.json(
-              { error: "Firecrawl returned no markdown content" },
+              { error: "The page returned no readable content." },
               { status: 502 },
             );
           }
@@ -86,9 +86,8 @@ export const Route = createFileRoute("/api/scrape")({
           const result = await upsertDocuments(docs, authed.userId);
           return Response.json({ ok: true, url, ...result });
         } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          console.error("[/api/scrape]", msg);
-          return Response.json({ error: msg }, { status: 500 });
+          console.error("[/api/scrape]", err);
+          return Response.json({ error: "Could not scrape that URL." }, { status: 500 });
         }
       },
     },

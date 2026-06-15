@@ -6,6 +6,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getAuthedUser } from "@/lib/auth-route.server";
 import { firecrawlScrape } from "@/lib/firecrawl.server";
+import {
+  chargeCredits,
+  refundCredits,
+  InsufficientCreditsError,
+  insufficientCreditsResponse,
+} from "@/lib/credits.server";
 
 type Body = { query?: string };
 
@@ -92,6 +98,14 @@ export const Route = createFileRoute("/api/competitors/validate-seeds")({
         if (!query) {
           return Response.json({ error: "query required" }, { status: 400 });
         }
+        // Charge the user — this endpoint fans out to ~9 Firecrawl calls.
+        try {
+          await chargeCredits(authed.userId, "competitor_analyze", { kind: "validate_seeds" });
+        } catch (err) {
+          if (err instanceof InsufficientCreditsError) return insufficientCreditsResponse(err);
+          throw err;
+        }
+
         const enc = encodeURIComponent(query);
         const seeds = SEED_TEMPLATES.map((s) => ({
           source: s.source,
