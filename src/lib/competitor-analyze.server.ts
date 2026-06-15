@@ -222,8 +222,9 @@ function median(nums: number[]): number | null {
 
 export async function analyzeCompetitors(
   query: string,
-  opts: { myPriceUsd?: number; minSimilarity?: number; maxResults?: number } = {},
+  opts: { userId: string; myPriceUsd?: number; minSimilarity?: number; maxResults?: number },
 ): Promise<AnalyzeResult> {
+  const userId = opts.userId;
   const minSim = opts.minSimilarity ?? 0.55;
   const maxResults = opts.maxResults ?? 24;
 
@@ -239,7 +240,7 @@ export async function analyzeCompetitors(
         return [] as RawProduct[];
       }
       try {
-        const items = await extractProductsLLM(query, r.url, r.markdown);
+        const items = await extractProductsLLM(userId, query, r.url, r.markdown);
         diagnostics.push({ url: r.url, products_found: items.length });
         return items.map((p) => ({
           ...p,
@@ -283,8 +284,8 @@ export async function analyzeCompetitors(
   });
 
   // 4. Embed + similarity filter
-  const [queryEmb] = await embed([query]);
-  const titleEmbs = await embed(deduped.map((p) => `${p.brand ?? ""} ${p.title}`.trim()));
+  const [queryEmb] = await embed(userId, [query]);
+  const titleEmbs = await embed(userId, deduped.map((p) => `${p.brand ?? ""} ${p.title}`.trim()));
 
   const scored = deduped.map((p, i) => ({
     p,
