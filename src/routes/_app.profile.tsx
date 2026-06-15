@@ -250,23 +250,7 @@ function ByokKeyCard() {
           )}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <Alert>
-          <AlertDescription className="text-xs">
-            {t("কীভাবে পাবেন: / How to get one:")}{" "}
-            <a
-              href="https://aistudio.google.com/app/apikey"
-              target="_blank"
-              rel="noreferrer noopener"
-              className="inline-flex items-center gap-1 text-primary underline"
-            >
-              aistudio.google.com/app/apikey <ExternalLink className="h-3 w-3" />
-            </a>
-            {" "}
-            {t("(ফ্রি tier-এ প্রতিদিন প্রচুর রিকোয়েস্ট দেয়) / (free tier covers most usage)")}
-          </AlertDescription>
-        </Alert>
-
+      <CardContent className="space-y-4">
         {isLoading ? (
           <p className="text-sm text-muted-foreground">{t("লোড হচ্ছে... / Loading...")}</p>
         ) : status?.hasKey && !editing ? (
@@ -306,13 +290,52 @@ function ByokKeyCard() {
                 </Button>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {t(
-                "আপনার key শুধু আপনার অ্যাকাউন্টে সংরক্ষিত থাকে এবং কেবল সার্ভার-সাইডে ব্যবহৃত হয়। / Your key is stored only on your account and used server-side only.",
-              )}
-            </p>
           </div>
         )}
+
+        {/* Step-by-step tutorial */}
+        <div className="rounded-lg border bg-muted/20 p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <KeyRound className="h-4 w-4 text-primary" />
+            <h4 className="text-sm font-semibold">
+              {t("কীভাবে নিজের ফ্রি Gemini key পাবেন / How to get your free Gemini key")}
+            </h4>
+          </div>
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>{t("Google AI Studio-তে যান / Go to Google AI Studio")} — <code className="text-foreground">aistudio.google.com</code></li>
+            <li>{t("আপনার Google অ্যাকাউন্ট দিয়ে সাইন ইন করুন / Sign in with your Google account")}</li>
+            <li>{t("'Get API Key' বাটনে ক্লিক করুন / Click 'Get API Key'")}</li>
+            <li>{t("'Create API key' এ ক্লিক করুন / Click 'Create API key'")}</li>
+            <li>{t("key টি কপি করুন / Copy the key")} (AIzaSy…)</li>
+            <li>{t("উপরের ইনপুট বক্সে পেস্ট করে Save করুন / Paste it in the field above and Save")}</li>
+          </ol>
+          <a
+            href="https://aistudio.google.com/app/apikey"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            {t("Google AI Studio খুলুন / Open Google AI Studio")}
+            <ExternalLink className="h-3 w-3" />
+          </a>
+          <p className="text-xs text-muted-foreground border-t pt-2">
+            {t(
+              "💡 এটি সম্পূর্ণ ফ্রি এবং Google এর Gemini ফ্রি tier-এ প্রতিদিন প্রচুর AI অনুরোধ অন্তর্ভুক্ত। আপনার নিজের key ব্যবহার করলে আপনি আমাদের প্ল্যাটফর্ম কোটার উপর নির্ভর করবেন না — আপনার AI assistant চলবে সম্পূর্ণ স্বাধীনভাবে। / It's completely free — Google's Gemini free tier includes generous daily AI usage. With your own key, your AI assistant runs independently of our platform quota.",
+            )}
+          </p>
+        </div>
+
+        {/* FAQ */}
+        <div className="rounded-lg border p-4 space-y-2">
+          <h4 className="text-sm font-semibold">
+            {t("আমার key যোগ করা কি নিরাপদ? / Is it safe to add my key here?")}
+          </h4>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {t(
+              "হ্যাঁ। আপনার key শুধুমাত্র আপনার অ্যাকাউন্টের সাথে যুক্ত করে আমাদের ডেটাবেসে সংরক্ষণ করা হয়, এবং row-level security নিয়ম দ্বারা সুরক্ষিত যাতে শুধু আপনি (এবং সার্ভার যখন আপনার AI অনুরোধ চালায়) এটি অ্যাক্সেস করতে পারেন। এটি অন্য কোনো ব্যবহারকারীর সাথে শেয়ার করা হয় না, public API-তে প্রকাশ করা হয় না, এবং কেবল আপনার নিজের AI কল করার জন্য Google-এ পাঠানো হয়। আপনি যেকোনো সময় 'সরান / Remove' বাটনে ক্লিক করে এটি মুছে ফেলতে পারেন। / Yes. Your key is stored against your own account and protected by row-level security so only you (and the server when it makes AI requests on your behalf) can access it. It is never shared with other users, never exposed in any public API, and is only sent to Google to make your own AI calls. You can remove it at any time with the Remove button.",
+            )}
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
