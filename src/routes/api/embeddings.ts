@@ -29,9 +29,8 @@ export const Route = createFileRoute("/api/embeddings")({
           const result = await upsertDocuments(docs, authed.userId);
           return Response.json({ ok: true, ...result });
         } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          console.error("[/api/embeddings] error:", msg);
-          return Response.json({ error: msg }, { status: 500 });
+          console.error("[/api/embeddings] error:", err);
+          return Response.json({ error: "Failed to index documents. Please try again." }, { status: 500 });
         }
       },
       GET: async ({ request }) => {
@@ -41,7 +40,10 @@ export const Route = createFileRoute("/api/embeddings")({
           .from("knowledge_documents")
           .select("*", { count: "exact", head: true })
           .eq("user_id", authed.userId);
-        if (error) return Response.json({ error: error.message }, { status: 500 });
+        if (error) {
+          console.error("[/api/embeddings] count error", error);
+          return Response.json({ error: "Could not read document count." }, { status: 500 });
+        }
         return Response.json({ count: count ?? 0 });
       },
     },
