@@ -184,56 +184,183 @@ function LandingPage() {
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="mx-auto max-w-6xl px-4 py-20 md:py-28">
-        <div className="mx-auto max-w-2xl text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border bg-muted/50 px-3 py-1 text-xs text-muted-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-success" />
-            {t("ছোট ইকমার্স টিমের জন্য তৈরি / Built for small ecommerce teams")}
-          </div>
-          <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
-            {lang === "bn" ? "ছোট ব্যবসার জন্য এআই-চালিত কমার্স ইন্টেলিজেন্স" : "AI-powered commerce intelligence for SMEs"}
-          </h1>
-          <h2 className="mt-2 text-xl font-medium tracking-tight text-muted-foreground md:text-2xl">
-            {lang === "bn" ? "AI-powered commerce intelligence for SMEs" : "ছোট ব্যবসার জন্য এআই-চালিত কমার্স ইন্টেলিজেন্স"}
-          </h2>
-          <p className="mt-4 text-base text-muted-foreground md:text-lg">
-            {lang === "bn"
-              ? "মার্কেট ট্রেন্ড, গ্রাহক আচরণ, ইনভেন্টরি ঝুঁকি এবং প্রতিযোগীর পদক্ষেপ বুঝুন — একটি সহজ ড্যাশবোর্ডে।"
-              : "Understand market trends, customer behavior, inventory risks, and competitor moves — with clear AI-generated recommendations."}
-          </p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Button asChild size="lg">
-              <Link to="/dashboard">
-                {t("শুরু করুন / Get Started")} <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link to="/dashboard">{t("ড্যাশবোর্ড দেখুন / View Dashboard")}</Link>
-            </Button>
-          </div>
+      {/* Hero — Midnight Indigo bento */}
+      <section className="relative overflow-hidden bg-[#0a0a1a] text-white">
+        {/* Ambient glow */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-32 left-1/2 h-[520px] w-[820px] -translate-x-1/2 rounded-full bg-[#4f46e5] opacity-30 blur-[140px]" />
+          <div className="absolute bottom-0 right-0 h-[360px] w-[360px] rounded-full bg-[#1e1e5a] opacity-50 blur-[120px]" />
+          <div
+            className="absolute inset-0 opacity-[0.07]"
+            style={{
+              backgroundImage:
+                "linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)",
+              backgroundSize: "56px 56px",
+              maskImage: "radial-gradient(ellipse at top, black 30%, transparent 70%)",
+            }}
+          />
         </div>
 
-        {/* Preview card */}
-        <div className="mx-auto mt-16 max-w-5xl rounded-xl border bg-card p-2 shadow-sm">
-          <div className="rounded-lg bg-muted/40 p-6">
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              {cards.map(([l, v, d]) => (
-                <div key={l} className="rounded-md border bg-card p-3 text-left">
-                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{t(l)}</div>
-                  <div className="mt-1 text-lg font-semibold tabular-nums transition-all duration-[1200ms] ease-out">{v}</div>
-                  <div className="text-xs text-muted-foreground tabular-nums transition-all duration-[1200ms] ease-out">{d}</div>
-                </div>
-              ))}
+        <div className="relative mx-auto max-w-6xl px-4 py-20 md:py-28">
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/70 backdrop-blur">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#7c7cff] opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#a5b4fc]" />
+              </span>
+              {t("ছোট ইকমার্স টিমের জন্য তৈরি / Built for small ecommerce teams")}
             </div>
-            <div className="mt-3 grid h-32 grid-cols-12 items-end gap-1.5">
-              {bars.map((h, i) => (
-                <div
-                  key={i}
-                  style={{ height: `${h}%` }}
-                  className="rounded-sm bg-primary/80 transition-[height] duration-[2200ms] ease-in-out"
-                />
-              ))}
+            <h1
+              className="text-balance text-4xl font-semibold leading-[1.05] tracking-tight md:text-6xl"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              {lang === "bn" ? (
+                <>
+                  ছোট ব্যবসার জন্য{" "}
+                  <span className="bg-gradient-to-r from-[#a5b4fc] via-white to-[#818cf8] bg-clip-text text-transparent">
+                    এআই-চালিত
+                  </span>{" "}
+                  কমার্স ইন্টেলিজেন্স
+                </>
+              ) : (
+                <>
+                  Commerce intelligence,{" "}
+                  <span className="bg-gradient-to-r from-[#a5b4fc] via-white to-[#818cf8] bg-clip-text text-transparent">
+                    rewritten
+                  </span>{" "}
+                  for small teams
+                </>
+              )}
+            </h1>
+            <p className="mx-auto mt-5 max-w-2xl text-base text-white/65 md:text-lg">
+              {lang === "bn"
+                ? "মার্কেট ট্রেন্ড, গ্রাহক আচরণ, ইনভেন্টরি ঝুঁকি এবং প্রতিযোগীর পদক্ষেপ — সব এক জায়গায়, পরিষ্কার AI সুপারিশ সহ।"
+                : "Market trends, customer behavior, inventory risk, and competitor moves — unified into clear AI recommendations."}
+            </p>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              <Button
+                asChild
+                size="lg"
+                className="bg-[#4f46e5] text-white shadow-[0_10px_40px_-12px_rgba(79,70,229,0.8)] hover:bg-[#6366f1]"
+              >
+                <Link to="/dashboard">
+                  {t("শুরু করুন / Get Started")} <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+              >
+                <Link to="/dashboard">{t("ড্যাশবোর্ড দেখুন / View Dashboard")}</Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Bento grid */}
+          <div className="mx-auto mt-16 grid max-w-5xl grid-cols-6 gap-3 md:grid-cols-12 md:gap-4">
+            {/* Big metric: Total Sales */}
+            <div className="col-span-6 row-span-2 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.02] p-5 backdrop-blur-sm md:col-span-7">
+              <div className="flex items-center justify-between text-[11px] uppercase tracking-wider text-white/50">
+                <span>{t("মোট বিক্রয় / Total Sales")}</span>
+                <span className="rounded-full bg-emerald-400/15 px-2 py-0.5 text-[10px] text-emerald-300">
+                  {fmtSigned(salesDelta, lang)}%
+                </span>
+              </div>
+              <div
+                className="mt-2 text-4xl font-semibold tabular-nums tracking-tight md:text-5xl"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                ${fmtNum(totalSales, lang)}
+              </div>
+              <div className="mt-5 grid h-28 grid-cols-12 items-end gap-1.5">
+                {bars.map((h, i) => (
+                  <div
+                    key={i}
+                    style={{ height: `${h}%` }}
+                    className="rounded-sm bg-gradient-to-t from-[#4f46e5] to-[#a5b4fc] transition-[height] duration-[2200ms] ease-in-out"
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Revenue */}
+            <div className="col-span-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm md:col-span-5">
+              <div className="text-[11px] uppercase tracking-wider text-white/50">
+                {t("রাজস্ব / Revenue")}
+              </div>
+              <div
+                className="mt-1 text-2xl font-semibold tabular-nums md:text-3xl"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                ${fmtNum(revenue, lang)}
+              </div>
+              <div className="mt-1 text-xs text-emerald-300 tabular-nums">
+                {fmtSigned(revenueDelta, lang)}%
+              </div>
+            </div>
+
+            {/* Trending SKUs */}
+            <div className="col-span-3 rounded-2xl border border-white/10 bg-gradient-to-br from-[#4f46e5]/20 to-transparent p-4 backdrop-blur-sm md:col-span-5">
+              <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-white/60">
+                <TrendingUp className="h-3 w-3" />
+                {t("ট্রেন্ডিং / Trending")}
+              </div>
+              <div
+                className="mt-1 text-2xl font-semibold tabular-nums md:text-3xl"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                {fmtNum(trending, lang)} SKUs
+              </div>
+              <div className="mt-1 text-xs text-white/50 tabular-nums">
+                {fmtSigned(trendingDelta, lang, 0)} {lang === "bn" ? "this wk" : "this wk"}
+              </div>
+            </div>
+
+            {/* AI Insight card */}
+            <div className="col-span-6 rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm md:col-span-7">
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#4f46e5]/20 text-[#a5b4fc]">
+                  <Brain className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="text-[11px] uppercase tracking-wider text-white/50">
+                    {lang === "bn" ? "এআই ইনসাইট" : "AI Insight"}
+                  </div>
+                  <p className="mt-1 text-sm text-white/80">
+                    {lang === "bn"
+                      ? "গত সপ্তাহে কটন টি-শার্টের চাহিদা ১৮% বেড়েছে — স্টক বাড়ানোর সময়।"
+                      : "Cotton tees demand up 18% week-over-week — time to restock."}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Inventory risk */}
+            <div className="col-span-3 rounded-2xl border border-amber-300/20 bg-amber-400/[0.06] p-4 backdrop-blur-sm md:col-span-3">
+              <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-amber-200/80">
+                <PackageSearch className="h-3 w-3" />
+                {t("ইনভেন্টরি ঝুঁকি / Risk")}
+              </div>
+              <div
+                className="mt-1 text-2xl font-semibold tabular-nums md:text-3xl"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                {fmtNum(inventoryRisk, lang)}
+              </div>
+              <div className="mt-1 text-xs text-white/50">
+                {lang === "bn" ? "items" : "items"}
+              </div>
+            </div>
+
+            {/* Assistant pill */}
+            <div className="col-span-3 flex flex-col justify-between rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-transparent p-4 backdrop-blur-sm md:col-span-2">
+              <MessageSquare className="h-4 w-4 text-[#a5b4fc]" />
+              <div className="text-[11px] leading-snug text-white/70">
+                {lang === "bn" ? "জিজ্ঞাসা করুন" : "Ask the AI"}
+                <ArrowRight className="ml-1 inline h-3 w-3" />
+              </div>
             </div>
           </div>
         </div>
