@@ -372,70 +372,94 @@ function LandingPage() {
       </section>
 
       {/* Features */}
-      <section id="features" className="border-t bg-muted/30">
-        <div className="mx-auto max-w-6xl px-4 py-20">
-          <div className="mb-10 max-w-2xl">
-            <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-              {lang === "bn" ? "স্মার্ট স্টোর চালানোর সব কিছু" : "Everything you need to run a smarter store"}
+      <section id="features" className="relative border-t border-white/10">
+        <div className="pointer-events-none absolute inset-0 opacity-40">
+          <div className="absolute left-1/4 top-1/3 h-[300px] w-[300px] rounded-full bg-[#4f46e5] opacity-20 blur-[120px]" />
+        </div>
+        <div className="relative mx-auto max-w-6xl px-4 py-24">
+          <div className="mb-14 max-w-2xl">
+            <div className="mb-4 text-xs uppercase tracking-[0.2em] text-[#a5b4fc]">
+              {lang === "bn" ? "ফিচার" : "Features"}
+            </div>
+            <h2
+              className="text-balance text-3xl leading-[1.1] tracking-tight md:text-5xl"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              {lang === "bn" ? (
+                <>স্মার্ট স্টোর চালানোর <em className="text-[#a5b4fc]">সব কিছু</em></>
+              ) : (
+                <>Everything you need to run a <em className="text-[#a5b4fc]">smarter store</em></>
+              )}
             </h2>
-            <h3 className="text-lg font-medium text-muted-foreground">
-              {lang === "bn" ? "Everything you need to run a smarter store" : "স্মার্ট স্টোর চালানোর সব কিছু"}
-            </h3>
-            <p className="mt-2 text-muted-foreground">
+            <p className="mt-4 max-w-xl text-base text-white/60">
               {lang === "bn"
                 ? "বাজওয়ার্ড নয়, ব্যবহারিক টুল। দ্রুত উত্তর প্রয়োজন এমন SME টিমের জন্য ডিজাইন করা।"
                 : "Practical tools, not buzzwords. Designed for SME teams who need answers fast."}
             </p>
           </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 md:grid-cols-2 lg:grid-cols-3">
             {features.map((f) => (
-              <Card key={f.title} className="border bg-card">
-                <CardHeader>
-                  <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
-                    <f.icon className="h-4 w-4" />
-                  </div>
-                  <CardTitle className="text-base">
-                    {lang === "bn" ? f.titleBn : f.title}
-                  </CardTitle>
-                  <CardDescription>
-                    {lang === "bn" ? f.descBn : f.desc}
-                  </CardDescription>
-                </CardHeader>
-              </Card>
+              <div
+                key={f.title}
+                className="group relative bg-[#0a0a1a] p-6 transition-colors hover:bg-[#141432]"
+              >
+                <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#4f46e5]/30 to-[#1e1e5a]/30 text-[#a5b4fc] ring-1 ring-white/10 transition-transform group-hover:scale-105">
+                  <f.icon className="h-4 w-4" />
+                </div>
+                <h3
+                  className="text-xl tracking-tight text-white"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  {lang === "bn" ? f.titleBn : f.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-white/55">
+                  {lang === "bn" ? f.descBn : f.desc}
+                </p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How */}
-      <section id="how" className="border-t">
-        <div className="mx-auto max-w-6xl px-4 py-20">
-          <div className="grid items-start gap-10 md:grid-cols-2">
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                {lang === "bn" ? "কীভাবে কাজ করে" : "How it works"}
+      {/* How it works */}
+      <section id="how" className="relative border-t border-white/10 bg-gradient-to-b from-transparent via-[#141432]/40 to-transparent">
+        <div className="mx-auto max-w-6xl px-4 py-24">
+          <div className="grid items-start gap-14 md:grid-cols-[1fr_1.2fr]">
+            <div className="md:sticky md:top-24">
+              <div className="mb-4 text-xs uppercase tracking-[0.2em] text-[#a5b4fc]">
+                {lang === "bn" ? "প্রক্রিয়া" : "Process"}
+              </div>
+              <h2
+                className="text-balance text-3xl leading-[1.1] tracking-tight md:text-5xl"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                {lang === "bn" ? (
+                  <>কীভাবে <em className="text-[#a5b4fc]">কাজ করে</em></>
+                ) : (
+                  <>How it <em className="text-[#a5b4fc]">works</em></>
+                )}
               </h2>
-              <h3 className="text-lg font-medium text-muted-foreground">
-                {lang === "bn" ? "How it works" : "কীভাবে কাজ করে"}
-              </h3>
-              <p className="mt-2 text-muted-foreground">
+              <p className="mt-4 text-base text-white/60">
                 {lang === "bn"
                   ? "আমরা আপনার স্টোরের সাথে সংযুক্ত হই, মার্কেট ডেটা দিয়ে সমৃদ্ধ করি, এবং RAG দ্বারা চালিত কার্যকর সুপারিশে অনুবাদ করি।"
                   : "We connect to your store, enrich it with market data, and translate it into actionable recommendations powered by retrieval-augmented AI."}
               </p>
             </div>
-            <ol className="space-y-3 text-sm">
+            <ol className="relative space-y-px overflow-hidden rounded-2xl border border-white/10 bg-white/10">
               {[
                 ["আপনার স্টোর ডেটা সোর্স সংযুক্ত করুন", "Connect your store data sources"],
-                ["ভেক্টর ডেটাবেসে সিগন্যাল প্রসেস ও সংরক্ষণ", "We process & store signals in a vector database"],
+                ["ভেক্টর ডেটাবেসে সিগন্যাল প্রসেস ও সংরক্ষণ", "Process & store signals in a vector database"],
                 ["Gemini + RAG পাইপলাইন ইনসাইট তৈরি করে", "Gemini + RAG pipeline generates insights"],
                 ["আপনি পরিষ্কার ড্যাশবোর্ড ও এআই সহকারী পান", "You get a clean dashboard and an AI assistant"],
               ].map(([bn, en], i) => (
-                <li key={en} className="flex gap-3 rounded-md border bg-card p-3">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
-                    {i + 1}
+                <li key={en} className="flex items-start gap-5 bg-[#0a0a1a] p-6 transition-colors hover:bg-[#141432]">
+                  <span
+                    className="text-3xl text-[#4f46e5] tabular-nums"
+                    style={{ fontFamily: "var(--font-display)" }}
+                  >
+                    {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span>
+                  <span className="pt-1.5 text-base text-white/85">
                     {lang === "bn" ? bn : en}
                   </span>
                 </li>
@@ -446,25 +470,39 @@ function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="border-t bg-muted/30">
-        <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-          <h2 className="text-2xl font-semibold tracking-tight">
-            {lang === "bn" ? "আপনার স্টোর স্পষ্টভাবে দেখতে প্রস্তুত?" : "Ready to see your store clearly?"}
+      <section className="relative border-t border-white/10 overflow-hidden">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute left-1/2 top-1/2 h-[500px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#4f46e5] opacity-25 blur-[140px]" />
+        </div>
+        <div className="relative mx-auto max-w-3xl px-4 py-24 text-center">
+          <h2
+            className="text-balance text-4xl leading-[1.05] tracking-tight md:text-6xl"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            {lang === "bn" ? (
+              <>আপনার স্টোর <em className="text-[#a5b4fc]">স্পষ্টভাবে</em> দেখতে প্রস্তুত?</>
+            ) : (
+              <>Ready to see your store <em className="text-[#a5b4fc]">clearly</em>?</>
+            )}
           </h2>
-          <h3 className="text-lg font-medium text-muted-foreground">
-            {lang === "bn" ? "Ready to see your store clearly?" : "আপনার স্টোর স্পষ্টভাবে দেখতে প্রস্তুত?"}
-          </h3>
-          <p className="mt-2 text-muted-foreground">
+          <p className="mx-auto mt-5 max-w-lg text-base text-white/65">
             {t("নমুনা ডেটা সহ ডেমো ড্যাশবোর্ডটি দেখুন। / Explore the demo dashboard with sample ecommerce data.")}
           </p>
-          <Button asChild size="lg" className="mt-6">
-            <Link to="/dashboard">{t("ড্যাশবোর্ড খুলুন / Open the Dashboard")}</Link>
+          <Button
+            asChild
+            size="lg"
+            className="mt-8 bg-[#4f46e5] text-white shadow-[0_10px_40px_-12px_rgba(79,70,229,0.8)] hover:bg-[#6366f1]"
+          >
+            <Link to="/dashboard">
+              {t("ড্যাশবোর্ড খুলুন / Open the Dashboard")}
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Link>
           </Button>
         </div>
       </section>
 
-      <footer className="border-t">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground md:flex-row">
+      <footer className="border-t border-white/10">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-8 text-xs text-white/40 md:flex-row">
           <span>© {new Date().getFullYear()} EasyBusiness AI</span>
           <span>{t("SME-দের জন্য নির্মিত / Built for SMEs")}</span>
         </div>
