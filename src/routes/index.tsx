@@ -46,15 +46,15 @@ function LanguageToggle() {
   return (
     <button
       onClick={toggleLang}
-      className="flex h-8 items-center overflow-hidden rounded-md border text-xs"
+      className="flex h-8 items-center overflow-hidden rounded-md border border-white/15 bg-white/5 text-xs"
     >
       <span
-        className={`${lang === "bn" ? "bg-primary text-primary-foreground rounded py-[4px] px-[8px] mx-[4px]" : "px-2 py-1 text-muted-foreground rounded-xl"}`}
+        className={`${lang === "bn" ? "bg-white text-[#0a0a1a] rounded py-[4px] px-[8px] mx-[4px]" : "px-2 py-1 text-white/60"}`}
       >
         বাং
       </span>
       <span
-        className={`${lang === "en" ? "bg-primary text-primary-foreground rounded py-[4px] px-[8px] mx-[4px]" : "px-2 py-1 text-muted-foreground rounded-xl"}`}
+        className={`${lang === "en" ? "bg-white text-[#0a0a1a] rounded py-[4px] px-[8px] mx-[4px]" : "px-2 py-1 text-white/60"}`}
       >
         En
       </span>
