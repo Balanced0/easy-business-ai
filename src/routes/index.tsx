@@ -160,24 +160,29 @@ function LandingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#0a0a1a] text-white">
       {/* Nav */}
-      <header className="border-b">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0a0a1a]/70 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#4f46e5] to-[#1e1e5a] text-white shadow-[0_4px_20px_-4px_rgba(79,70,229,0.6)]">
               <BarChart3 className="h-4 w-4" />
             </div>
-            <span className="text-sm font-semibold">{t("ইজিবিজনেস / EasyBusiness AI")}</span>
+            <span
+              className="text-base font-medium tracking-tight"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              {t("ইজিবিজনেস / EasyBusiness AI")}
+            </span>
           </Link>
-          <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-            <a href="#features" className="hover:text-foreground">{t("ফিচার / Features")}</a>
-            <a href="#how" className="hover:text-foreground">{t("কীভাবে কাজ করে / How it works")}</a>
-            <Link to="/about" className="hover:text-foreground">{t("সম্পর্কে / About")}</Link>
+          <nav className="hidden items-center gap-7 text-sm text-white/60 md:flex">
+            <a href="#features" className="transition-colors hover:text-white">{t("ফিচার / Features")}</a>
+            <a href="#how" className="transition-colors hover:text-white">{t("কীভাবে কাজ করে / How it works")}</a>
+            <Link to="/about" className="transition-colors hover:text-white">{t("সম্পর্কে / About")}</Link>
           </nav>
           <div className="flex items-center gap-2">
             <LanguageToggle />
-            <Button asChild size="sm">
+            <Button asChild size="sm" className="bg-white text-[#0a0a1a] hover:bg-white/90">
               <Link to="/dashboard">{t("ড্যাশবোর্ড / Open Dashboard")}</Link>
             </Button>
           </div>
