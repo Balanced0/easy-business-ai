@@ -45,8 +45,8 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --font-sans: "Inter Tight", "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Instrument Serif", "Hind Siliguri", ui-serif, Georgia, serif;
+  --font-sans: "DM Sans", "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
