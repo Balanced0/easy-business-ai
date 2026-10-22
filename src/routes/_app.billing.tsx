@@ -6,14 +6,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Zap, Sparkles, Calendar, ShoppingCart, ArrowDownRight, ArrowUpRight, Check } from "lucide-react";
+import { Zap, Calendar, ShoppingCart, ArrowDownRight, ArrowUpRight, Check } from "lucide-react";
 import { useT } from "@/hooks/use-language";
 import { useCredits } from "@/hooks/use-credits";
 import { getCreditPacks, getMyTransactions, type CreditPack, type MyTransaction } from "@/lib/credits.functions";
 import { toast } from "sonner";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_app/billing")({
-  head: () => ({ meta: [{ title: "বিলিং ও ক্রেডিট / Billing & Credits — EasyBusiness AI" }] }),
+  head: () => ({ meta: [{ title: "বিলিং ও ক্রেডিট / Billing & Credits: EasyBusiness AI" }] }),
   component: BillingPage,
 });
 
@@ -37,7 +38,7 @@ function BillingPage() {
 
   const resetDate = credits?.quotaResetAt
     ? new Date(credits.quotaResetAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
-    : "—";
+    : "-";
 
   const handleBuy = (pack: CreditPack) => {
     // Stripe sandbox could not be enabled (seller country not yet supported).
@@ -72,7 +73,7 @@ function BillingPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription className="flex items-center gap-1.5 text-xs">
-                <Sparkles className="h-3.5 w-3.5" />
+                <Zap className="h-3.5 w-3.5" />
                 {t("ফ্রি কোটা বাকি / Free quota left")}
               </CardDescription>
               <CardTitle className="text-3xl">
@@ -135,9 +136,10 @@ function BillingPage() {
                       <Check className="h-4 w-4 text-primary" />
                       {t("সব এআই ফিচারে কাজ করে / Works on every AI feature")}
                     </div>
-                    <Button className="mt-3 w-full" onClick={() => handleBuy(pack)}>
-                      <ShoppingCart className="mr-2 h-4 w-4" />
-                      {t("কিনুন / Buy")}
+                    <Button asChild className="mt-3 w-full" variant="outline">
+                      <Link to="/profile">
+                        {t("নিজের কী দিয়ে ফ্রি ব্যবহার করুন / Use free with own API key")}
+                      </Link>
                     </Button>
                   </CardContent>
                 </Card>

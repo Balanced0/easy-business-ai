@@ -45,7 +45,7 @@ import {
 } from "recharts";
 
 export const Route = createFileRoute("/_app/competitors")({
-  head: () => ({ meta: [{ title: "প্রতিযোগী / Competitors — EasyBusiness AI" }] }),
+  head: () => ({ meta: [{ title: "প্রতিযোগী / Competitors: EasyBusiness AI" }] }),
   component: CompetitorsPage,
 });
 
@@ -254,7 +254,7 @@ function CompetitorsPage() {
             </CardTitle>
             <CardDescription>
               {t(
-                "আপনার পণ্যের নাম ও দাম দিন; আমরা প্রতিযোগী পণ্য খুঁজে আপনার দামের সাথে তুলনা করব। / Enter your product and price — we find true competitors and compare price, rating, and reviews side-by-side.",
+                "আপনার পণ্যের নাম ও দাম দিন; আমরা প্রতিযোগী পণ্য খুঁজে আপনার দামের সাথে তুলনা করব। / Enter your product and price to find true competitors and compare price, rating, and reviews side by side.",
               )}
             </CardDescription>
           </CardHeader>
@@ -285,7 +285,7 @@ function CompetitorsPage() {
               </Button>
             </div>
             <p className="mt-2 text-[11px] text-muted-foreground">
-              Price is optional — if blank, we compare against the median competitor price.
+              Price is optional: if left blank, we compare against the median competitor price.
             </p>
           </CardContent>
         </Card>

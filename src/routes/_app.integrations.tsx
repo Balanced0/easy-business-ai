@@ -31,7 +31,7 @@ import { useT } from "@/hooks/use-language";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/integrations")({
-  head: () => ({ meta: [{ title: "ইন্টিগ্রেশন / Integrations — EasyBusiness AI" }] }),
+  head: () => ({ meta: [{ title: "ইন্টিগ্রেশন / Integrations: EasyBusiness AI" }] }),
   component: IntegrationsPage,
 });
 
@@ -85,7 +85,7 @@ const INTEGRATIONS: Integration[] = [
     description: "দক্ষিণ এশিয়ার বৃহত্তম মার্কেটপ্লেস থেকে অর্ডার ও স্টক সিঙ্ক করুন / Sync orders and stock from South Asia's largest marketplace",
     icon: ShoppingCart,
     color: "text-rose-500 bg-rose-500/10",
-    status: "available",
+    status: "coming_soon",
   },
   {
     id: "tiktok",

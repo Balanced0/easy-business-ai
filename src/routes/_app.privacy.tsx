@@ -46,7 +46,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_app/privacy")({
   head: () => ({
     meta: [
-      { title: "গোপনীয়তা ও ডেটা / Privacy & Data — EasyBusiness AI" },
+      { title: "গোপনীয়তা ও ডেটা / Privacy & Data: EasyBusiness AI" },
       { name: "description", content: "Manage your uploaded data, review AI usage policy, see your audit log, and export your data." },
     ],
   }),
@@ -120,7 +120,7 @@ function PrivacyPage() {
     for (const b of (batchRes.data ?? []) as Array<{ kind: string; filename: string | null; created_at: string; row_count: number }>) {
       entries.push({
         timestamp: b.created_at,
-        type: `Data upload (${b.kind}): ${b.filename ?? "file"} — ${b.row_count} rows`,
+        type: `Data upload (${b.kind}): ${b.filename ?? "file"} (${b.row_count} rows)`,
         status: b.row_count > 0 ? "Success" : "Failed",
       });
     }

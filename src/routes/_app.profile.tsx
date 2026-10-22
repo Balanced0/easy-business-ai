@@ -22,7 +22,7 @@ import { toast } from "sonner";
 import { getByokStatus, saveByokKey, clearByokKey } from "@/lib/credits.functions";
 
 export const Route = createFileRoute("/_app/profile")({
-  head: () => ({ meta: [{ title: "প্রোফাইল / Profile — EasyBusiness AI" }] }),
+  head: () => ({ meta: [{ title: "প্রোফাইল / Profile: EasyBusiness AI" }] }),
   component: ProfilePage,
 });
 
@@ -246,7 +246,7 @@ function ByokKeyCard() {
         </div>
         <CardDescription>
           {t(
-            "নিজের Google Gemini API key যোগ করলে আপনার AI সম্পূর্ণ স্বাধীন হবে — কোনো শেয়ার্ড পুলের উপর নির্ভর করবে না, এবং আপনার ক্রেডিট খরচ হবে না। / Add your own Google Gemini API key to make your AI fully independent — no shared pool, no credit charges from us.",
+            "নিজের Google Gemini API key যোগ করলে আপনার AI সম্পূর্ণ স্বাধীন হবে; কোনো শেয়ার্ড পুলের উপর নির্ভর করবে না এবং কোনো প্ল্যাটফর্ম ক্রেডিট খরচ হবে না। / Add your own Google Gemini API key to make your AI fully independent with no shared pool and no credit charges from us.",
           )}
         </CardDescription>
       </CardHeader>
@@ -302,7 +302,7 @@ function ByokKeyCard() {
             </h4>
           </div>
           <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>{t("Google AI Studio-তে যান / Go to Google AI Studio")} — <code className="text-foreground">aistudio.google.com</code></li>
+            <li>{t("Google AI Studio-তে যান / Go to Google AI Studio")}: <code className="text-foreground">aistudio.google.com</code></li>
             <li>{t("আপনার Google অ্যাকাউন্ট দিয়ে সাইন ইন করুন / Sign in with your Google account")}</li>
             <li>{t("'Get API Key' বাটনে ক্লিক করুন / Click 'Get API Key'")}</li>
             <li>{t("'Create API key' এ ক্লিক করুন / Click 'Create API key'")}</li>
@@ -320,7 +320,7 @@ function ByokKeyCard() {
           </a>
           <p className="text-xs text-muted-foreground border-t pt-2">
             {t(
-              "💡 এটি সম্পূর্ণ ফ্রি এবং Google এর Gemini ফ্রি tier-এ প্রতিদিন প্রচুর AI অনুরোধ অন্তর্ভুক্ত। আপনার নিজের key ব্যবহার করলে আপনি আমাদের প্ল্যাটফর্ম কোটার উপর নির্ভর করবেন না — আপনার AI assistant চলবে সম্পূর্ণ স্বাধীনভাবে। / It's completely free — Google's Gemini free tier includes generous daily AI usage. With your own key, your AI assistant runs independently of our platform quota.",
+              "💡 এটি সম্পূর্ণ ফ্রি এবং Google এর Gemini ফ্রি tier-এ প্রতিদিন প্রচুর AI অনুরোধ অন্তর্ভুক্ত। আপনার নিজের key ব্যবহার করলে আপনি আমাদের প্ল্যাটফর্ম কোটার উপর নির্ভর করবেন না; আপনার AI assistant চলবে সম্পূর্ণ স্বাধীনভাবে। / It is completely free. Google Gemini free tier includes generous daily AI usage. With your own key, your AI assistant runs independently of our platform quota.",
             )}
           </p>
         </div>

@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Sparkles,
   Globe2,
   Languages,
   Brain,
@@ -23,7 +22,7 @@ import {
 import { useT } from "@/hooks/use-language";
 
 export const Route = createFileRoute("/_app/about")({
-  head: () => ({ meta: [{ title: "সম্পর্কে / About — EasyBusiness AI" }] }),
+  head: () => ({ meta: [{ title: "সম্পর্কে / About: EasyBusiness AI" }] }),
   component: AboutPage,
 });
 
@@ -31,7 +30,7 @@ const revenueStreams = [
   {
     icon: DollarSign,
     title: "SaaS সাবস্ক্রিপশন / SaaS subscriptions",
-    desc: "মাসিক ও বার্ষিক প্ল্যান — Free থেকে Enterprise পর্যন্ত। / Tiered monthly and annual plans from Free to Enterprise.",
+    desc: "মাসিক ও বার্ষিক প্ল্যান: Free থেকে Enterprise পর্যন্ত। / Tiered monthly and annual plans from Free to Enterprise.",
   },
   {
     icon: Handshake,
@@ -59,12 +58,12 @@ const advantages = [
   {
     icon: Brain,
     title: "আপনার ডেটার উপর RAG / RAG over your data",
-    desc: "জেনেরিক উত্তর নয় — উত্তর আপনার আসল বিক্রয় ও ইনভেন্টরিতে গ্রাউন্ডেড। / Not generic answers — every reply is grounded in your real sales and inventory.",
+    desc: "জেনেরিক উত্তর নয়, উত্তর আপনার আসল বিক্রয় ও ইনভেন্টরিতে গ্রাউন্ডেড। / Not generic answers, every reply is grounded in your real sales and inventory.",
   },
   {
     icon: Upload,
     title: "নো-কোড ডেটা আপলোড / No-code data upload",
-    desc: "CSV বা XLSX টানুন, কোন ইঞ্জিনিয়ার লাগবে না। / Drag a CSV or XLSX — no engineers, no integrations required.",
+    desc: "CSV বা XLSX টানুন, কোন ইঞ্জিনিয়ার লাগবে না। / Drag a CSV or XLSX, no engineers or complex integrations required.",
   },
   {
     icon: Radar,
@@ -92,7 +91,7 @@ const roadmap = [
     phase: "ফেজ ২ / Phase 2",
     when: "২০২৬ (চলমান) / 2026 (in progress)",
     region: "দক্ষিণ এশিয়া / South Asia",
-    desc: "ভারত, পাকিস্তান, শ্রীলঙ্কা — হিন্দি ও উর্দু সাপোর্ট। / Expand to India, Pakistan, Sri Lanka with Hindi and Urdu support.",
+    desc: "ভারত, পাকিস্তান, শ্রীলঙ্কা: হিন্দি ও উর্দু সাপোর্ট। / Expand to India, Pakistan, Sri Lanka with Hindi and Urdu support.",
   },
   {
     phase: "ফেজ ৩ / Phase 3",
@@ -117,14 +116,14 @@ function AboutPage() {
         {/* Hero */}
         <section className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-primary/10 via-card to-card p-8 md:p-12">
           <Badge variant="secondary" className="mb-3">
-            <Sparkles className="mr-1 h-3 w-3" /> {t("ইনভেস্টর ওভারভিউ / Investor overview")}
+            {t("ইনভেস্টর ওভারভিউ / Investor overview")}
           </Badge>
           <h1 className="max-w-3xl text-3xl font-bold tracking-tight md:text-5xl">
             {t("SME বিক্রেতাদের জন্য AI বিজনেস অ্যানালিস্ট / AI Business Analyst for SME Sellers")}
           </h1>
           <p className="mt-4 max-w-2xl text-base text-muted-foreground md:text-lg">
             {t(
-              "কাঁচা ইকমার্স ডেটাকে বাংলা ও ইংরেজিতে কার্যকর সিদ্ধান্তে রূপান্তর করি — কোন অ্যানালিস্ট লাগবে না। / We turn raw ecommerce data into actionable decisions in Bangla and English — no analyst required.",
+              "কাঁচা ইকমার্স ডেটাকে বাংলা ও ইংরেজিতে কার্যকর সিদ্ধান্তে রূপান্তর করি, কোন অ্যানালিস্ট লাগবে না। / We turn raw ecommerce data into actionable decisions in Bangla and English, no analyst required.",
             )}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
@@ -148,21 +147,21 @@ function AboutPage() {
           <CardContent>
             <div className="grid gap-4 md:grid-cols-3">
               <div className="rounded-lg border bg-muted/30 p-5">
-                <div className="text-3xl font-bold text-primary">$47B</div>
+                <div className="text-lg font-semibold text-primary">{t("আঞ্চলিক SME বিক্রেতা / Regional SME Sellers")}</div>
                 <div className="mt-1 text-sm text-muted-foreground">
-                  {t("দক্ষিণ ও দক্ষিণ-পূর্ব এশিয়ার SME ইকমার্স বাজার / SME ecommerce market in South & Southeast Asia")}
+                  {t("ছোট ও মাঝারি অনলাইন ব্র্যান্ড যারা একাধিক প্ল্যাটফর্মে বিক্রি করেন / Independent merchants selling across Daraz, Shopify, and social commerce")}
                 </div>
               </div>
               <div className="rounded-lg border bg-muted/30 p-5">
-                <div className="text-3xl font-bold text-primary">4.2M</div>
+                <div className="text-lg font-semibold text-primary">{t("স্প্রেডশিট নির্ভরতা / Spreadsheet Bottleneck")}</div>
                 <div className="mt-1 text-sm text-muted-foreground">
-                  {t("সক্রিয় অনলাইন বিক্রেতা / Active online sellers underserved by enterprise analytics tools")}
+                  {t("ম্যানুয়াল ট্র্যাকিংয়ের কারণে স্টকআউট ও অতিরিক্ত স্টকের ক্ষতি / Manual tracking causing avoidable inventory and margin loss")}
                 </div>
               </div>
               <div className="rounded-lg border bg-muted/30 p-5">
-                <div className="text-3xl font-bold text-primary">18%</div>
+                <div className="text-lg font-semibold text-primary">{t("ভাষাগত প্রবেশগম্যতা / Language Accessibility")}</div>
                 <div className="mt-1 text-sm text-muted-foreground">
-                  {t("বার্ষিক বৃদ্ধি (CAGR) / Annual growth rate across the region")}
+                  {t("স্থানীয় ভাষা ও স্থানীয় মুদ্রায় কার্যকর অ্যানালিটিক্স / Pragmatic analytics delivered in native languages with regional currency support")}
                 </div>
               </div>
             </div>

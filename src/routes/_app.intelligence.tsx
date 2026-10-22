@@ -12,12 +12,11 @@ import {
   Globe,
   CheckCircle2,
   Database,
-  Sparkles,
+  Activity,
   Search,
   Clock,
   ArrowRight,
   XCircle,
-  Star,
 } from "lucide-react";
 import { useT } from "@/hooks/use-language";
 import { useAuth } from "@/hooks/use-auth";
@@ -26,11 +25,11 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_app/intelligence")({
   head: () => ({
     meta: [
-      { title: "এআই ইন্টেলিজেন্স কোর / AI Intelligence Core — EasyBusiness AI" },
+      { title: "এআই ইন্টেলিজেন্স কোর / AI Intelligence Core: EasyBusiness AI" },
       {
         name: "description",
         content:
-          "How EasyBusiness AI turns your data into intelligence — RAG, embeddings, model routing, and explainable output.",
+          "How EasyBusiness AI turns your data into intelligence: RAG, embeddings, model routing, and explainable output.",
       },
     ],
   }),
@@ -60,7 +59,7 @@ const PIPELINE = [
     icon: Network,
     title: "মডেল সিলেকশন লজিক / Model Selection Logic",
     body:
-      "হালকা প্রশ্ন → Gemini 2.5 Flash (গতি)। জটিল রিজনিং → Gemini 2.5 Pro। এমবেডিং → text-embedding-3-small। সবকিছু Lovable AI Gateway দিয়ে রুট হয় — কোন ইউজার API কী লাগে না। / Light queries → Gemini 2.5 Flash (speed). Complex reasoning → Gemini 2.5 Pro. Embeddings → text-embedding-3-small. All routed through the Lovable AI Gateway — no user API keys required.",
+      "হালকা প্রশ্ন → Gemini 2.5 Flash (গতি)। জটিল রিজনিং → Gemini 2.5 Pro। এমবেডিং → text-embedding-3-small। সবকিছু Lovable AI Gateway দিয়ে রুট হয়, কোন ইউজার API কী লাগে না। / Light queries → Gemini 2.5 Flash (speed). Complex reasoning → Gemini 2.5 Pro. Embeddings → text-embedding-3-small. All routed through the Lovable AI Gateway, no user API keys required.",
   },
   {
     icon: MessageSquareText,
@@ -154,14 +153,14 @@ function IntelligencePage() {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" />
+                <Activity className="h-4 w-4 text-primary" />
                 <CardTitle className="text-base">{t("লাইভ সিস্টেম স্ট্যাটাস / Live system status")}</CardTitle>
               </div>
               <CardDescription>
                 {t("আপনার অ্যাকাউন্টে এআই অবকাঠামোর রিয়েল-টাইম স্বাস্থ্য / Real-time health of your AI infrastructure")}
               </CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <CardContent className="grid gap-3 md:grid-cols-3">
               <StatusRow
                 icon={Database}
                 label={t("Supabase সংযোগ / Supabase connection")}
@@ -169,7 +168,7 @@ function IntelligencePage() {
                 ok
               />
               <StatusRow
-                icon={Sparkles}
+                icon={Network}
                 label={t("এআই গেটওয়ে / AI Gateway")}
                 value={t("সংযুক্ত / Connected")}
                 ok
@@ -180,7 +179,7 @@ function IntelligencePage() {
                 value={
                   docCount === null
                     ? t("লোড হচ্ছে... / Loading...")
-                    : `${t("সক্রিয় / Active")} — ${docCount} ${t("ডকুমেন্ট / documents")}`
+                    : `${t("সক্রিয় / Active")}: ${docCount} ${t("ডকুমেন্ট / documents")}`
                 }
                 ok={docCount !== null}
               />

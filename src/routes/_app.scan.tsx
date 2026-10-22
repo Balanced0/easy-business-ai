@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ScanLine, Sparkles, CheckCircle2, AlertCircle, Loader2, ArrowLeft } from "lucide-react";
+import { ScanLine, CheckCircle2, AlertCircle, Loader2, ArrowLeft } from "lucide-react";
 import { useT } from "@/hooks/use-language";
 import { useCredits } from "@/hooks/use-credits";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +16,7 @@ import { ScanReviewTable } from "@/components/scan-review-table";
 import { CREDIT_COSTS } from "@/lib/credit-costs";
 
 export const Route = createFileRoute("/_app/scan")({
-  head: () => ({ meta: [{ title: "হাতের লেখা স্ক্যান / Scan handwriting — EasyBusiness AI" }] }),
+  head: () => ({ meta: [{ title: "হাতের লেখা স্ক্যান / Scan handwriting: EasyBusiness AI" }] }),
   component: ScanPage,
 });
 
@@ -140,7 +140,7 @@ function ScanPage() {
             </div>
             <CardDescription>
               {t(
-                "ক্যামেরায় আপনার বিক্রয়/স্টক/অর্ডার খাতা দেখান, এআই প্রতিটি সারি বের করে আপনার ডেটায় যোগ করবে। / Point your camera at a sales / inventory / order sheet — AI will extract every row and add it to your data.",
+                "ক্যামেরায় আপনার বিক্রয়/স্টক/অর্ডার খাতা দেখান, এআই প্রতিটি সারি বের করে আপনার ডেটায় যোগ করবে। / Point your camera at a sales / inventory / order sheet: AI will extract every row and add it to your data.",
               )}
             </CardDescription>
           </CardHeader>
@@ -183,7 +183,7 @@ function ScanPage() {
                   </span>
                 </div>
                 <Button onClick={extract} disabled={pages.length === 0 || extracting}>
-                  {extracting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                  {extracting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ScanLine className="mr-2 h-4 w-4" />}
                   {t("এআই দিয়ে এক্সট্র্যাক্ট করুন / Extract with AI")}
                 </Button>
               </div>
@@ -208,7 +208,7 @@ function ScanPage() {
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
                     {t(
-                      "কিছু সেল এআই পড়তে পারেনি — সেভ করার আগে দ্রুত একবার দেখে নিন। / AI couldn't read some cells — please review before saving.",
+                      "কিছু সেল এআই পড়তে পারেনি, সেভ করার আগে দ্রুত একবার দেখে নিন। / AI couldn't read some cells, please review before saving.",
                     )}
                   </AlertDescription>
                 </Alert>

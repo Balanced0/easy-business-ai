@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Check, X, BarChart3, Sparkles } from "lucide-react";
+import { Check, X, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,13 +22,13 @@ import { useAuth } from "@/hooks/use-auth";
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "মূল্য / Pricing — EasyBusiness AI" },
+      { title: "মূল্য / Pricing: EasyBusiness AI" },
       {
         name: "description",
         content:
           "EasyBusiness AI-এর সরল ও স্বচ্ছ মূল্য পরিকল্পনা। Simple, transparent pricing for SME ecommerce teams.",
       },
-      { property: "og:title", content: "Pricing — EasyBusiness AI" },
+      { property: "og:title", content: "Pricing: EasyBusiness AI" },
       {
         property: "og:description",
         content: "Plans for solo sellers to enterprise marketplaces.",
@@ -224,10 +224,6 @@ function PricingPage() {
       <main className="mx-auto max-w-6xl px-4 py-12">
         {/* Hero */}
         <div className="mx-auto max-w-2xl text-center">
-          <Badge variant="secondary" className="mb-4">
-            <Sparkles className="mr-1 h-3 w-3" />
-            {t("সরল মূল্য / Simple pricing")}
-          </Badge>
           <h1 className="text-3xl font-bold tracking-tight md:text-5xl">
             {t("আপনার ব্যবসার সাথে বাড়ুন / Plans that grow with you")}
           </h1>
@@ -355,7 +351,7 @@ function PricingPage() {
             {t("নিশ্চিত নন কোনটি বেছে নেবেন? / Not sure which plan fits?")}
           </h3>
           <p className="mt-2 text-sm text-muted-foreground">
-            {t("আমাদের টিমের সাথে কথা বলুন। / Talk to our team — we'll help you pick the right plan.")}
+            {t("আমাদের টিমের সাথে কথা বলুন। / Talk to our team, we'll help you pick the right plan.")}
           </p>
           <Button asChild className="mt-4" variant="outline">
             <a href="mailto:sales@easybusiness.ai">{t("যোগাযোগ করুন / Contact us")}</a>
@@ -371,7 +367,7 @@ function PricingPage() {
               {t("আপগ্রেড / Upgrade to")} {openPlan ? t(openPlan.name) : ""}
             </DialogTitle>
             <DialogDescription>
-              {t("ডেমো চেকআউট — কোন আসল পেমেন্ট নেওয়া হবে না। / Demo checkout — no real payment will be processed.")}
+              {t("ডেমো চেকআউট: কোন আসল পেমেন্ট নেওয়া হবে না। / Demo checkout: no real payment will be processed.")}
             </DialogDescription>
           </DialogHeader>
           <form
@@ -397,7 +393,7 @@ function PricingPage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="name">{t("কার্ডে নাম / Name on card")}</Label>
-              <Input id="name" placeholder="Jane Doe" required />
+              <Input id="name" placeholder={t("আপনার নাম / Your name")} required />
             </div>
             {openPlan && openPlan.monthly !== null && openPlan.monthly > 0 && (
               <div className="flex items-center justify-between rounded-md border bg-muted/40 px-3 py-2 text-sm">

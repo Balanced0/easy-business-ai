@@ -6,7 +6,7 @@ import { DashboardTopbar } from "@/components/dashboard-topbar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Sparkles, User, Database, Upload, Mic, Square, Volume2, VolumeX, Loader2 } from "lucide-react";
+import { Send, Bot, User, Database, Upload, Mic, Square, Volume2, VolumeX, Loader2 } from "lucide-react";
 import { useLanguage, useT } from "@/hooks/use-language";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -22,7 +22,7 @@ async function authHeaders(): Promise<Record<string, string>> {
 }
 
 export const Route = createFileRoute("/_app/assistant")({
-  head: () => ({ meta: [{ title: "এআই সহকারী / AI Assistant — EasyBusiness AI" }] }),
+  head: () => ({ meta: [{ title: "এআই সহকারী / AI Assistant: EasyBusiness AI" }] }),
   validateSearch: (s: Record<string, unknown>) => ({
     q: typeof s.q === "string" ? s.q : undefined,
     t: typeof s.t === "number" ? s.t : undefined,
@@ -251,7 +251,7 @@ function AssistantPage() {
 
 
   const welcomeBn = "হাই! আমি আপনার এআই কমার্স সহকারী। ট্রেন্ড, ইনভেন্টরি, মূল্য বা গ্রাহক সন্তুষ্টি সম্পর্কে জিজ্ঞাসা করুন।";
-  const welcomeEn = "Hi! I'm your AI commerce assistant. Ask me about trends, inventory, pricing, or customer sentiment — I'll pull from your store data.";
+  const welcomeEn = "Hi! I'm your AI commerce assistant. Ask me about trends, inventory, pricing, or customer sentiment: I'll pull from your store data.";
 
   return (
     <>
@@ -262,7 +262,7 @@ function AssistantPage() {
             <CardHeader className="border-b">
               <div className="flex items-center gap-2">
                 <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
-                  <Sparkles className="h-4 w-4" />
+                  <Bot className="h-4 w-4" />
                 </div>
                 <div>
                   <CardTitle className="text-base">{t("কমার্স সহকারী / Commerce Assistant")}</CardTitle>
@@ -277,7 +277,7 @@ function AssistantPage() {
                 {messages.length === 0 && (
                   <div className="flex gap-3">
                     <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                      <Sparkles className="h-3.5 w-3.5" />
+                      <Bot className="h-3.5 w-3.5" />
                     </div>
                     <div className="flex-1 pt-0.5">
                       <div className="text-xs font-medium">{t("সহকারী / Assistant")}</div>
@@ -301,7 +301,7 @@ function AssistantPage() {
                         }`}
                       >
                         {m.role === "assistant" ? (
-                          <Sparkles className="h-3.5 w-3.5" />
+                          <Bot className="h-3.5 w-3.5" />
                         ) : (
                           <User className="h-3.5 w-3.5" />
                         )}
@@ -320,7 +320,7 @@ function AssistantPage() {
                 {status === "submitted" && (
                   <div className="flex gap-3">
                     <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                      <Sparkles className="h-3.5 w-3.5" />
+                      <Bot className="h-3.5 w-3.5" />
                     </div>
                     <div className="flex-1 pt-1.5">
                       <div className="text-sm text-muted-foreground">{t("চিন্তা করছি… / Thinking…")}</div>
@@ -436,7 +436,7 @@ function AssistantPage() {
                   {docCount === null
                     ? t("লোড হচ্ছে... / Loading...")
                     : docCount === 0
-                    ? t("খালি — ডেটা আপলোড করুন / Empty — upload data")
+                    ? t("খালি: ডেটা আপলোড করুন / Empty: upload data")
                     : `${docCount} ${t("ডকুমেন্ট ইন্ডেক্স করা / documents indexed")}`}
                 </CardDescription>
               </CardHeader>

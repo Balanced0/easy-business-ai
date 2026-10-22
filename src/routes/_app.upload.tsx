@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/upload")({
-  head: () => ({ meta: [{ title: "ডেটা আপলোড / Upload Data — EasyBusiness AI" }] }),
+  head: () => ({ meta: [{ title: "ডেটা আপলোড / Upload Data: EasyBusiness AI" }] }),
   component: UploadPage,
 });
 
@@ -118,7 +118,7 @@ function UploadPage() {
                 </CardTitle>
                 <CardDescription>
                   {t(
-                    "ক্যামেরায় আপনার বিক্রয়/স্টক খাতা দেখান — এআই প্রতিটি সারি বের করবে। / Point your camera at a sales / inventory sheet — AI will extract every row.",
+                    "ক্যামেরায় আপনার বিক্রয়/স্টক খাতা দেখান; এআই প্রতিটি সারি বের করবে। / Point your camera at a sales or inventory sheet; AI will extract every row.",
                   )}
                 </CardDescription>
               </div>

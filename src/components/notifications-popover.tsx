@@ -1,4 +1,4 @@
-import { Bell, CheckCheck, Package, TrendingUp, Sparkles, AlertTriangle } from "lucide-react";
+import { Bell, CheckCheck, Package, TrendingUp, Bot, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useT } from "@/hooks/use-language";
@@ -80,7 +80,7 @@ function IconFor({ kind }: { kind: Notif["icon"] }) {
     case "trend":
       return <TrendingUp className={cn(base, "text-emerald-500")} />;
     case "ai":
-      return <Sparkles className={cn(base, "text-primary")} />;
+      return <Bot className={cn(base, "text-primary")} />;
     case "alert":
       return <AlertTriangle className={cn(base, "text-rose-500")} />;
   }

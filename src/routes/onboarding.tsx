@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/onboarding")({
-  head: () => ({ meta: [{ title: "ব্যবসা সেটআপ / Business setup — EasyBusiness AI" }] }),
+  head: () => ({ meta: [{ title: "ব্যবসা সেটআপ / Business setup: EasyBusiness AI" }] }),
   component: OnboardingPage,
 });
 

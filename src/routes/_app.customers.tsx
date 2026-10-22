@@ -11,7 +11,7 @@ import { useT } from "@/hooks/use-language";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app/customers")({
-  head: () => ({ meta: [{ title: "গ্রাহক / Customer Insights — EasyBusiness AI" }] }),
+  head: () => ({ meta: [{ title: "গ্রাহক / Customer Insights: EasyBusiness AI" }] }),
   component: CustomersPage,
 });
 
@@ -78,8 +78,14 @@ function CustomersPage() {
             <CardContent>
               <div className="h-64 w-full">
                 {breakdown.length === 0 ? (
-                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                    {t("কোনও ডেটা নেই / No data")}
+                  <div className="flex flex-col h-full items-center justify-center text-center p-4">
+                    <p className="text-sm font-medium">{t("কোনও সেন্টিমেন্ট ডেটা উপলব্ধ নেই / No sentiment data available")}</p>
+                    <p className="mt-1 text-xs text-muted-foreground max-w-xs">
+                      {t("গ্রাহক রিভিউ ফাইল আপলোড করলে এখানে পজিটিভ ও নেগেটিভ অনুপাত দেখা যাবে। / Upload customer reviews or order feedback to compute sentiment distribution.")}
+                    </p>
+                    <Button asChild size="sm" variant="outline" className="mt-3">
+                      <Link to="/upload">{t("রিভিউ আপলোড / Upload reviews")}</Link>
+                    </Button>
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
@@ -124,7 +130,9 @@ function CustomersPage() {
             </CardHeader>
             <CardContent>
               {positive.length === 0 ? (
-                <div className="rounded-md border p-3 text-sm text-muted-foreground">{t("কোনও ইতিবাচক রিভিউ নেই / No positive reviews")}</div>
+                <div className="rounded-md border border-dashed p-4 text-center text-xs text-muted-foreground">
+                  {t("রিভিউ আপলোড করার পর ইতিবাচক মন্তব্য এখানে সারসংক্ষেপ হবে। / Positive customer feedback will appear here once reviews are uploaded.")}
+                </div>
               ) : (
                 <ul className="space-y-2 text-sm">
                   {positive.map((p, i) => (
@@ -147,7 +155,9 @@ function CustomersPage() {
             </CardHeader>
             <CardContent>
               {complaints.length === 0 ? (
-                <div className="rounded-md border p-3 text-sm text-muted-foreground">{t("কোনও অভিযোগ নেই / No complaints")}</div>
+                <div className="rounded-md border border-dashed p-4 text-center text-xs text-muted-foreground">
+                  {t("রিভিউ আপলোড করার পর পুনরাবৃত্তিমূলক অভিযোগ এখানে হাইলাইট হবে। / Common customer complaints and issues will be highlighted here once reviews are uploaded.")}
+                </div>
               ) : (
                 <ul className="space-y-2 text-sm">
                   {complaints.map((p, i) => (

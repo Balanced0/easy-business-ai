@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { BarChart3 } from "lucide-react";
 
 export const Route = createFileRoute("/signup")({
-  head: () => ({ meta: [{ title: "সাইন আপ / Sign up — EasyBusiness AI" }] }),
+  head: () => ({ meta: [{ title: "সাইন আপ / Sign up: EasyBusiness AI" }] }),
   component: SignupPage,
 });
 

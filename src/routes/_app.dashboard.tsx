@@ -20,7 +20,7 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { Sparkles, TrendingUp, TrendingDown, AlertTriangle, Loader2, Search, X, Upload, DollarSign, ShieldCheck, PackageMinus, Clock, Info } from "lucide-react";
+import { Brain, TrendingUp, TrendingDown, AlertTriangle, Loader2, Search, X, Upload, DollarSign, ShieldCheck, PackageMinus, Clock, Info } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage, useT } from "@/hooks/use-language";
@@ -31,7 +31,7 @@ import { Link } from "@tanstack/react-router";
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — EasyBusiness AI" },
+      { title: "Dashboard: EasyBusiness AI" },
       { name: "description", content: "Overview of sales, inventory, and AI insights from your uploaded data." },
     ],
   }),
@@ -323,7 +323,7 @@ function DashboardPage() {
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <div className="flex h-7 w-7 items-center justify-center rounded-md bg-success/15 text-success">
-                    <Sparkles className="h-4 w-4" />
+                    <DollarSign className="h-4 w-4" />
                   </div>
                   <div>
                     <CardTitle className="text-base">
@@ -361,7 +361,7 @@ function DashboardPage() {
           {summaryCards.length === 0 ? (
             <Card className="sm:col-span-2 lg:col-span-4">
               <CardContent className="py-8 text-center text-sm text-muted-foreground">
-                {loadingAnalytics ? t("লোড হচ্ছে... / Loading...") : t("কোনও সারাংশ মেট্রিক নেই — ডেটা আপলোড করুন / No summary metrics — upload data")}
+                {loadingAnalytics ? t("লোড হচ্ছে... / Loading...") : t("কোনও সারাংশ মেট্রিক নেই: ডেটা আপলোড করুন / No summary metrics: upload data")}
               </CardContent>
             </Card>
           ) : (
@@ -403,13 +403,13 @@ function DashboardPage() {
               ? t("ব্যাপক ডেটা ও ধারাবাহিক সংকেতের ভিত্তিতে উচ্চ নির্ভরতা। / High confidence: based on broad data and consistent signals.")
               : conf === "medium"
               ? t("পর্যাপ্ত ডেটা, তবে আরও আপলোডে নির্ভরতা বাড়বে। / Medium confidence: enough data, more uploads will improve reliability.")
-              : t("সীমিত ডেটা — নির্ভরতা বাড়াতে আরও ডেটা আপলোড করুন। / Low confidence: limited data — upload more for stronger reliability.");
+              : t("সীমিত ডেটা: নির্ভরতা বাড়াতে আরও ডেটা আপলোড করুন। / Low confidence: limited data. Upload more for stronger reliability.");
           return (
             <Card className="border-primary/20 bg-primary/[0.03]">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
-                    <Sparkles className="h-4 w-4" />
+                    <Brain className="h-4 w-4" />
                   </div>
                   <CardTitle className="text-base">{t("এআই বিজনেস সারাংশ / AI business summary")}</CardTitle>
                   <div className="ml-auto flex items-center gap-2">
@@ -580,7 +580,7 @@ function DashboardPage() {
             <CardContent className="space-y-2">
               {inventoryAlerts.length === 0 ? (
                 <div className="rounded-md border p-3 text-sm text-muted-foreground">
-                  {t("কোনও সতর্কতা নেই — ইনভেন্টরি আপলোড করুন / No alerts — upload inventory")}
+                  {t("কোনও সতর্কতা নেই: ইনভেন্টরি আপলোড করুন / No alerts: upload inventory")}
                 </div>
               ) : (
                 inventoryAlerts.map((i) => (
