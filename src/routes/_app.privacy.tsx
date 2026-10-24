@@ -255,7 +255,7 @@ function PrivacyPage() {
                   icon: SlidersHorizontal,
                   title: t("পক্ষপাত সচেতনতা / Bias awareness"),
                   body: t(
-                    "প্রতিযোগী মূল্য তুলনায় আউটলায়ার বায়াস প্রতিরোধ করতে মিডিয়ান-ভিত্তিক নর্মালাইজেশন ব্যবহার করা হয়। / Competitor pricing comparisons use median-based normalization to prevent outlier bias in recommendations.",
+                    "মূল্য তুলনায় আউটলায়ার বায়াস প্রতিরোধ করতে মিডিয়ান-ভিত্তিক নর্মালাইজেশন ব্যবহার করা হয়। / Pricing comparisons use median-based normalization to prevent outlier bias in recommendations.",
                   ),
                 },
                 {

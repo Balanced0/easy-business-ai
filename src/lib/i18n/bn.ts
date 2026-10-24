@@ -12,7 +12,6 @@ const bn: TranslationMap = {
   "nav.dashboard": "ড্যাশবোর্ড",
   "nav.upload": "ডেটা আপলোড",
   "nav.inventory": "ইনভেন্টরি",
-  "nav.competitors": "প্রতিযোগী",
   "nav.customers": "গ্রাহক",
   "nav.assistant": "এআই সহকারী",
   "nav.privacy": "গোপনীয়তা ও ডেটা",

@@ -224,9 +224,6 @@ function formatReason(reason: string, t: (s: string) => string): string {
       chat: t("এআই সহকারী মেসেজ / AI Assistant message"),
       voice_tts: t("ভয়েস রিপ্লাই / Voice reply"),
       voice_stt: t("ভয়েস ট্রান্সক্রিপশন / Voice transcription"),
-      competitor_analyze: t("প্রতিযোগী বিশ্লেষণ / Competitor analysis"),
-      competitor_discover: t("প্রতিযোগী খোঁজ / Competitor discovery"),
-      competitor_scrape: t("প্রতিযোগী স্ক্র্যাপ / Competitor scrape"),
       embedding: t("ডেটা ইন্ডেক্সিং / Data indexing"),
       dashboard_summary: t("ড্যাশবোর্ড সারসংক্ষেপ / Dashboard summary"),
     };

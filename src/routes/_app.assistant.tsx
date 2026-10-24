@@ -34,7 +34,6 @@ const suggestions = [
   "কোন পণ্যগুলো ট্রেন্ডিং? / Which products are trending?",
   "কী রিস্টক করা উচিত? / What should I restock?",
   "বিক্রয় কেন কমছে? / Why are sales dropping?",
-  "প্রতিযোগীদের তুলনায় আমার দাম কেমন? / How do my prices compare to competitors?",
 ];
 
 function AssistantPage() {

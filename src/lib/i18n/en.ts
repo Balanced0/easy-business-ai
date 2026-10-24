@@ -12,7 +12,6 @@ const en: TranslationMap = {
   "nav.dashboard": "Dashboard",
   "nav.upload": "Upload Data",
   "nav.inventory": "Inventory",
-  "nav.competitors": "Competitors",
   "nav.customers": "Customers",
   "nav.assistant": "AI Assistant",
   "nav.privacy": "Privacy & Data",

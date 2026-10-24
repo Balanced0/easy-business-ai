@@ -35,7 +35,7 @@ const SEED: Notif[] = [
     id: "n3",
     icon: "ai",
     title: "নতুন AI ইনসাইট / New AI insight",
-    body: "প্রতিযোগী মূল্য বিশ্লেষণ প্রস্তুত। / Competitor pricing analysis is ready.",
+    body: "বিক্রয় প্রবণতা বিশ্লেষণ প্রস্তুত। / Sales trend analysis is ready.",
     time: "3h",
     read: false,
   },

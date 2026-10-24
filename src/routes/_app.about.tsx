@@ -8,7 +8,6 @@ import {
   Languages,
   Brain,
   Upload,
-  Radar,
   ShoppingBag,
   Store,
   Package,
@@ -64,11 +63,6 @@ const advantages = [
     icon: Upload,
     title: "নো-কোড ডেটা আপলোড / No-code data upload",
     desc: "CSV বা XLSX টানুন, কোন ইঞ্জিনিয়ার লাগবে না। / Drag a CSV or XLSX, no engineers or complex integrations required.",
-  },
-  {
-    icon: Radar,
-    title: "রিয়েল-টাইম প্রতিযোগী ইন্টেলিজেন্স / Real-time competitor intelligence",
-    desc: "মূল্য, রেটিং, রিভিউ ট্র্যাক করুন সিম্যান্টিক সাদৃশ্য সহ। / Track competitor price, rating, reviews with semantic similarity scoring.",
   },
 ];
 

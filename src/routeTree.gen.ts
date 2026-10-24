@@ -30,7 +30,7 @@ import { Route as AppIntelligenceRouteImport } from './routes/_app.intelligence'
 import { Route as AppIntegrationsRouteImport } from './routes/_app.integrations'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppCustomersRouteImport } from './routes/_app.customers'
-import { Route as AppCompetitorsRouteImport } from './routes/_app.competitors'
+
 import { Route as AppBillingRouteImport } from './routes/_app.billing'
 import { Route as AppAssistantRouteImport } from './routes/_app.assistant'
 import { Route as AppAboutRouteImport } from './routes/_app.about'
@@ -38,11 +38,7 @@ import { Route as ApiVoiceTtsRouteImport } from './routes/api/voice/tts'
 import { Route as ApiVoiceSttRouteImport } from './routes/api/voice/stt'
 import { Route as ApiScanExtractRouteImport } from './routes/api/scan/extract'
 import { Route as ApiScanCommitRouteImport } from './routes/api/scan/commit'
-import { Route as ApiCompetitorsValidateSeedsRouteImport } from './routes/api/competitors/validate-seeds'
-import { Route as ApiCompetitorsScrapeRouteImport } from './routes/api/competitors/scrape'
-import { Route as ApiCompetitorsListRouteImport } from './routes/api/competitors/list'
-import { Route as ApiCompetitorsDiscoverRouteImport } from './routes/api/competitors/discover'
-import { Route as ApiCompetitorsAnalyzeRouteImport } from './routes/api/competitors/analyze'
+
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -148,11 +144,7 @@ const AppCustomersRoute = AppCustomersRouteImport.update({
   path: '/customers',
   getParentRoute: () => AppRoute,
 } as any)
-const AppCompetitorsRoute = AppCompetitorsRouteImport.update({
-  id: '/competitors',
-  path: '/competitors',
-  getParentRoute: () => AppRoute,
-} as any)
+
 const AppBillingRoute = AppBillingRouteImport.update({
   id: '/billing',
   path: '/billing',
@@ -188,32 +180,7 @@ const ApiScanCommitRoute = ApiScanCommitRouteImport.update({
   path: '/api/scan/commit',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiCompetitorsValidateSeedsRoute =
-  ApiCompetitorsValidateSeedsRouteImport.update({
-    id: '/api/competitors/validate-seeds',
-    path: '/api/competitors/validate-seeds',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiCompetitorsScrapeRoute = ApiCompetitorsScrapeRouteImport.update({
-  id: '/api/competitors/scrape',
-  path: '/api/competitors/scrape',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiCompetitorsListRoute = ApiCompetitorsListRouteImport.update({
-  id: '/api/competitors/list',
-  path: '/api/competitors/list',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiCompetitorsDiscoverRoute = ApiCompetitorsDiscoverRouteImport.update({
-  id: '/api/competitors/discover',
-  path: '/api/competitors/discover',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiCompetitorsAnalyzeRoute = ApiCompetitorsAnalyzeRouteImport.update({
-  id: '/api/competitors/analyze',
-  path: '/api/competitors/analyze',
-  getParentRoute: () => rootRouteImport,
-} as any)
+
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -224,7 +191,6 @@ export interface FileRoutesByFullPath {
   '/about': typeof AppAboutRoute
   '/assistant': typeof AppAssistantRoute
   '/billing': typeof AppBillingRoute
-  '/competitors': typeof AppCompetitorsRoute
   '/customers': typeof AppCustomersRoute
   '/dashboard': typeof AppDashboardRoute
   '/integrations': typeof AppIntegrationsRoute
@@ -240,11 +206,6 @@ export interface FileRoutesByFullPath {
   '/api/scrape': typeof ApiScrapeRoute
   '/api/search': typeof ApiSearchRoute
   '/api/upload': typeof ApiUploadRoute
-  '/api/competitors/analyze': typeof ApiCompetitorsAnalyzeRoute
-  '/api/competitors/discover': typeof ApiCompetitorsDiscoverRoute
-  '/api/competitors/list': typeof ApiCompetitorsListRoute
-  '/api/competitors/scrape': typeof ApiCompetitorsScrapeRoute
-  '/api/competitors/validate-seeds': typeof ApiCompetitorsValidateSeedsRoute
   '/api/scan/commit': typeof ApiScanCommitRoute
   '/api/scan/extract': typeof ApiScanExtractRoute
   '/api/voice/stt': typeof ApiVoiceSttRoute
@@ -259,7 +220,6 @@ export interface FileRoutesByTo {
   '/about': typeof AppAboutRoute
   '/assistant': typeof AppAssistantRoute
   '/billing': typeof AppBillingRoute
-  '/competitors': typeof AppCompetitorsRoute
   '/customers': typeof AppCustomersRoute
   '/dashboard': typeof AppDashboardRoute
   '/integrations': typeof AppIntegrationsRoute
@@ -275,11 +235,6 @@ export interface FileRoutesByTo {
   '/api/scrape': typeof ApiScrapeRoute
   '/api/search': typeof ApiSearchRoute
   '/api/upload': typeof ApiUploadRoute
-  '/api/competitors/analyze': typeof ApiCompetitorsAnalyzeRoute
-  '/api/competitors/discover': typeof ApiCompetitorsDiscoverRoute
-  '/api/competitors/list': typeof ApiCompetitorsListRoute
-  '/api/competitors/scrape': typeof ApiCompetitorsScrapeRoute
-  '/api/competitors/validate-seeds': typeof ApiCompetitorsValidateSeedsRoute
   '/api/scan/commit': typeof ApiScanCommitRoute
   '/api/scan/extract': typeof ApiScanExtractRoute
   '/api/voice/stt': typeof ApiVoiceSttRoute
@@ -296,7 +251,6 @@ export interface FileRoutesById {
   '/_app/about': typeof AppAboutRoute
   '/_app/assistant': typeof AppAssistantRoute
   '/_app/billing': typeof AppBillingRoute
-  '/_app/competitors': typeof AppCompetitorsRoute
   '/_app/customers': typeof AppCustomersRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/integrations': typeof AppIntegrationsRoute
@@ -312,11 +266,6 @@ export interface FileRoutesById {
   '/api/scrape': typeof ApiScrapeRoute
   '/api/search': typeof ApiSearchRoute
   '/api/upload': typeof ApiUploadRoute
-  '/api/competitors/analyze': typeof ApiCompetitorsAnalyzeRoute
-  '/api/competitors/discover': typeof ApiCompetitorsDiscoverRoute
-  '/api/competitors/list': typeof ApiCompetitorsListRoute
-  '/api/competitors/scrape': typeof ApiCompetitorsScrapeRoute
-  '/api/competitors/validate-seeds': typeof ApiCompetitorsValidateSeedsRoute
   '/api/scan/commit': typeof ApiScanCommitRoute
   '/api/scan/extract': typeof ApiScanExtractRoute
   '/api/voice/stt': typeof ApiVoiceSttRoute
@@ -333,7 +282,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/assistant'
     | '/billing'
-    | '/competitors'
     | '/customers'
     | '/dashboard'
     | '/integrations'
@@ -349,11 +297,6 @@ export interface FileRouteTypes {
     | '/api/scrape'
     | '/api/search'
     | '/api/upload'
-    | '/api/competitors/analyze'
-    | '/api/competitors/discover'
-    | '/api/competitors/list'
-    | '/api/competitors/scrape'
-    | '/api/competitors/validate-seeds'
     | '/api/scan/commit'
     | '/api/scan/extract'
     | '/api/voice/stt'
@@ -368,7 +311,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/assistant'
     | '/billing'
-    | '/competitors'
     | '/customers'
     | '/dashboard'
     | '/integrations'
@@ -384,11 +326,6 @@ export interface FileRouteTypes {
     | '/api/scrape'
     | '/api/search'
     | '/api/upload'
-    | '/api/competitors/analyze'
-    | '/api/competitors/discover'
-    | '/api/competitors/list'
-    | '/api/competitors/scrape'
-    | '/api/competitors/validate-seeds'
     | '/api/scan/commit'
     | '/api/scan/extract'
     | '/api/voice/stt'
@@ -404,7 +341,6 @@ export interface FileRouteTypes {
     | '/_app/about'
     | '/_app/assistant'
     | '/_app/billing'
-    | '/_app/competitors'
     | '/_app/customers'
     | '/_app/dashboard'
     | '/_app/integrations'
@@ -420,11 +356,6 @@ export interface FileRouteTypes {
     | '/api/scrape'
     | '/api/search'
     | '/api/upload'
-    | '/api/competitors/analyze'
-    | '/api/competitors/discover'
-    | '/api/competitors/list'
-    | '/api/competitors/scrape'
-    | '/api/competitors/validate-seeds'
     | '/api/scan/commit'
     | '/api/scan/extract'
     | '/api/voice/stt'
@@ -444,11 +375,6 @@ export interface RootRouteChildren {
   ApiScrapeRoute: typeof ApiScrapeRoute
   ApiSearchRoute: typeof ApiSearchRoute
   ApiUploadRoute: typeof ApiUploadRoute
-  ApiCompetitorsAnalyzeRoute: typeof ApiCompetitorsAnalyzeRoute
-  ApiCompetitorsDiscoverRoute: typeof ApiCompetitorsDiscoverRoute
-  ApiCompetitorsListRoute: typeof ApiCompetitorsListRoute
-  ApiCompetitorsScrapeRoute: typeof ApiCompetitorsScrapeRoute
-  ApiCompetitorsValidateSeedsRoute: typeof ApiCompetitorsValidateSeedsRoute
   ApiScanCommitRoute: typeof ApiScanCommitRoute
   ApiScanExtractRoute: typeof ApiScanExtractRoute
   ApiVoiceSttRoute: typeof ApiVoiceSttRoute
@@ -604,13 +530,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCustomersRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/competitors': {
-      id: '/_app/competitors'
-      path: '/competitors'
-      fullPath: '/competitors'
-      preLoaderRoute: typeof AppCompetitorsRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/billing': {
       id: '/_app/billing'
       path: '/billing'
@@ -660,41 +579,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiScanCommitRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/competitors/validate-seeds': {
-      id: '/api/competitors/validate-seeds'
-      path: '/api/competitors/validate-seeds'
-      fullPath: '/api/competitors/validate-seeds'
-      preLoaderRoute: typeof ApiCompetitorsValidateSeedsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/competitors/scrape': {
-      id: '/api/competitors/scrape'
-      path: '/api/competitors/scrape'
-      fullPath: '/api/competitors/scrape'
-      preLoaderRoute: typeof ApiCompetitorsScrapeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/competitors/list': {
-      id: '/api/competitors/list'
-      path: '/api/competitors/list'
-      fullPath: '/api/competitors/list'
-      preLoaderRoute: typeof ApiCompetitorsListRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/competitors/discover': {
-      id: '/api/competitors/discover'
-      path: '/api/competitors/discover'
-      fullPath: '/api/competitors/discover'
-      preLoaderRoute: typeof ApiCompetitorsDiscoverRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/competitors/analyze': {
-      id: '/api/competitors/analyze'
-      path: '/api/competitors/analyze'
-      fullPath: '/api/competitors/analyze'
-      preLoaderRoute: typeof ApiCompetitorsAnalyzeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -702,7 +586,6 @@ interface AppRouteChildren {
   AppAboutRoute: typeof AppAboutRoute
   AppAssistantRoute: typeof AppAssistantRoute
   AppBillingRoute: typeof AppBillingRoute
-  AppCompetitorsRoute: typeof AppCompetitorsRoute
   AppCustomersRoute: typeof AppCustomersRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppIntegrationsRoute: typeof AppIntegrationsRoute
@@ -718,7 +601,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppAboutRoute: AppAboutRoute,
   AppAssistantRoute: AppAssistantRoute,
   AppBillingRoute: AppBillingRoute,
-  AppCompetitorsRoute: AppCompetitorsRoute,
   AppCustomersRoute: AppCustomersRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppIntegrationsRoute: AppIntegrationsRoute,
@@ -745,11 +627,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiScrapeRoute: ApiScrapeRoute,
   ApiSearchRoute: ApiSearchRoute,
   ApiUploadRoute: ApiUploadRoute,
-  ApiCompetitorsAnalyzeRoute: ApiCompetitorsAnalyzeRoute,
-  ApiCompetitorsDiscoverRoute: ApiCompetitorsDiscoverRoute,
-  ApiCompetitorsListRoute: ApiCompetitorsListRoute,
-  ApiCompetitorsScrapeRoute: ApiCompetitorsScrapeRoute,
-  ApiCompetitorsValidateSeedsRoute: ApiCompetitorsValidateSeedsRoute,
   ApiScanCommitRoute: ApiScanCommitRoute,
   ApiScanExtractRoute: ApiScanExtractRoute,
   ApiVoiceSttRoute: ApiVoiceSttRoute,

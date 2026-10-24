@@ -36,7 +36,6 @@ export type TranslationKey =
   | "nav.dashboard"
   | "nav.upload"
   | "nav.inventory"
-  | "nav.competitors"
   | "nav.customers"
   | "nav.assistant"
   | "nav.privacy"

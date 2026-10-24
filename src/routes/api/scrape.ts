@@ -1,7 +1,7 @@
 // POST /api/scrape
 // Body: { url: string, sourceType?: string, title?: string }
 // Scrapes a URL with Firecrawl, embeds the markdown content, and stores it
-// in the vector store. Useful for adding competitor or market trend data
+// in the vector store. Useful for adding product or market trend data
 // from real ecommerce pages.
 
 import { createFileRoute } from "@tanstack/react-router";

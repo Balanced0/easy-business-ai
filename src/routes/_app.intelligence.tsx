@@ -9,7 +9,6 @@ import {
   Brain,
   Network,
   MessageSquareText,
-  Globe,
   CheckCircle2,
   Database,
   Activity,
@@ -66,12 +65,6 @@ const PIPELINE = [
     title: "ব্যাখ্যাযোগ্য আউটপুট / Explainable Output",
     body:
       "প্রতিটি ইনসাইটের সাথে থাকে: যে সোর্স ডেটা থেকে এটি এসেছে, একটি কনফিডেন্স স্কোর (High/Medium/Low) এবং বাংলা বা ইংরেজিতে সহজ ব্যাখ্যা। / Every insight includes: the source data it was derived from, a confidence score (High/Medium/Low), and plain-English reasoning in Bangla or English.",
-  },
-  {
-    icon: Globe,
-    title: "প্রতিযোগী ইন্টেলিজেন্স / Competitor Intelligence",
-    body:
-      "Firecrawl /v2/search লাইভ ওয়েব ডেটা স্ক্র্যাপ করে → Gemini স্ট্রাকচার্ড পণ্য ডেটা এক্সট্র্যাক্ট করে → কোসাইন সিমিলারিটি নয়েজ ফিল্টার করে → FX নর্মালাইজেশন → র‍্যাঙ্কড প্রতিযোগী তুলনা। / Firecrawl /v2/search scrapes live web data → Gemini extracts structured product data → cosine similarity filters noise → FX normalization → ranked competitive comparison.",
   },
 ];
 
@@ -214,7 +207,6 @@ function IntelligencePage() {
                 { ok: false, text: t("কোন রিকমেন্ডেশন নেই / No recommendations") },
                 { ok: false, text: t("শুধু ইংরেজি / English only") },
                 { ok: false, text: t("ডেটা অ্যানালিস্ট প্রয়োজন / Requires data analyst") },
-                { ok: false, text: t("কোন প্রতিযোগী ডেটা নেই / No competitor data") },
               ]}
             />
             <ComparisonCard
@@ -225,7 +217,6 @@ function IntelligencePage() {
                 { ok: true, text: t("অ্যাকশনেবল রিকমেন্ডেশন / Actionable recommendations") },
                 { ok: true, text: t("বাংলা + ইংরেজি / Bangla + English") },
                 { ok: true, text: t("নন-টেকনিকাল মালিকদের জন্য / Works for non-technical owners") },
-                { ok: true, text: t("লাইভ প্রতিযোগী ইন্টেলিজেন্স / Live competitor intelligence") },
                 { ok: true, text: t("ব্যাখ্যাযোগ্য রিজনিং / Explainable reasoning") },
                 { ok: true, text: t("ডেটা কখনও ট্রেনিংয়ে নয় / Data never used for training") },
               ]}

@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import {
   Brain,
   TrendingUp,
-  Search,
   PackageSearch,
   MessageSquare,
   BarChart3,
@@ -76,13 +75,6 @@ const features = [
     title: "Demand Forecasting",
     descBn: "সঠিক সময়ে সঠিক পরিমাণ অর্ডার করার জন্য SKU অনুযায়ী বিক্রয় পূর্বাভাস।",
     desc: "Predict sales by SKU so you order the right quantity at the right time.",
-  },
-  {
-    icon: Search,
-    titleBn: "প্রতিযোগী ট্র্যাকিং",
-    title: "Competitor Tracking",
-    descBn: "স্প্রেডশিট ছাড়াই প্রতিযোগীর দাম ও রেটিং মনিটর করুন।",
-    desc: "Monitor competitor pricing and ratings without manual spreadsheets.",
   },
   {
     icon: PackageSearch,
@@ -164,8 +156,8 @@ function LandingPage() {
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-base text-white/65 md:text-lg">
               {lang === "bn"
-                ? "মার্কেট ট্রেন্ড, গ্রাহক আচরণ, ইনভেন্টরি ঝুঁকি এবং প্রতিযোগীর পদক্ষেপ, সব এক জায়গায় পরিষ্কার সুপারিশ সহ।"
-                : "Market trends, customer behavior, inventory risk, and competitor moves, unified into clear actionable recommendations."}
+                ? "মার্কেট ট্রেন্ড, গ্রাহক আচরণ ও ইনভেন্টরি ঝুঁকি, সব এক জায়গায় পরিষ্কার সুপারিশ সহ।"
+                : "Market trends, customer behavior, and inventory risk, unified into clear actionable recommendations."}
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Button
