@@ -6,16 +6,17 @@
 - **Personality:** Practical, trustworthy, bilingual (Bangla & English), focused on commerce clarity rather than AI hype.
 
 ## Visual Direction & Mood
-- **Mood:** Clean, focused, reliable, and functional. An analyst tool built for real store operations, not a decorative AI showcase.
+- **Direction:** Bazaar Signal.
+- **Mood:** Grounded, market-aware, and alert. It should feel like a reliable commerce workspace for the decisions a seller makes every day.
 - **Palette:**
-  - Base Light: Clean crisp background with high-contrast text (`oklch(0.985 0.005 275)`, foreground `oklch(0.18 0.04 275)`).
-  - Base Dark: Deep obsidian navy (`oklch(0.13 0.03 275)`, card `oklch(0.18 0.05 275)`).
-  - Primary: Deep Indigo (`oklch(0.52 0.22 275)`) used deliberately for key interactive actions.
-  - Accent / Semantic: Emerald for revenue/positive metrics, Amber for inventory warnings, Rose for stockouts.
+  - Light ground: Soft mineral (`#F2F4EF`) with forest ink (`#14281F`).
+  - Dark ground: Deep market green (`#10251D`) with pale mineral text (`#F3F5F0`).
+  - Primary: Commerce green (`#176B56` in light mode, `#62C49A` in dark mode) for the main affirmative action and selected states.
+  - Semantic: Turmeric (`#9A5410` in light mode) for inventory attention, rose (`#A33042` in light mode) for destructive or stockout states. Green success is never the only status signal.
 - **Typography:**
-  - Headings / Display: `Space Grotesk`, tight letter spacing, clear weights.
-  - Body / Interface: `DM Sans` paired with `Hind Siliguri` for natural Bangla reading.
-  - Monospace: Reserved strictly for SKUs, order IDs, and code tokens.
+  - Headings / Display: `Noto Serif Bengali`, with `Noto Sans Bengali` as the immediate fallback. Use normal letter spacing and generous line height so Bangla vowel signs and conjuncts are not clipped.
+  - Body / Interface: `Noto Sans Bengali`, with `Hind Siliguri` and system fonts as fallbacks. This is the default for mixed Bangla and English UI text.
+  - Technical values: `Noto Sans Mono` may be used for Latin-only IDs. Bangla values fall back to `Noto Sans Bengali`.
 
 ## Dials
 - **ENERGY: 2** (Balanced: clear focal points, calm ground plane, no ungrounded glowing orbs)

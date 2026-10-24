@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Noto+Serif+Bengali:wght@500;600;700&display=swap");
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
@@ -45,87 +46,88 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --font-sans: "DM Sans", "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Noto Sans Bengali", "Hind Siliguri", "Noto Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Noto Serif Bengali", "Noto Sans Bengali", "Hind Siliguri", Georgia, serif;
+  --font-display: "Noto Serif Bengali", "Noto Sans Bengali", "Hind Siliguri", Georgia, serif;
 }
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(0.985 0.005 275);
-  --foreground: oklch(0.18 0.04 275);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.04 275);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.04 275);
-  --primary: oklch(0.52 0.22 275);
-  --primary-foreground: oklch(0.99 0.005 275);
-  --secondary: oklch(0.95 0.02 275);
-  --secondary-foreground: oklch(0.25 0.06 275);
-  --muted: oklch(0.96 0.012 275);
-  --muted-foreground: oklch(0.48 0.04 275);
-  --accent: oklch(0.93 0.04 275);
-  --accent-foreground: oklch(0.25 0.08 275);
-  --destructive: oklch(0.58 0.22 27);
-  --destructive-foreground: oklch(0.99 0 0);
-  --success: oklch(0.62 0.15 155);
-  --success-foreground: oklch(0.99 0 0);
-  --warning: oklch(0.75 0.15 70);
-  --warning-foreground: oklch(0.2 0.02 70);
-  --border: oklch(0.9 0.015 275);
-  --input: oklch(0.9 0.015 275);
-  --ring: oklch(0.52 0.22 275);
-  --chart-1: oklch(0.52 0.22 275);
-  --chart-2: oklch(0.78 0.12 275);
-  --chart-3: oklch(0.65 0.18 295);
-  --chart-4: oklch(0.62 0.15 220);
-  --chart-5: oklch(0.7 0.14 255);
-  --sidebar: oklch(0.985 0.005 275);
-  --sidebar-foreground: oklch(0.25 0.05 275);
-  --sidebar-primary: oklch(0.52 0.22 275);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.93 0.04 275);
-  --sidebar-accent-foreground: oklch(0.25 0.08 275);
-  --sidebar-border: oklch(0.9 0.015 275);
-  --sidebar-ring: oklch(0.52 0.22 275);
+  --background: #f2f4ef;
+  --foreground: #14281f;
+  --card: #fafbf7;
+  --card-foreground: #14281f;
+  --popover: #fafbf7;
+  --popover-foreground: #14281f;
+  --primary: #176b56;
+  --primary-foreground: #ffffff;
+  --secondary: #e2e9e1;
+  --secondary-foreground: #1d4134;
+  --muted: #e8ece6;
+  --muted-foreground: #4c6055;
+  --accent: #e7f1e9;
+  --accent-foreground: #1d5948;
+  --destructive: #a33042;
+  --destructive-foreground: #ffffff;
+  --success: #1d6f4f;
+  --success-foreground: #ffffff;
+  --warning: #9a5410;
+  --warning-foreground: #ffffff;
+  --border: #c9d4c9;
+  --input: #667f70;
+  --ring: #176b56;
+  --chart-1: #176b56;
+  --chart-2: #b87217;
+  --chart-3: #3d7d66;
+  --chart-4: #a33042;
+  --chart-5: #667f70;
+  --sidebar: #edf1eb;
+  --sidebar-foreground: #1d4134;
+  --sidebar-primary: #176b56;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e1ebe2;
+  --sidebar-accent-foreground: #1d5948;
+  --sidebar-border: #c9d4c9;
+  --sidebar-ring: #176b56;
 }
 
 .dark {
-  --background: oklch(0.13 0.03 275);
-  --foreground: oklch(0.97 0.01 275);
-  --card: oklch(0.18 0.05 275);
-  --card-foreground: oklch(0.97 0.01 275);
-  --popover: oklch(0.18 0.05 275);
-  --popover-foreground: oklch(0.97 0.01 275);
-  --primary: oklch(0.62 0.22 275);
-  --primary-foreground: oklch(0.99 0.005 275);
-  --secondary: oklch(0.24 0.06 275);
-  --secondary-foreground: oklch(0.97 0.01 275);
-  --muted: oklch(0.24 0.06 275);
-  --muted-foreground: oklch(0.72 0.04 275);
-  --accent: oklch(0.3 0.09 275);
-  --accent-foreground: oklch(0.97 0.01 275);
-  --destructive: oklch(0.65 0.2 27);
-  --destructive-foreground: oklch(0.99 0 0);
-  --success: oklch(0.7 0.15 155);
-  --success-foreground: oklch(0.15 0.02 155);
-  --warning: oklch(0.8 0.15 70);
-  --warning-foreground: oklch(0.2 0.02 70);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.62 0.22 275);
-  --chart-1: oklch(0.62 0.22 275);
-  --chart-2: oklch(0.78 0.12 275);
-  --chart-3: oklch(0.68 0.18 295);
-  --chart-4: oklch(0.65 0.15 220);
-  --chart-5: oklch(0.72 0.14 255);
-  --sidebar: oklch(0.15 0.04 275);
-  --sidebar-foreground: oklch(0.9 0.02 275);
-  --sidebar-primary: oklch(0.62 0.22 275);
-  --sidebar-primary-foreground: oklch(0.99 0.005 275);
-  --sidebar-accent: oklch(0.24 0.06 275);
-  --sidebar-accent-foreground: oklch(0.97 0.01 275);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.62 0.22 275);
+  --background: #10251d;
+  --foreground: #f3f5f0;
+  --card: #18342a;
+  --card-foreground: #f3f5f0;
+  --popover: #18342a;
+  --popover-foreground: #f3f5f0;
+  --primary: #62c49a;
+  --primary-foreground: #082b20;
+  --secondary: #1f4034;
+  --secondary-foreground: #eaf3ed;
+  --muted: #1f4034;
+  --muted-foreground: #bfd0c3;
+  --accent: #234b3d;
+  --accent-foreground: #f3f5f0;
+  --destructive: #f28a9a;
+  --destructive-foreground: #38101a;
+  --success: #62c49a;
+  --success-foreground: #082b20;
+  --warning: #e7b25e;
+  --warning-foreground: #382000;
+  --border: #5b7a6a;
+  --input: #5b7a6a;
+  --ring: #8dd9b7;
+  --chart-1: #62c49a;
+  --chart-2: #e7b25e;
+  --chart-3: #8dd9b7;
+  --chart-4: #f28a9a;
+  --chart-5: #bfd0c3;
+  --sidebar: #132c23;
+  --sidebar-foreground: #dce9df;
+  --sidebar-primary: #62c49a;
+  --sidebar-primary-foreground: #082b20;
+  --sidebar-accent: #234b3d;
+  --sidebar-accent-foreground: #f3f5f0;
+  --sidebar-border: #5b7a6a;
+  --sidebar-ring: #8dd9b7;
 }
 
 @layer base {
@@ -136,9 +138,24 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    font-synthesis: none;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3, h4 {
-    letter-spacing: -0.02em;
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    letter-spacing: normal;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+  :lang(bn) {
+    letter-spacing: normal;
+    line-height: 1.65;
+  }
+  :where(h1, h2, h3, h4, h5, h6):lang(bn) {
+    line-height: 1.45;
+  }
+  button, input, textarea, select {
+    font: inherit;
   }
 }
