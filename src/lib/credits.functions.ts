@@ -116,23 +116,22 @@ export const getByokStatus = createServerFn({ method: "GET" })
   });
 
 export const saveByokKey = createServerFn({ method: "POST" })
-  .validator((input: { key: string }) => {
-    const key = (input?.key ?? "").trim();
-    if (!key || key.length < 10) throw new Error("Key looks too short");
-    if (key.length > 500) throw new Error("Key looks too long");
-    return { key };
-  })
   .middleware([requireSupabaseAuth])
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const input = data as unknown as { key?: unknown };
+    const key = typeof input.key === "string" ? input.key.trim() : "";
+    if (!key || key.length < 10) throw new Error("Key looks too short");
+    if (key.length > 500) throw new Error("Key looks too long");
+
     // Validate the key against Google first so we don't store garbage.
     const { testGeminiKey } = await import("@/lib/ai-gateway.server");
-    const result = await testGeminiKey(data.key);
+    const result = await testGeminiKey(key);
     if (!result.ok) throw new Error(result.error ?? "Could not verify the key with Google");
 
     const { supabase, userId } = context;
     const { error } = await supabase
       .from("profiles")
-      .upsert({ user_id: userId, byok_gemini_key: data.key }, { onConflict: "user_id" });
+      .upsert({ user_id: userId, byok_gemini_key: key }, { onConflict: "user_id" });
     if (error) {
       console.error("[saveByokKey] db error", error);
       throw new Error("Could not save your key. Please try again.");

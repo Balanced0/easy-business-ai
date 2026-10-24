@@ -230,7 +230,7 @@ function ByokKeyCard() {
   const handleSave = async () => {
     setBusy(true);
     try {
-      await saveFn({ data: { key: keyInput.trim() } });
+      await saveFn({ data: { key: keyInput.trim() } } as never);
       toast.success(t("API key সংরক্ষণ হয়েছে / API key saved"));
       setKeyInput("");
       setEditing(false);
