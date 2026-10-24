@@ -116,13 +116,13 @@ export const getByokStatus = createServerFn({ method: "GET" })
   });
 
 export const saveByokKey = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .validator((input: { key: string }) => {
     const key = (input?.key ?? "").trim();
     if (!key || key.length < 10) throw new Error("Key looks too short");
     if (key.length > 500) throw new Error("Key looks too long");
     return { key };
   })
+  .middleware([requireSupabaseAuth])
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     // Validate the key against Google first so we don't store garbage.
     const { testGeminiKey } = await import("@/lib/ai-gateway.server");
