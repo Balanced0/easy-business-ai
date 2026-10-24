@@ -4,12 +4,23 @@ import { useServerFn } from "@tanstack/react-start";
 import { DashboardTopbar } from "@/components/dashboard-topbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Zap, Calendar, ShoppingCart, ArrowDownRight, ArrowUpRight, Check } from "lucide-react";
 import { useT } from "@/hooks/use-language";
 import { useCredits } from "@/hooks/use-credits";
-import { getCreditPacks, getMyTransactions, type CreditPack, type MyTransaction } from "@/lib/credits.functions";
+import {
+  getCreditPacks,
+  getMyTransactions,
+  type CreditPack,
+  type MyTransaction,
+} from "@/lib/credits.functions";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
 
@@ -37,7 +48,11 @@ function BillingPage() {
   });
 
   const resetDate = credits?.quotaResetAt
-    ? new Date(credits.quotaResetAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+    ? new Date(credits.quotaResetAt).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
     : "-";
 
   const handleBuy = (pack: CreditPack) => {
@@ -97,27 +112,28 @@ function BillingPage() {
               <CardTitle className="text-xl">{resetDate}</CardTitle>
             </CardHeader>
             <CardContent className="text-xs text-muted-foreground">
-              {t("আজীবন কেনা: / Lifetime purchased:")} {(credits?.lifetimePurchased ?? 0).toLocaleString()}
+              {t("আজীবন কেনা: / Lifetime purchased:")}{" "}
+              {(credits?.lifetimePurchased ?? 0).toLocaleString()}
             </CardContent>
           </Card>
         </div>
 
         {/* Credit packs */}
         <section>
-          <h2 className="mb-3 text-lg font-semibold">{t("ক্রেডিট প্যাক কিনুন / Buy credit packs")}</h2>
+          <h2 className="mb-3 text-lg font-semibold">
+            {t("ক্রেডিট প্যাক কিনুন / Buy credit packs")}
+          </h2>
           <div className="grid gap-4 md:grid-cols-3">
-            {packs.map((pack, idx) => {
-              const popular = idx === 1;
+            {packs.map((pack) => {
               const pricePerCredit = pack.price_cents / pack.credits;
               return (
-                <Card key={pack.id} className={popular ? "border-primary shadow-md" : ""}>
+                <Card key={pack.id}>
                   <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <CardTitle>{pack.name}</CardTitle>
-                      {popular && <Badge>{t("জনপ্রিয় / Popular")}</Badge>}
-                    </div>
+                    <CardTitle>{pack.name}</CardTitle>
                     <div className="mt-2">
-                      <span className="text-3xl font-bold">${(pack.price_cents / 100).toFixed(2)}</span>
+                      <span className="text-3xl font-bold">
+                        ${(pack.price_cents / 100).toFixed(2)}
+                      </span>
                       <span className="text-sm text-muted-foreground">
                         {" "}
                         / {pack.credits.toLocaleString()} {t("ক্রেডিট / credits")}
@@ -146,7 +162,9 @@ function BillingPage() {
               );
             })}
             {packs.length === 0 && (
-              <p className="text-sm text-muted-foreground">{t("ক্রেডিট প্যাক লোড হচ্ছে... / Loading packs...")}</p>
+              <p className="text-sm text-muted-foreground">
+                {t("ক্রেডিট প্যাক লোড হচ্ছে... / Loading packs...")}
+              </p>
             )}
           </div>
         </section>
@@ -173,7 +191,10 @@ function BillingPage() {
                 ))}
                 {transactions.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="py-6 text-center text-sm text-muted-foreground">
+                    <TableCell
+                      colSpan={4}
+                      className="py-6 text-center text-sm text-muted-foreground"
+                    >
                       {t("কোনো কার্যক্রম নেই / No activity yet")}
                     </TableCell>
                   </TableRow>
@@ -200,10 +221,14 @@ function TxRow({ tx }: { tx: MyTransaction }) {
       <TableCell className="text-right">
         <span
           className={`inline-flex items-center gap-1 text-sm font-medium ${
-            isSpend ? "text-destructive" : "text-emerald-600 dark:text-emerald-400"
+            isSpend ? "text-destructive" : "text-success"
           }`}
         >
-          {isSpend ? <ArrowDownRight className="h-3.5 w-3.5" /> : <ArrowUpRight className="h-3.5 w-3.5" />}
+          {isSpend ? (
+            <ArrowDownRight className="h-3.5 w-3.5" />
+          ) : (
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          )}
           {isSpend ? "" : "+"}
           {tx.delta}
         </span>

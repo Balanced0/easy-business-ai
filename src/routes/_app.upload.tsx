@@ -5,9 +5,24 @@ import { DashboardTopbar } from "@/components/dashboard-topbar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Loader2, ScanLine, ArrowRight } from "lucide-react";
+import {
+  Upload,
+  FileSpreadsheet,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  ScanLine,
+  ArrowRight,
+} from "lucide-react";
 import { useT } from "@/hooks/use-language";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -18,8 +33,16 @@ export const Route = createFileRoute("/_app/upload")({
 });
 
 const KINDS = [
-  { id: "sales", label: "Sales", hint: "Columns: date, sku, product_name, quantity, revenue, channel" },
-  { id: "inventory", label: "Inventory", hint: "Columns: sku, name, stock, reorder_threshold, cost, price" },
+  {
+    id: "sales",
+    label: "Sales",
+    hint: "Columns: date, sku, product_name, quantity, revenue, channel",
+  },
+  {
+    id: "inventory",
+    label: "Inventory",
+    hint: "Columns: sku, name, stock, reorder_threshold, cost, price",
+  },
   { id: "products", label: "Products", hint: "Columns: sku, name, category, price" },
   { id: "reviews", label: "Reviews", hint: "Columns: product, rating, sentiment, content, date" },
   { id: "orders", label: "Orders", hint: "Columns: order_id, customer, total, status, date" },
@@ -81,7 +104,10 @@ function UploadPage() {
       const json = await res.json();
       if (!res.ok) {
         const detail = Array.isArray(json.details)
-          ? json.details.slice(0, 3).map((d: { row: number; message: string }) => `Row ${d.row}: ${d.message}`).join("; ")
+          ? json.details
+              .slice(0, 3)
+              .map((d: { row: number; message: string }) => `Row ${d.row}: ${d.message}`)
+              .join("; ")
           : json.error;
         throw new Error(detail || "Upload failed");
       }
@@ -106,7 +132,7 @@ function UploadPage() {
     <>
       <DashboardTopbar title="ডেটা আপলোড / Upload Data" />
       <main className="flex-1 space-y-4 p-4 md:p-6">
-        <Card className="border-primary/40 bg-gradient-to-br from-primary/5 to-transparent">
+        <Card className="border-primary/40 bg-card">
           <CardHeader>
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
@@ -136,10 +162,14 @@ function UploadPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Upload className="h-4 w-4 text-primary" />
-              <CardTitle className="text-base">{t("CSV বা XLSX আপলোড করুন / Upload CSV or XLSX")}</CardTitle>
+              <CardTitle className="text-base">
+                {t("CSV বা XLSX আপলোড করুন / Upload CSV or XLSX")}
+              </CardTitle>
             </div>
             <CardDescription>
-              {t("আপনার ব্যবসার ডেটা আপলোড করুন। ড্যাশবোর্ড ও এআই সহকারী এই ডেটা থেকে বিশ্লেষণ তৈরি করবে। / Upload your business data. The dashboard and AI assistant will generate analytics from this data.")}
+              {t(
+                "আপনার ব্যবসার ডেটা আপলোড করুন। ড্যাশবোর্ড ও এআই সহকারী এই ডেটা থেকে বিশ্লেষণ তৈরি করবে। / Upload your business data. The dashboard and AI assistant will generate analytics from this data.",
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -173,8 +203,13 @@ function UploadPage() {
                   role="button"
                   tabIndex={0}
                   onClick={() => fileInputRef.current?.click()}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") fileInputRef.current?.click(); }}
-                  onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") fileInputRef.current?.click();
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragOver(true);
+                  }}
                   onDragLeave={() => setIsDragOver(false)}
                   onDrop={(e) => {
                     e.preventDefault();
@@ -184,19 +219,23 @@ function UploadPage() {
                   }}
                   className={cn(
                     "mt-2 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-8 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    isDragOver ? "border-primary bg-primary/5" : "border-input hover:bg-accent/50"
+                    isDragOver ? "border-primary bg-primary/5" : "border-input hover:bg-accent/50",
                   )}
                 >
                   {file ? (
                     <>
                       <FileSpreadsheet className="h-8 w-8 text-primary" />
                       <p className="text-sm font-medium text-foreground">{file.name}</p>
-                      <p className="text-xs text-muted-foreground">{t("ফাইল পরিবর্তন করতে ক্লিক করুন / Click to change file")}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t("ফাইল পরিবর্তন করতে ক্লিক করুন / Click to change file")}
+                      </p>
                     </>
                   ) : (
                     <>
                       <Upload className="h-8 w-8 text-muted-foreground" />
-                      <p className="text-sm font-medium text-foreground">{t("আপলোড করতে ক্লিক করুন বা টেনে আনুন / Click to upload or drag and drop")}</p>
+                      <p className="text-sm font-medium text-foreground">
+                        {t("আপলোড করতে ক্লিক করুন বা টেনে আনুন / Click to upload or drag and drop")}
+                      </p>
                       <p className="text-xs text-muted-foreground">CSV, XLSX, or XLS</p>
                     </>
                   )}
@@ -211,12 +250,22 @@ function UploadPage() {
                 />
               </div>
               <Button type="submit" disabled={!file || uploading}>
-                {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                {uploading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="mr-2 h-4 w-4" />
+                )}
                 {t("আপলোড / Upload")}
               </Button>
               {lastResult && (
-                <div className={`flex items-start gap-2 rounded-md border p-3 text-sm ${lastResult.ok ? "border-success/40 bg-success/5 text-success" : "border-destructive/40 bg-destructive/5 text-destructive"}`}>
-                  {lastResult.ok ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> : <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />}
+                <div
+                  className={`flex items-start gap-2 rounded-md border p-3 text-sm ${lastResult.ok ? "border-success/40 bg-success/5 text-success" : "border-destructive/40 bg-destructive/5 text-destructive"}`}
+                >
+                  {lastResult.ok ? (
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+                  ) : (
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  )}
                   <span>{lastResult.message}</span>
                 </div>
               )}
@@ -227,7 +276,9 @@ function UploadPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">{t("সাম্প্রতিক আপলোড / Recent uploads")}</CardTitle>
-            <CardDescription>{t("আপনার অ্যাকাউন্টে আপলোডকৃত ব্যাচ / Batches uploaded under your account")}</CardDescription>
+            <CardDescription>
+              {t("আপনার অ্যাকাউন্টে আপলোডকৃত ব্যাচ / Batches uploaded under your account")}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {loadingBatches ? (
@@ -249,8 +300,14 @@ function UploadPage() {
                 <TableBody>
                   {batches.map((b) => (
                     <TableRow key={b.id}>
-                      <TableCell><Badge variant="secondary" className="capitalize">{b.kind}</Badge></TableCell>
-                      <TableCell className="text-muted-foreground">{b.filename ?? "—"}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="capitalize">
+                          {b.kind}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {b.filename ?? t("নাম নেই / No filename")}
+                      </TableCell>
                       <TableCell className="text-right">{b.row_count}</TableCell>
                       <TableCell className="text-muted-foreground text-xs">
                         {new Date(b.created_at).toLocaleString()}

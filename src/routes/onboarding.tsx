@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { AuthShell } from "@/components/auth-shell";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({ meta: [{ title: "ব্যবসা সেটআপ / Business setup: EasyBusiness AI" }] }),
@@ -56,8 +57,9 @@ function OnboardingPage() {
       });
   }, [user, loading, navigate]);
 
-  const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
+  const update =
+    (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,20 +72,36 @@ function OnboardingPage() {
     if (error) toast.error(error.message);
     else {
       toast.success(t("সংরক্ষণ হয়েছে / Saved"));
-      navigate({ to: "/dashboard" });
+      navigate({ to: "/dashboard", search: { q: undefined, t: undefined } });
     }
   };
 
   if (loading || loadingExisting) {
-    return <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">Loading…</div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
+        {t("লোড হচ্ছে / Loading")}
+      </div>
+    );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
+    <AuthShell
+      eyebrow={t("শুরু করার আগে / Before you begin")}
+      title={t(
+        "আপনার ব্যবসার কাজের প্রেক্ষাপটটি যোগ করুন। / Add the context for your business work.",
+      )}
+      description={t(
+        "আপনার লেখা তথ্য পরের ধাপে ড্যাশবোর্ড ও সহকারীর প্রেক্ষাপট হিসেবে ব্যবহৃত হবে। / What you add here becomes context for the dashboard and assistant.",
+      )}
+    >
       <Card className="w-full max-w-2xl">
         <CardHeader>
           <CardTitle>{t("আপনার ব্যবসা সম্পর্কে বলুন / Tell us about your business")}</CardTitle>
-          <CardDescription>{t("AI আপনার ব্যবসার জন্য ব্যক্তিগত পরামর্শ দেবে / The AI will tailor insights to your business")}</CardDescription>
+          <CardDescription>
+            {t(
+              "AI আপনার ব্যবসার জন্য ব্যক্তিগত পরামর্শ দেবে / The AI will tailor insights to your business",
+            )}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -94,7 +112,11 @@ function OnboardingPage() {
               </div>
               <div className="space-y-1">
                 <Label>{t("শিল্প / Industry")}</Label>
-                <Input placeholder={t("যেমন ফ্যাশন, ইলেকট্রনিক্স / e.g. fashion, electronics")} value={form.industry} onChange={update("industry")} />
+                <Input
+                  placeholder={t("যেমন ফ্যাশন, ইলেকট্রনিক্স / e.g. fashion, electronics")}
+                  value={form.industry}
+                  onChange={update("industry")}
+                />
               </div>
             </div>
             <div className="space-y-1">
@@ -103,7 +125,12 @@ function OnboardingPage() {
             </div>
             <div className="space-y-1">
               <Label>{t("পণ্য / Products")}</Label>
-              <Textarea rows={2} placeholder={t("আপনি কী বিক্রি করেন / What you sell")} value={form.products} onChange={update("products")} />
+              <Textarea
+                rows={2}
+                placeholder={t("আপনি কী বিক্রি করেন / What you sell")}
+                value={form.products}
+                onChange={update("products")}
+              />
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-1">
@@ -112,7 +139,11 @@ function OnboardingPage() {
               </div>
               <div className="space-y-1">
                 <Label>{t("মাসিক রাজস্ব / Monthly revenue")}</Label>
-                <Input placeholder="$" value={form.monthly_revenue} onChange={update("monthly_revenue")} />
+                <Input
+                  placeholder="$"
+                  value={form.monthly_revenue}
+                  onChange={update("monthly_revenue")}
+                />
               </div>
             </div>
             <Button type="submit" className="w-full" disabled={busy}>
@@ -121,6 +152,6 @@ function OnboardingPage() {
           </form>
         </CardContent>
       </Card>
-    </div>
+    </AuthShell>
   );
 }

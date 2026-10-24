@@ -15,6 +15,7 @@ import {
   Search,
   Clock,
   ArrowRight,
+  Star,
   XCircle,
 } from "lucide-react";
 import { useT } from "@/hooks/use-language";
@@ -39,32 +40,27 @@ const PIPELINE = [
   {
     icon: Upload,
     title: "ডেটা ইনজেশন / Data Ingestion",
-    body:
-      "আপনার CSV/XLSX ফাইল পার্স করা হয়, স্কিমার সাথে যাচাই করা হয় এবং রো-লেভেল সিকিউরিটি সহ Supabase Postgres-এ সংরক্ষিত হয়। / Your CSV/XLSX files are parsed, validated against schema, and stored in Supabase Postgres with row-level security.",
+    body: "আপনার CSV/XLSX ফাইল পার্স করা হয়, স্কিমার সাথে যাচাই করা হয় এবং রো-লেভেল সিকিউরিটি সহ Supabase Postgres-এ সংরক্ষিত হয়। / Your CSV/XLSX files are parsed, validated against schema, and stored in Supabase Postgres with row-level security.",
   },
   {
     icon: Boxes,
     title: "এমবেডিং ও ইনডেক্সিং / Embedding & Indexing",
-    body:
-      "প্রতিটি ডকুমেন্ট চাঙ্ক OpenAI text-embedding-3-small (1536 dimensions) দিয়ে এমবেড করা হয় এবং মিলিসেকেন্ড সিম্যান্টিক রিট্রিভালের জন্য pgvector-এ সংরক্ষিত হয়। / Each document chunk is embedded using OpenAI text-embedding-3-small (1536 dimensions) and stored in pgvector for millisecond semantic retrieval.",
+    body: "প্রতিটি ডকুমেন্ট চাঙ্ক OpenAI text-embedding-3-small (1536 dimensions) দিয়ে এমবেড করা হয় এবং মিলিসেকেন্ড সিম্যান্টিক রিট্রিভালের জন্য pgvector-এ সংরক্ষিত হয়। / Each document chunk is embedded using OpenAI text-embedding-3-small (1536 dimensions) and stored in pgvector for millisecond semantic retrieval.",
   },
   {
     icon: Brain,
     title: "রিট্রিভাল-অগমেন্টেড জেনারেশন / Retrieval-Augmented Generation",
-    body:
-      "প্রশ্ন করলে কোসাইন সিমিলারিটির মাধ্যমে শীর্ষ-K প্রাসঙ্গিক চাঙ্ক রিট্রিভ হয় এবং Gemini 2.5 Flash-এর কনটেক্সট উইন্ডোতে গ্রাউন্ডেড এভিডেন্স হিসেবে ইনজেক্ট হয়। / When you ask a question, the top-K most relevant chunks are retrieved via cosine similarity search, then injected into the Gemini 2.5 Flash context window as grounded evidence.",
+    body: "প্রশ্ন করলে কোসাইন সিমিলারিটির মাধ্যমে শীর্ষ-K প্রাসঙ্গিক চাঙ্ক রিট্রিভ হয় এবং Gemini 2.5 Flash-এর কনটেক্সট উইন্ডোতে গ্রাউন্ডেড এভিডেন্স হিসেবে ইনজেক্ট হয়। / When you ask a question, the top-K most relevant chunks are retrieved via cosine similarity search, then injected into the Gemini 2.5 Flash context window as grounded evidence.",
   },
   {
     icon: Network,
     title: "মডেল সিলেকশন লজিক / Model Selection Logic",
-    body:
-      "হালকা প্রশ্ন → Gemini 2.5 Flash (গতি)। জটিল রিজনিং → Gemini 2.5 Pro। এমবেডিং → text-embedding-3-small। সবকিছু Lovable AI Gateway দিয়ে রুট হয়, কোন ইউজার API কী লাগে না। / Light queries → Gemini 2.5 Flash (speed). Complex reasoning → Gemini 2.5 Pro. Embeddings → text-embedding-3-small. All routed through the Lovable AI Gateway, no user API keys required.",
+    body: "হালকা প্রশ্ন → Gemini 2.5 Flash (গতি)। জটিল রিজনিং → Gemini 2.5 Pro। এমবেডিং → text-embedding-3-small। সবকিছু Lovable AI Gateway দিয়ে রুট হয়, কোন ইউজার API কী লাগে না। / Light queries → Gemini 2.5 Flash (speed). Complex reasoning → Gemini 2.5 Pro. Embeddings → text-embedding-3-small. All routed through the Lovable AI Gateway, no user API keys required.",
   },
   {
     icon: MessageSquareText,
     title: "ব্যাখ্যাযোগ্য আউটপুট / Explainable Output",
-    body:
-      "প্রতিটি ইনসাইটের সাথে থাকে: যে সোর্স ডেটা থেকে এটি এসেছে, একটি কনফিডেন্স স্কোর (High/Medium/Low) এবং বাংলা বা ইংরেজিতে সহজ ব্যাখ্যা। / Every insight includes: the source data it was derived from, a confidence score (High/Medium/Low), and plain-English reasoning in Bangla or English.",
+    body: "প্রতিটি ইনসাইটের সাথে থাকে: যে সোর্স ডেটা থেকে এটি এসেছে, একটি কনফিডেন্স স্কোর (High/Medium/Low) এবং বাংলা বা ইংরেজিতে সহজ ব্যাখ্যা। / Every insight includes: the source data it was derived from, a confidence score (High/Medium/Low), and plain-English reasoning in Bangla or English.",
   },
 ];
 
@@ -110,7 +106,9 @@ function IntelligencePage() {
               {t("আপনার ডেটা কীভাবে ইন্টেলিজেন্সে পরিণত হয় / How your data becomes intelligence")}
             </h2>
             <p className="text-sm text-muted-foreground">
-              {t("আপলোড থেকে অ্যাকশনেবল রিকমেন্ডেশন পর্যন্ত ছয়টি ধাপ / Six stages from upload to actionable recommendation")}
+              {t(
+                "আপলোড থেকে অ্যাকশনেবল রিকমেন্ডেশন পর্যন্ত ছয়টি ধাপ / Six stages from upload to actionable recommendation",
+              )}
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -147,10 +145,14 @@ function IntelligencePage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Activity className="h-4 w-4 text-primary" />
-                <CardTitle className="text-base">{t("লাইভ সিস্টেম স্ট্যাটাস / Live system status")}</CardTitle>
+                <CardTitle className="text-base">
+                  {t("লাইভ সিস্টেম স্ট্যাটাস / Live system status")}
+                </CardTitle>
               </div>
               <CardDescription>
-                {t("আপনার অ্যাকাউন্টে এআই অবকাঠামোর রিয়েল-টাইম স্বাস্থ্য / Real-time health of your AI infrastructure")}
+                {t(
+                  "আপনার অ্যাকাউন্টে এআই অবকাঠামোর রিয়েল-টাইম স্বাস্থ্য / Real-time health of your AI infrastructure",
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-3 md:grid-cols-3">
@@ -185,7 +187,11 @@ function IntelligencePage() {
               <StatusRow
                 icon={Upload}
                 label={t("ডেটা সতেজতা / Data freshness")}
-                value={lastUpload ? new Date(lastUpload).toLocaleString() : t("কোনও আপলোড নেই / No uploads")}
+                value={
+                  lastUpload
+                    ? new Date(lastUpload).toLocaleString()
+                    : t("কোনও আপলোড নেই / No uploads")
+                }
                 ok={!!lastUpload}
               />
             </CardContent>
@@ -228,7 +234,12 @@ function IntelligencePage() {
                 { ok: false, text: t("৬ মাসের ইমপ্লিমেন্টেশন / 6-month implementation") },
                 { ok: false, text: t("IT টিম প্রয়োজন / Requires IT team") },
                 { ok: false, text: t("SME-দের জন্য ডিজাইন করা নয় / Not designed for SMEs") },
-                { ok: false, text: t("দক্ষিণ এশীয় মার্কেটপ্লেস সাপোর্ট নেই / No South Asian marketplace support") },
+                {
+                  ok: false,
+                  text: t(
+                    "দক্ষিণ এশীয় মার্কেটপ্লেস সাপোর্ট নেই / No South Asian marketplace support",
+                  ),
+                },
               ]}
             />
           </div>
@@ -284,7 +295,7 @@ function ComparisonCard({
   highlight?: boolean;
 }) {
   return (
-    <Card className={highlight ? "border-primary ring-1 ring-primary/40 shadow-lg" : ""}>
+    <Card className={highlight ? "border-primary ring-1 ring-primary/40" : ""}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm">{title}</CardTitle>

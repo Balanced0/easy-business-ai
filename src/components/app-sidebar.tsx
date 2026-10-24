@@ -52,12 +52,15 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <Link to="/" className="flex items-center justify-start gap-2 px-2 py-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+        <Link
+          to="/"
+          className="flex min-h-11 items-center justify-start gap-2 px-2 py-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+        >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <BarChart3 className="h-4 w-4" />
           </div>
           <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-semibold">ইজিবিজনেস</span>
+            <span className="font-display text-sm font-semibold">ইজিবিজনেস</span>
             <span className="text-xs text-muted-foreground">EasyBusiness AI</span>
           </div>
         </Link>

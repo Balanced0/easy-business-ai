@@ -9,13 +9,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 
 import { KeyRound, ExternalLink, Trash2, CheckCircle2, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useT } from "@/hooks/use-language";
-import { useCurrency, SUPPORTED_CURRENCIES, CURRENCY_META, type CurrencyCode } from "@/hooks/use-currency";
+import {
+  useCurrency,
+  SUPPORTED_CURRENCIES,
+  CURRENCY_META,
+  type CurrencyCode,
+} from "@/hooks/use-currency";
 import { useCredits } from "@/hooks/use-credits";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -63,19 +74,24 @@ function ProfilePage() {
     });
   }, [user, loading]);
 
-  const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
+  const update =
+    (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
     setBusy(true);
     const [bizRes, profRes] = await Promise.all([
-      supabase.from("business_profiles").upsert({ user_id: user.id, ...form }, { onConflict: "user_id" }),
-      supabase.from("profiles").upsert(
-        { user_id: user.id, full_name: fullName, email: user.email ?? null },
-        { onConflict: "user_id" },
-      ),
+      supabase
+        .from("business_profiles")
+        .upsert({ user_id: user.id, ...form }, { onConflict: "user_id" }),
+      supabase
+        .from("profiles")
+        .upsert(
+          { user_id: user.id, full_name: fullName, email: user.email ?? null },
+          { onConflict: "user_id" },
+        ),
     ]);
     setBusy(false);
     if (bizRes.error || profRes.error) toast.error((bizRes.error ?? profRes.error)!.message);
@@ -106,7 +122,9 @@ function ProfilePage() {
           <CardHeader>
             <div className="flex items-center gap-4">
               <Avatar className="h-16 w-16">
-                <AvatarFallback className="bg-primary text-primary-foreground text-lg">{initials}</AvatarFallback>
+                <AvatarFallback className="bg-primary text-primary-foreground text-lg">
+                  {initials}
+                </AvatarFallback>
               </Avatar>
               <div>
                 <CardTitle className="text-base">{fullName || user?.email}</CardTitle>
@@ -119,7 +137,11 @@ function ProfilePage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">{t("আপনার তথ্য / Your information")}</CardTitle>
-            <CardDescription>{t("আপনার অ্যাকাউন্ট ও ব্যবসার বিবরণ আপডেট করুন / Update your account and business details")}</CardDescription>
+            <CardDescription>
+              {t(
+                "আপনার অ্যাকাউন্ট ও ব্যবসার বিবরণ আপডেট করুন / Update your account and business details",
+              )}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSave} className="space-y-4">
@@ -167,7 +189,13 @@ function ProfilePage() {
                 <Button type="submit" disabled={busy}>
                   {t("সংরক্ষণ করুন / Save changes")}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => navigate({ to: "/dashboard" })}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    navigate({ to: "/dashboard", search: { q: undefined, t: undefined } })
+                  }
+                >
                   {t("ফিরে যান / Back")}
                 </Button>
               </div>
@@ -285,7 +313,13 @@ function ByokKeyCard() {
                 {t("সংরক্ষণ ও যাচাই / Save & verify")}
               </Button>
               {editing && (
-                <Button variant="outline" onClick={() => { setEditing(false); setKeyInput(""); }}>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setEditing(false);
+                    setKeyInput("");
+                  }}
+                >
                   {t("বাতিল / Cancel")}
                 </Button>
               )}
@@ -302,12 +336,19 @@ function ByokKeyCard() {
             </h4>
           </div>
           <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>{t("Google AI Studio-তে যান / Go to Google AI Studio")}: <code className="text-foreground">aistudio.google.com</code></li>
-            <li>{t("আপনার Google অ্যাকাউন্ট দিয়ে সাইন ইন করুন / Sign in with your Google account")}</li>
+            <li>
+              {t("Google AI Studio-তে যান / Go to Google AI Studio")}:{" "}
+              <code className="text-foreground">aistudio.google.com</code>
+            </li>
+            <li>
+              {t("আপনার Google অ্যাকাউন্ট দিয়ে সাইন ইন করুন / Sign in with your Google account")}
+            </li>
             <li>{t("'Get API Key' বাটনে ক্লিক করুন / Click 'Get API Key'")}</li>
             <li>{t("'Create API key' এ ক্লিক করুন / Click 'Create API key'")}</li>
             <li>{t("key টি কপি করুন / Copy the key")} (AIzaSy…)</li>
-            <li>{t("উপরের ইনপুট বক্সে পেস্ট করে Save করুন / Paste it in the field above and Save")}</li>
+            <li>
+              {t("উপরের ইনপুট বক্সে পেস্ট করে Save করুন / Paste it in the field above and Save")}
+            </li>
           </ol>
           <a
             href="https://aistudio.google.com/app/apikey"
@@ -320,7 +361,7 @@ function ByokKeyCard() {
           </a>
           <p className="text-xs text-muted-foreground border-t pt-2">
             {t(
-              "💡 এটি সম্পূর্ণ ফ্রি এবং Google এর Gemini ফ্রি tier-এ প্রতিদিন প্রচুর AI অনুরোধ অন্তর্ভুক্ত। আপনার নিজের key ব্যবহার করলে আপনি আমাদের প্ল্যাটফর্ম কোটার উপর নির্ভর করবেন না; আপনার AI assistant চলবে সম্পূর্ণ স্বাধীনভাবে। / It is completely free. Google Gemini free tier includes generous daily AI usage. With your own key, your AI assistant runs independently of our platform quota.",
+              "এটি সম্পূর্ণ ফ্রি এবং Google এর Gemini ফ্রি tier-এ প্রতিদিন প্রচুর AI অনুরোধ অন্তর্ভুক্ত। আপনার নিজের key ব্যবহার করলে আপনি আমাদের প্ল্যাটফর্ম কোটার উপর নির্ভর করবেন না; আপনার AI assistant চলবে সম্পূর্ণ স্বাধীনভাবে। / It is completely free. Google Gemini free tier includes generous daily AI usage. With your own key, your AI assistant runs independently of our platform quota.",
             )}
           </p>
         </div>
@@ -352,12 +393,16 @@ function CurrencyPreference() {
     <div className="space-y-1 max-w-sm">
       <Label>{t("profile.currency")}</Label>
       <Select value={currency} onValueChange={handleChange}>
-        <SelectTrigger><SelectValue /></SelectTrigger>
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
         <SelectContent>
           {SUPPORTED_CURRENCIES.map((code) => (
             <SelectItem key={code} value={code}>
               <span className="font-medium">{code}</span>
-              <span className="text-muted-foreground ml-2">{CURRENCY_META[code].symbol} · {CURRENCY_META[code].label}</span>
+              <span className="text-muted-foreground ml-2">
+                {CURRENCY_META[code].symbol} · {CURRENCY_META[code].label}
+              </span>
             </SelectItem>
           ))}
         </SelectContent>
@@ -366,4 +411,3 @@ function CurrencyPreference() {
     </div>
   );
 }
-

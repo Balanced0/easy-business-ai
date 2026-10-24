@@ -12,7 +12,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useLanguage, useT, SUPPORTED_LOCALES, LOCALE_META, type LocaleKey } from "@/hooks/use-language";
+import {
+  useLanguage,
+  useT,
+  SUPPORTED_LOCALES,
+  LOCALE_META,
+  type LocaleKey,
+} from "@/hooks/use-language";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
 import { useCredits } from "@/hooks/use-credits";
@@ -56,10 +62,9 @@ export function DashboardTopbar({ title }: { title: string }) {
     }
   };
 
-
   return (
     <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur">
-      <SidebarTrigger />
+      <SidebarTrigger className="h-10 w-10" />
       <h1 className="text-sm font-semibold">{t(title)}</h1>
       <div className="ml-auto flex items-center gap-2">
         <div className="relative hidden md:block">
@@ -87,7 +92,7 @@ export function DashboardTopbar({ title }: { title: string }) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9"
+          className="h-10 w-10"
           onClick={toggleTheme}
           title={t("থিম পরিবর্তন / Toggle theme")}
           aria-label="Toggle theme"
@@ -103,10 +108,18 @@ export function DashboardTopbar({ title }: { title: string }) {
           className="rounded-full ring-offset-background transition hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
         >
           <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-primary text-primary-foreground text-xs">{initials}</AvatarFallback>
+            <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+              {initials}
+            </AvatarFallback>
           </Avatar>
         </button>
-        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleLogout} title={t("লগ আউট / Sign out")}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-10 w-10"
+          onClick={handleLogout}
+          title={t("লগ আউট / Sign out")}
+        >
           <LogOut className="h-4 w-4" />
         </Button>
       </div>
@@ -129,19 +142,21 @@ function CreditsBadge() {
       }`}
     >
       <Zap className="h-3.5 w-3.5" />
-      <span className="tabular-nums">{loading ? "—" : total.toLocaleString()}</span>
+      <span className="tabular-nums">
+        {loading ? t("লোড হচ্ছে / Loading") : total.toLocaleString()}
+      </span>
     </Link>
   );
 }
 
 function LocaleSwitcher() {
   const { locale, setLocale } = useLanguage();
+  const t = useT();
   const meta = LOCALE_META[locale as LocaleKey] ?? LOCALE_META.en;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="h-9 gap-1.5 px-2.5">
-          <span className="text-base leading-none">{meta.flag}</span>
+        <Button variant="outline" size="sm" className="h-10 gap-1.5 px-2.5">
           <span className="text-xs font-medium">{meta.nativeLabel}</span>
           <ChevronDown className="h-3 w-3 opacity-60" />
         </Button>
@@ -165,12 +180,13 @@ function LocaleSwitcher() {
               }}
               className="flex items-center justify-between"
             >
-              <span className="flex items-center gap-2">
-                <span className="text-base leading-none">{m.flag}</span>
-                <span className={isActive ? "" : "text-muted-foreground"}>{m.nativeLabel}</span>
-              </span>
-              {!isActive && <span className="text-[10px] text-muted-foreground">soon</span>}
-              {isActive && code === locale && <span className="text-[10px] text-primary">●</span>}
+              <span className={isActive ? "" : "text-muted-foreground"}>{m.nativeLabel}</span>
+              {!isActive && <span className="text-xs text-muted-foreground">soon</span>}
+              {isActive && code === locale && (
+                <span className="text-xs font-medium text-primary">
+                  {t("নির্বাচিত / Selected")}
+                </span>
+              )}
             </DropdownMenuItem>
           );
         })}
@@ -178,4 +194,3 @@ function LocaleSwitcher() {
     </DropdownMenu>
   );
 }
-

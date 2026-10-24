@@ -101,7 +101,10 @@ function ScanPage() {
       const json = await res.json();
       if (!res.ok) {
         const detail = Array.isArray(json.details)
-          ? json.details.slice(0, 3).map((d: { row: number; message: string }) => `Row ${d.row}: ${d.message}`).join("; ")
+          ? json.details
+              .slice(0, 3)
+              .map((d: { row: number; message: string }) => `Row ${d.row}: ${d.message}`)
+              .join("; ")
           : json.error;
         throw new Error(detail || "Save failed");
       }
@@ -135,7 +138,9 @@ function ScanPage() {
             <div className="flex items-center gap-2">
               <ScanLine className="h-5 w-5 text-primary" />
               <CardTitle className="text-base">
-                {t("ক্যামেরা দিয়ে হাতে লেখা ডেটা স্ক্যান করুন / Scan handwritten data with your camera")}
+                {t(
+                  "ক্যামেরা দিয়ে হাতে লেখা ডেটা স্ক্যান করুন / Scan handwritten data with your camera",
+                )}
               </CardTitle>
             </div>
             <CardDescription>
@@ -149,7 +154,9 @@ function ScanPage() {
         {step === "capture" && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{t("ধাপ ১: ডেটা টাইপ ও পেজ / Step 1: Choose type & capture pages")}</CardTitle>
+              <CardTitle className="text-base">
+                {t("ধাপ ১: ডেটা টাইপ ও পেজ / Step 1: Choose type & capture pages")}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -183,7 +190,11 @@ function ScanPage() {
                   </span>
                 </div>
                 <Button onClick={extract} disabled={pages.length === 0 || extracting}>
-                  {extracting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ScanLine className="mr-2 h-4 w-4" />}
+                  {extracting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <ScanLine className="mr-2 h-4 w-4" />
+                  )}
                   {t("এআই দিয়ে এক্সট্র্যাক্ট করুন / Extract with AI")}
                 </Button>
               </div>
@@ -216,7 +227,11 @@ function ScanPage() {
               <ScanReviewTable columns={columns} rows={rows} onChange={setRows} />
               <div className="flex flex-wrap gap-2">
                 <Button onClick={commit} disabled={committing || rows.length === 0}>
-                  {committing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                  {committing ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                  )}
                   {t("আমার ডেটায় সংরক্ষণ করুন / Save to my data")}
                 </Button>
                 <Button variant="outline" onClick={() => setStep("capture")}>
@@ -246,10 +261,14 @@ function ScanPage() {
             <CardContent className="flex flex-wrap gap-2">
               <Button onClick={reset}>{t("আরেকটি পেজ স্ক্যান করুন / Scan another sheet")}</Button>
               <Button variant="outline" asChild>
-                <Link to="/dashboard">{t("ড্যাশবোর্ডে যান / Go to dashboard")}</Link>
+                <Link to="/dashboard" search={{ q: undefined, t: undefined }}>
+                  {t("ড্যাশবোর্ডে যান / Go to dashboard")}
+                </Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link to="/assistant">{t("এআই-কে প্রশ্ন করুন / Ask the AI")}</Link>
+                <Link to="/assistant" search={{ q: undefined, t: undefined }}>
+                  {t("এআই-কে প্রশ্ন করুন / Ask the AI")}
+                </Link>
               </Button>
             </CardContent>
           </Card>

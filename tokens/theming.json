@@ -1,10 +1,10 @@
 {
   "$schema": "https://design-tokens.github.io/community-group/format/",
-  "$description": "Bazaar Signal uses a single commerce-green brand theme with light and dark semantic modes. Density scales spacing and control sizing without touching color or type.",
+  "$description": "Market Paper uses a single clay brand theme with light and dark semantic modes. Density scales spacing and control sizing without touching color or type.",
 
   "theme": {
     "$description": "The active brand map. Dark mode is handled by the dark semantic overrides in colors.json.",
-    "bazaar-signal": {
+    "market-paper": {
       "action-primary": { "$type": "color", "$value": "{primitive.commerce.700}" },
       "action-primary-hover": { "$type": "color", "$value": "{primitive.commerce.800}" }
     }
@@ -13,13 +13,21 @@
   "density": {
     "$description": "Multiplier applied to spacing + control sizing. 1 = default. Compact for data-dense enterprise UI, spacious for marketing/touch.",
     "compact": {
-      "scale": { "$type": "number", "$value": 0.875, "$description": "−12.5% spacing & control height" }
+      "scale": {
+        "$type": "number",
+        "$value": 0.875,
+        "$description": "−12.5% spacing & control height"
+      }
     },
     "default": {
       "scale": { "$type": "number", "$value": 1 }
     },
     "spacious": {
-      "scale": { "$type": "number", "$value": 1.15, "$description": "+15% spacing & control height" }
+      "scale": {
+        "$type": "number",
+        "$value": 1.15,
+        "$description": "+15% spacing & control height"
+      }
     }
   }
 }

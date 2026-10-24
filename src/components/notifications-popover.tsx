@@ -76,13 +76,13 @@ function IconFor({ kind }: { kind: Notif["icon"] }) {
   const base = "h-4 w-4";
   switch (kind) {
     case "stock":
-      return <Package className={cn(base, "text-amber-500")} />;
+      return <Package className={cn(base, "text-warning")} />;
     case "trend":
-      return <TrendingUp className={cn(base, "text-emerald-500")} />;
+      return <TrendingUp className={cn(base, "text-success")} />;
     case "ai":
       return <Bot className={cn(base, "text-primary")} />;
     case "alert":
-      return <AlertTriangle className={cn(base, "text-rose-500")} />;
+      return <AlertTriangle className={cn(base, "text-destructive")} />;
   }
 }
 
@@ -111,13 +111,13 @@ export function NotificationsPopover() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative h-9 w-9"
+          className="relative h-10 w-10"
           aria-label={t("নোটিফিকেশন / Notifications")}
           title={t("নোটিফিকেশন / Notifications")}
         >
           <Bell className="h-4 w-4" />
           {unread > 0 && (
-            <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-primary-foreground">
+            <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-xs font-semibold leading-none text-primary-foreground">
               {unread > 9 ? "9+" : unread}
             </span>
           )}
@@ -149,7 +149,7 @@ export function NotificationsPopover() {
                 onClick={() => markRead(n.id)}
                 className={cn(
                   "flex w-full gap-3 border-b px-3 py-2.5 text-left transition hover:bg-muted/60",
-                  !n.read && "bg-primary/5"
+                  !n.read && "bg-primary/5",
                 )}
               >
                 <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted">
@@ -158,7 +158,7 @@ export function NotificationsPopover() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <p className="truncate text-xs font-medium">{n.title}</p>
-                    <span className="shrink-0 text-[10px] text-muted-foreground">{n.time}</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">{n.time}</span>
                   </div>
                   <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{n.body}</p>
                 </div>

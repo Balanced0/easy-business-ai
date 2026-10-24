@@ -27,11 +27,7 @@ export const getMyCredits = createServerFn({ method: "GET" })
 
     if (!data) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      await supabaseAdmin
-        .from("user_credits")
-        .insert({ user_id: userId })
-        .select()
-        .maybeSingle();
+      await supabaseAdmin.from("user_credits").insert({ user_id: userId }).select().maybeSingle();
       return {
         balance: 0,
         freeQuotaRemaining: 100,
@@ -121,7 +117,7 @@ export const getByokStatus = createServerFn({ method: "GET" })
 
 export const saveByokKey = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { key: string }) => {
+  .validator((input: { key: string }) => {
     const key = (input?.key ?? "").trim();
     if (!key || key.length < 10) throw new Error("Key looks too short");
     if (key.length > 500) throw new Error("Key looks too long");

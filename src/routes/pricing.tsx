@@ -15,7 +15,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useLanguage, useT } from "@/hooks/use-language";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -45,7 +52,6 @@ type Plan = {
   monthly: number | null; // null => custom
   features: string[];
   cta: string;
-  highlight?: boolean;
   ctaVariant?: "default" | "outline" | "secondary";
 };
 
@@ -93,7 +99,6 @@ const PLANS: Plan[] = [
       "প্রাইওরিটি সাপোর্ট / Priority support",
     ],
     cta: "ফ্রি ট্রায়াল শুরু করুন / Start free trial",
-    highlight: true,
   },
   {
     id: "enterprise",
@@ -116,7 +121,10 @@ const PLANS: Plan[] = [
 const COMPARISON: { label: string; values: (string | boolean)[] }[] = [
   { label: "মার্কেটপ্লেস / Marketplaces", values: ["1", "3", "Unlimited", "Unlimited"] },
   { label: "অর্ডার/মাস / Orders per month", values: ["100", "1,000", "10,000", "Custom"] },
-  { label: "ড্যাশবোর্ড / Dashboard", values: ["Basic", "Standard", "Advanced", "Advanced + Custom"] },
+  {
+    label: "ড্যাশবোর্ড / Dashboard",
+    values: ["Basic", "Standard", "Advanced", "Advanced + Custom"],
+  },
   { label: "এআই সহকারী / AI assistant", values: [false, "50/mo", "Unlimited", "Unlimited"] },
   { label: "RAG সার্চ / RAG search", values: [false, false, true, true] },
   { label: "ভয়েস সহকারী / Voice assistant", values: [false, false, true, true] },
@@ -171,7 +179,9 @@ function PricingNav() {
           </button>
           {loading ? null : user ? (
             <Button asChild size="sm">
-              <Link to="/dashboard">{t("ড্যাশবোর্ডে ফিরে যান / Back to dashboard")}</Link>
+              <Link to="/dashboard" search={{ q: undefined, t: undefined }}>
+                {t("ড্যাশবোর্ডে ফিরে যান / Back to dashboard")}
+              </Link>
             </Button>
           ) : (
             <>
@@ -217,10 +227,13 @@ function PricingPage() {
     <div className="min-h-screen bg-background">
       <PricingNav />
 
-      <main className="mx-auto max-w-6xl px-4 py-12">
+      <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
         {/* Hero */}
         <div className="mx-auto max-w-2xl text-center">
-          <h1 className="text-3xl font-bold tracking-tight md:text-5xl">
+          <p className="text-sm font-medium text-primary">
+            {t("পরিকল্পনা ও মূল্য / Plans and pricing")}
+          </p>
+          <h1 className="mt-4 font-display text-3xl font-semibold leading-tight md:text-5xl">
             {t("আপনার ব্যবসার সাথে বাড়ুন / Plans that grow with you")}
           </h1>
           <p className="mt-4 text-muted-foreground">
@@ -238,24 +251,16 @@ function PricingPage() {
             <span className={`text-sm ${annual ? "font-semibold" : "text-muted-foreground"}`}>
               {t("বার্ষিক / Annual")}
             </span>
-            <Badge variant="secondary" className="ml-1 text-[10px]">
+            <Badge variant="secondary" className="ml-1 text-xs">
               {t("২০% ছাড় / Save 20%")}
             </Badge>
           </div>
         </div>
 
         {/* Plan cards */}
-        <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid gap-4 md:grid-cols-2">
           {PLANS.map((plan) => (
-            <Card
-              key={plan.id}
-              className={`relative flex flex-col ${plan.highlight ? "border-primary shadow-lg ring-1 ring-primary/40" : ""}`}
-            >
-              {plan.highlight && (
-                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  {t("সবচেয়ে জনপ্রিয় / Most popular")}
-                </Badge>
-              )}
+            <Card key={plan.id} className="flex flex-col">
               <CardHeader>
                 <CardTitle className="text-lg">{t(plan.name)}</CardTitle>
                 <CardDescription className="text-xs">{t(plan.tagline)}</CardDescription>
@@ -347,7 +352,9 @@ function PricingPage() {
             {t("নিশ্চিত নন কোনটি বেছে নেবেন? / Not sure which plan fits?")}
           </h3>
           <p className="mt-2 text-sm text-muted-foreground">
-            {t("আমাদের টিমের সাথে কথা বলুন। / Talk to our team, we'll help you pick the right plan.")}
+            {t(
+              "আমাদের টিমের সাথে কথা বলুন। / Talk to our team, we'll help you pick the right plan.",
+            )}
           </p>
           <Button asChild className="mt-4" variant="outline">
             <a href="mailto:sales@easybusiness.ai">{t("যোগাযোগ করুন / Contact us")}</a>
@@ -363,7 +370,9 @@ function PricingPage() {
               {t("আপগ্রেড / Upgrade to")} {openPlan ? t(openPlan.name) : ""}
             </DialogTitle>
             <DialogDescription>
-              {t("ডেমো চেকআউট: কোন আসল পেমেন্ট নেওয়া হবে না। / Demo checkout: no real payment will be processed.")}
+              {t(
+                "ডেমো চেকআউট: কোন আসল পেমেন্ট নেওয়া হবে না। / Demo checkout: no real payment will be processed.",
+              )}
             </DialogDescription>
           </DialogHeader>
           <form

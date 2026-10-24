@@ -108,11 +108,11 @@ function AboutPage() {
       <DashboardTopbar title="সম্পর্কে / About / Business Model" />
       <main className="flex-1 space-y-6 p-4 md:p-6">
         {/* Hero */}
-        <section className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-primary/10 via-card to-card p-8 md:p-12">
+        <section className="relative overflow-hidden rounded-xl border border-primary/25 bg-card p-8 md:p-12">
           <Badge variant="secondary" className="mb-3">
             {t("ইনভেস্টর ওভারভিউ / Investor overview")}
           </Badge>
-          <h1 className="max-w-3xl text-3xl font-bold tracking-tight md:text-5xl">
+          <h1 className="max-w-3xl font-display text-3xl font-semibold md:text-5xl">
             {t("SME বিক্রেতাদের জন্য AI বিজনেস অ্যানালিস্ট / AI Business Analyst for SME Sellers")}
           </h1>
           <p className="mt-4 max-w-2xl text-base text-muted-foreground md:text-lg">
@@ -135,27 +135,41 @@ function AboutPage() {
           <CardHeader>
             <CardTitle className="text-base">{t("বাজার সুযোগ / Market opportunity")}</CardTitle>
             <CardDescription>
-              {t("একটি বিশাল, কম-সেবা পাওয়া SME ইকমার্স বাজার / A massive, underserved SME ecommerce market")}
+              {t(
+                "একটি বিশাল, কম-সেবা পাওয়া SME ইকমার্স বাজার / A massive, underserved SME ecommerce market",
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-3">
               <div className="rounded-lg border bg-muted/30 p-5">
-                <div className="text-lg font-semibold text-primary">{t("আঞ্চলিক SME বিক্রেতা / Regional SME Sellers")}</div>
+                <div className="text-lg font-semibold text-primary">
+                  {t("আঞ্চলিক SME বিক্রেতা / Regional SME Sellers")}
+                </div>
                 <div className="mt-1 text-sm text-muted-foreground">
-                  {t("ছোট ও মাঝারি অনলাইন ব্র্যান্ড যারা একাধিক প্ল্যাটফর্মে বিক্রি করেন / Independent merchants selling across Daraz, Shopify, and social commerce")}
+                  {t(
+                    "ছোট ও মাঝারি অনলাইন ব্র্যান্ড যারা একাধিক প্ল্যাটফর্মে বিক্রি করেন / Independent merchants selling across Daraz, Shopify, and social commerce",
+                  )}
                 </div>
               </div>
               <div className="rounded-lg border bg-muted/30 p-5">
-                <div className="text-lg font-semibold text-primary">{t("স্প্রেডশিট নির্ভরতা / Spreadsheet Bottleneck")}</div>
+                <div className="text-lg font-semibold text-primary">
+                  {t("স্প্রেডশিট নির্ভরতা / Spreadsheet Bottleneck")}
+                </div>
                 <div className="mt-1 text-sm text-muted-foreground">
-                  {t("ম্যানুয়াল ট্র্যাকিংয়ের কারণে স্টকআউট ও অতিরিক্ত স্টকের ক্ষতি / Manual tracking causing avoidable inventory and margin loss")}
+                  {t(
+                    "ম্যানুয়াল ট্র্যাকিংয়ের কারণে স্টকআউট ও অতিরিক্ত স্টকের ক্ষতি / Manual tracking causing avoidable inventory and margin loss",
+                  )}
                 </div>
               </div>
               <div className="rounded-lg border bg-muted/30 p-5">
-                <div className="text-lg font-semibold text-primary">{t("ভাষাগত প্রবেশগম্যতা / Language Accessibility")}</div>
+                <div className="text-lg font-semibold text-primary">
+                  {t("ভাষাগত প্রবেশগম্যতা / Language Accessibility")}
+                </div>
                 <div className="mt-1 text-sm text-muted-foreground">
-                  {t("স্থানীয় ভাষা ও স্থানীয় মুদ্রায় কার্যকর অ্যানালিটিক্স / Pragmatic analytics delivered in native languages with regional currency support")}
+                  {t(
+                    "স্থানীয় ভাষা ও স্থানীয় মুদ্রায় কার্যকর অ্যানালিটিক্স / Pragmatic analytics delivered in native languages with regional currency support",
+                  )}
                 </div>
               </div>
             </div>
@@ -195,7 +209,9 @@ function AboutPage() {
         {/* Competitive advantage */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">{t("প্রতিযোগিতামূলক সুবিধা / Competitive advantage")}</CardTitle>
+            <CardTitle className="text-base">
+              {t("প্রতিযোগিতামূলক সুবিধা / Competitive advantage")}
+            </CardTitle>
             <CardDescription>{t("আমরা কেন জিতি / Why we win")}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -217,7 +233,9 @@ function AboutPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">{t("টার্গেট গ্রাহক / Target customers")}</CardTitle>
-            <CardDescription>{t("কারা EasyBusiness AI ব্যবহার করে / Who uses EasyBusiness AI")}</CardDescription>
+            <CardDescription>
+              {t("কারা EasyBusiness AI ব্যবহার করে / Who uses EasyBusiness AI")}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
@@ -262,7 +280,7 @@ function AboutPage() {
                     <div className="md:w-1/2 md:px-8">
                       <div className="rounded-lg border bg-card p-4">
                         <div className="flex items-center justify-between gap-2">
-                          <Badge variant="secondary" className="text-[10px]">
+                          <Badge variant="secondary" className="text-xs">
                             {t(r.phase)}
                           </Badge>
                           <span className="text-xs font-medium text-primary">{r.when}</span>
@@ -280,8 +298,8 @@ function AboutPage() {
         </Card>
 
         {/* Traction CTA */}
-        <section className="rounded-xl border bg-gradient-to-br from-primary/10 via-card to-card p-8 text-center md:p-12">
-          <h2 className="text-2xl font-bold md:text-3xl">
+        <section className="rounded-xl border border-primary/25 bg-card p-8 text-center md:p-12">
+          <h2 className="font-display text-2xl font-semibold md:text-3xl">
             {t("আমাদের যাত্রায় যোগ দিন / Join our journey")}
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">

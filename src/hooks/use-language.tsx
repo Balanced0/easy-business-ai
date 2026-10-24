@@ -68,15 +68,15 @@ export function useLanguage() {
 
 /**
  * Translate a string. Supports two input shapes for full back-compat:
- * 1. Bilingual literal: "বাংলা / English" — split by " / ".
- * 2. Translation key from src/lib/i18n (e.g. "nav.dashboard") — resolved
+ * 1. Bilingual literal: "বাংলা / English" split by " / ".
+ * 2. Translation key from src/lib/i18n (e.g. "nav.dashboard") resolved
  *    through getTranslation() for the current locale.
  */
 export function useT() {
   const { lang } = useContext(LanguageContext);
   return (text: string): string => {
     if (!text || typeof text !== "string") return text;
-    // Bilingual literal first — preserves the original API exactly.
+    // Bilingual literal first; preserves the original API exactly.
     const idx = text.indexOf(" / ");
     if (idx !== -1) {
       return lang === "bn" ? text.slice(0, idx).trim() : text.slice(idx + 3).trim();

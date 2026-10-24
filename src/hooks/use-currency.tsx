@@ -15,7 +15,10 @@ export const SUPPORTED_CURRENCIES = [
 
 export type CurrencyCode = (typeof SUPPORTED_CURRENCIES)[number];
 
-export const CURRENCY_META: Record<CurrencyCode, { symbol: string; label: string; locale: string }> = {
+export const CURRENCY_META: Record<
+  CurrencyCode,
+  { symbol: string; label: string; locale: string }
+> = {
   USD: { symbol: "$", label: "US Dollar", locale: "en-US" },
   BDT: { symbol: "৳", label: "Bangladeshi Taka", locale: "bn-BD" },
   INR: { symbol: "₹", label: "Indian Rupee", locale: "en-IN" },
@@ -26,7 +29,7 @@ export const CURRENCY_META: Record<CurrencyCode, { symbol: string; label: string
   AED: { symbol: "د.إ", label: "UAE Dirham", locale: "en-AE" },
 };
 
-// Static FX rates relative to USD. Updated manually — refresh periodically
+// Static FX rates relative to USD. Updated manually; refresh periodically
 // from a trusted source (e.g. open.er-api.com). Last updated: 2026-06-08.
 export const FX_RATES_USD: Record<CurrencyCode, number> = {
   USD: 1,
@@ -93,10 +96,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       setCurrencyState(code);
       if (typeof window !== "undefined") window.localStorage.setItem("preferred_currency", code);
       if (!user) return;
-      await supabase
-        .from("profiles")
-        .update({ preferred_currency: code })
-        .eq("user_id", user.id);
+      await supabase.from("profiles").update({ preferred_currency: code }).eq("user_id", user.id);
     },
     [user],
   );

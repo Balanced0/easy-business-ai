@@ -9,17 +9,16 @@ export type LocaleMeta = {
   code: LocaleKey;
   label: string;
   nativeLabel: string;
-  flag: string;
   active: boolean;
 };
 
 export const LOCALE_META: Record<LocaleKey, LocaleMeta> = {
-  en: { code: "en", label: "English", nativeLabel: "English", flag: "🇬🇧", active: true },
-  bn: { code: "bn", label: "Bangla", nativeLabel: "বাংলা", flag: "🇧🇩", active: true },
-  hi: { code: "hi", label: "Hindi", nativeLabel: "हिन्दी", flag: "🇮🇳", active: false },
-  ms: { code: "ms", label: "Malay", nativeLabel: "Bahasa Melayu", flag: "🇲🇾", active: false },
-  ta: { code: "ta", label: "Tamil", nativeLabel: "தமிழ்", flag: "🇮🇳", active: false },
-  th: { code: "th", label: "Thai", nativeLabel: "ภาษาไทย", flag: "🇹🇭", active: false },
+  en: { code: "en", label: "English", nativeLabel: "English", active: true },
+  bn: { code: "bn", label: "Bangla", nativeLabel: "বাংলা", active: true },
+  hi: { code: "hi", label: "Hindi", nativeLabel: "हिन्दी", active: false },
+  ms: { code: "ms", label: "Malay", nativeLabel: "Bahasa Melayu", active: false },
+  ta: { code: "ta", label: "Tamil", nativeLabel: "தமிழ்", active: false },
+  th: { code: "th", label: "Thai", nativeLabel: "ภาษาไทย", active: false },
 };
 
 // Keys for the typed translation map. Add new keys here and provide values in

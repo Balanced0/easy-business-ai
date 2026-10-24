@@ -6,7 +6,18 @@ import { DashboardTopbar } from "@/components/dashboard-topbar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Bot, User, Database, Upload, Mic, Square, Volume2, VolumeX, Loader2 } from "lucide-react";
+import {
+  Send,
+  Bot,
+  User,
+  Database,
+  Upload,
+  Mic,
+  Square,
+  Volume2,
+  VolumeX,
+  Loader2,
+} from "lucide-react";
 import { useLanguage, useT } from "@/hooks/use-language";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -90,7 +101,7 @@ function AssistantPage() {
     lastHandledKey.current = key;
     console.log("[assistant] auto-send from search param:", q);
     void sendMessage({ text: q });
-    navigate({ search: {}, replace: true });
+    navigate({ search: { q: undefined, t: undefined }, replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search.q, search.t]);
 
@@ -105,7 +116,9 @@ function AssistantPage() {
 
   // ---- Voice features ----
   const [voiceMode, setVoiceMode] = useState(false);
-  useEffect(() => { voiceModeRef.current = voiceMode; }, [voiceMode]);
+  useEffect(() => {
+    voiceModeRef.current = voiceMode;
+  }, [voiceMode]);
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [speaking, setSpeaking] = useState(false);
@@ -172,8 +185,8 @@ function AssistantPage() {
       const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
         ? "audio/webm;codecs=opus"
         : MediaRecorder.isTypeSupported("audio/webm")
-        ? "audio/webm"
-        : "";
+          ? "audio/webm"
+          : "";
       const rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
       chunksRef.current = [];
       rec.ondataavailable = (e) => {
@@ -221,7 +234,16 @@ function AssistantPage() {
       console.error("[voice] mic error", err);
       toast.error(lang === "bn" ? "মাইক্রোফোন অ্যাক্সেস নেই" : "Microphone access denied");
     }
-  }, [recording, transcribing, isLoading, lang, sendMessage, stopAudio, showOutOfCredits, refreshCredits]);
+  }, [
+    recording,
+    transcribing,
+    isLoading,
+    lang,
+    sendMessage,
+    stopAudio,
+    showOutOfCredits,
+    refreshCredits,
+  ]);
 
   const stopRecording = useCallback(() => {
     if (recorderRef.current && recorderRef.current.state !== "inactive") {
@@ -231,14 +253,17 @@ function AssistantPage() {
   }, []);
 
   // Auto-speak new assistant messages when voice mode is on and stream is done.
-  // English only — skip Bangla messages (TTS for Bangla is disabled).
+  // English only; skip Bangla messages because Bangla TTS is disabled.
   useEffect(() => {
     if (!voiceMode) return;
     if (status !== "ready") return;
     const last = messages[messages.length - 1];
     if (!last || last.role !== "assistant") return;
     if (spokenIdsRef.current.has(last.id)) return;
-    const text = last.parts.map((p) => (p.type === "text" ? p.text : "")).join("").trim();
+    const text = last.parts
+      .map((p) => (p.type === "text" ? p.text : ""))
+      .join("")
+      .trim();
     if (!text) return;
     spokenIdsRef.current.add(last.id);
     // Detect Bangla characters (U+0980–U+09FF). If present, skip speaking.
@@ -248,9 +273,10 @@ function AssistantPage() {
 
   useEffect(() => () => stopAudio(), [stopAudio]);
 
-
-  const welcomeBn = "হাই! আমি আপনার এআই কমার্স সহকারী। ট্রেন্ড, ইনভেন্টরি, মূল্য বা গ্রাহক সন্তুষ্টি সম্পর্কে জিজ্ঞাসা করুন।";
-  const welcomeEn = "Hi! I'm your AI commerce assistant. Ask me about trends, inventory, pricing, or customer sentiment: I'll pull from your store data.";
+  const welcomeBn =
+    "হাই! আমি আপনার এআই কমার্স সহকারী। ট্রেন্ড, ইনভেন্টরি, মূল্য বা গ্রাহক সন্তুষ্টি সম্পর্কে জিজ্ঞাসা করুন।";
+  const welcomeEn =
+    "Hi! I'm your AI commerce assistant. Ask me about trends, inventory, pricing, or customer sentiment: I'll pull from your store data.";
 
   return (
     <>
@@ -264,9 +290,13 @@ function AssistantPage() {
                   <Bot className="h-4 w-4" />
                 </div>
                 <div>
-                  <CardTitle className="text-base">{t("কমার্স সহকারী / Commerce Assistant")}</CardTitle>
+                  <CardTitle className="text-base">
+                    {t("কমার্স সহকারী / Commerce Assistant")}
+                  </CardTitle>
                   <CardDescription className="text-xs">
-                    {t("Gemini + আপনার স্টোর ডেটা দ্বারা চালিত / Powered by Gemini + your store data")}
+                    {t(
+                      "Gemini + আপনার স্টোর ডেটা দ্বারা চালিত / Powered by Gemini + your store data",
+                    )}
                   </CardDescription>
                 </div>
               </div>
@@ -287,9 +317,7 @@ function AssistantPage() {
                   </div>
                 )}
                 {messages.map((m) => {
-                  const text = m.parts
-                    .map((p) => (p.type === "text" ? p.text : ""))
-                    .join("");
+                  const text = m.parts.map((p) => (p.type === "text" ? p.text : "")).join("");
                   return (
                     <div key={m.id} className="flex gap-3">
                       <div
@@ -322,13 +350,18 @@ function AssistantPage() {
                       <Bot className="h-3.5 w-3.5" />
                     </div>
                     <div className="flex-1 pt-1.5">
-                      <div className="text-sm text-muted-foreground">{t("চিন্তা করছি… / Thinking…")}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {t("চিন্তা করছি… / Thinking…")}
+                      </div>
                     </div>
                   </div>
                 )}
                 {error && (
                   <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-                    {error.message || t("কিছু ভুল হয়েছে। আবার চেষ্টা করুন। / Something went wrong. Please try again.")}
+                    {error.message ||
+                      t(
+                        "কিছু ভুল হয়েছে। আবার চেষ্টা করুন। / Something went wrong. Please try again.",
+                      )}
                   </div>
                 )}
               </div>
@@ -347,13 +380,19 @@ function AssistantPage() {
                     />
                     <Label htmlFor="voice-mode" className="cursor-pointer text-xs">
                       {voiceMode ? (
-                        <span className="flex items-center gap-1"><Volume2 className="h-3.5 w-3.5" /> {t("ভয়েস রেসপন্স চালু / Voice replies on")}</span>
+                        <span className="flex items-center gap-1">
+                          <Volume2 className="h-3.5 w-3.5" />{" "}
+                          {t("ভয়েস রেসপন্স চালু / Voice replies on")}
+                        </span>
                       ) : (
-                        <span className="flex items-center gap-1"><VolumeX className="h-3.5 w-3.5" /> {t("ভয়েস রেসপন্স বন্ধ / Voice replies off")}</span>
+                        <span className="flex items-center gap-1">
+                          <VolumeX className="h-3.5 w-3.5" />{" "}
+                          {t("ভয়েস রেসপন্স বন্ধ / Voice replies off")}
+                        </span>
                       )}
                     </Label>
                   </div>
-                  <span className="rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                  <span className="rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-xs font-medium text-muted-foreground">
                     {t("শুধু ইংরেজিতে / English only")}
                   </span>
                 </div>
@@ -387,10 +426,12 @@ function AssistantPage() {
                     recording
                       ? t("শুনছি… ট্যাপ করে থামান / Listening… tap to stop")
                       : transcribing
-                      ? t("ট্রান্সক্রাইব করছি… / Transcribing…")
-                      : t("আপনার স্টোর সম্পর্কে কিছু জিজ্ঞাসা করুন... / Ask anything about your store...")
+                        ? t("ট্রান্সক্রাইব করছি… / Transcribing…")
+                        : t(
+                            "আপনার স্টোর সম্পর্কে কিছু জিজ্ঞাসা করুন... / Ask anything about your store...",
+                          )
                   }
-                  className="min-h-[42px] resize-none"
+                  className="min-h-11 resize-none"
                   rows={1}
                   disabled={isLoading || recording || transcribing}
                 />
@@ -421,7 +462,6 @@ function AssistantPage() {
                 </Button>
               </form>
             </div>
-
           </Card>
 
           <div className="space-y-4">
@@ -435,8 +475,8 @@ function AssistantPage() {
                   {docCount === null
                     ? t("লোড হচ্ছে... / Loading...")
                     : docCount === 0
-                    ? t("খালি: ডেটা আপলোড করুন / Empty: upload data")
-                    : `${docCount} ${t("ডকুমেন্ট ইন্ডেক্স করা / documents indexed")}`}
+                      ? t("খালি: ডেটা আপলোড করুন / Empty: upload data")
+                      : `${docCount} ${t("ডকুমেন্ট ইন্ডেক্স করা / documents indexed")}`}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -449,10 +489,11 @@ function AssistantPage() {
               </CardContent>
             </Card>
 
-
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">{t("প্রস্তাবিত প্রশ্ন / Suggested questions")}</CardTitle>
+                <CardTitle className="text-base">
+                  {t("প্রস্তাবিত প্রশ্ন / Suggested questions")}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 {suggestions.map((s) => (

@@ -4,7 +4,14 @@ import { DashboardTopbar } from "@/components/dashboard-topbar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Area,
   AreaChart,
@@ -20,9 +27,33 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { Brain, TrendingUp, TrendingDown, AlertTriangle, Loader2, Search, X, Upload, DollarSign, ShieldCheck, PackageMinus, Clock, Info } from "lucide-react";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Brain,
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle,
+  Loader2,
+  Search,
+  X,
+  Upload,
+  DollarSign,
+  ShieldCheck,
+  PackageMinus,
+  Clock,
+  Info,
+} from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  Tooltip as UITooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useLanguage, useT } from "@/hooks/use-language";
 import { useCurrency } from "@/hooks/use-currency";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,7 +63,10 @@ export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard: EasyBusiness AI" },
-      { name: "description", content: "Overview of sales, inventory, and AI insights from your uploaded data." },
+      {
+        name: "description",
+        content: "Overview of sales, inventory, and AI insights from your uploaded data.",
+      },
     ],
   }),
   validateSearch: (s: Record<string, unknown>) => ({
@@ -58,10 +92,20 @@ type Analytics = {
   demandForecast: Array<{ week: string; actual: number | null; forecast: number }>;
   inventory: {
     low: Array<{ sku: string; name: string; stock: number; recommend: number; status: "low" }>;
-    overstock: Array<{ sku: string; name: string; stock: number; recommend: number; status: "overstock" }>;
+    overstock: Array<{
+      sku: string;
+      name: string;
+      stock: number;
+      recommend: number;
+      status: "overstock";
+    }>;
   };
   trendingProducts: Array<{ name: string; growth: string; unitsSold: number }>;
-  sentiment: { breakdown: Array<{ name: string; value: number }>; positive: string[]; complaints: string[] };
+  sentiment: {
+    breakdown: Array<{ name: string; value: number }>;
+    positive: string[];
+    complaints: string[];
+  };
   summaryCards: Array<{ label: string; value: string; delta: string; positive: boolean }>;
   aiSummaryFacts: string;
   valueGenerated: {
@@ -93,7 +137,11 @@ async function authHeaders(): Promise<Record<string, string>> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-const SENTIMENT_COLORS = ["var(--color-chart-2)", "var(--color-chart-3)", "var(--color-destructive)"];
+const SENTIMENT_COLORS = [
+  "var(--color-chart-2)",
+  "var(--color-chart-3)",
+  "var(--color-destructive)",
+];
 
 function DashboardPage() {
   const t = useT();
@@ -150,7 +198,8 @@ function DashboardPage() {
           body: JSON.stringify({ query: q, language: lang }),
         });
         const json = (await res.json()) as SearchResponse | { error?: string };
-        if (!res.ok) throw new Error("error" in json ? json.error || "Search failed" : "Search failed");
+        if (!res.ok)
+          throw new Error("error" in json ? json.error || "Search failed" : "Search failed");
         if (!cancelled) setSearchResult(json as SearchResponse);
       } catch (error) {
         if (!cancelled) {
@@ -171,7 +220,7 @@ function DashboardPage() {
     setSearchResult(null);
     setSearchError(null);
     setSearchLoading(false);
-    navigate({ search: {}, replace: true });
+    navigate({ search: { q: undefined, t: undefined }, replace: true });
   };
 
   const hasData = analytics?.hasData ?? false;
@@ -180,7 +229,11 @@ function DashboardPage() {
   const trendingProducts = analytics?.trendingProducts ?? [];
   const demandForecast = analytics?.demandForecast ?? [];
   const sentimentBreakdown = useMemo(
-    () => (analytics?.sentiment.breakdown ?? []).map((s, i) => ({ ...s, color: SENTIMENT_COLORS[i] ?? "var(--color-chart-1)" })),
+    () =>
+      (analytics?.sentiment.breakdown ?? []).map((s, i) => ({
+        ...s,
+        color: SENTIMENT_COLORS[i] ?? "var(--color-chart-1)",
+      })),
     [analytics],
   );
   const inventoryAlerts = useMemo(
@@ -203,9 +256,13 @@ function DashboardPage() {
                   <Upload className="h-4 w-4" />
                 </div>
                 <div className="flex-1">
-                  <CardTitle className="text-base">{t("কোনও ডেটা পাওয়া যায়নি / No data available yet")}</CardTitle>
+                  <CardTitle className="text-base">
+                    {t("কোনও ডেটা পাওয়া যায়নি / No data available yet")}
+                  </CardTitle>
                   <CardDescription>
-                    {t("বিশ্লেষণ চালু করতে আপনার ডেটা আপলোড করুন / Upload data to activate analytics")}
+                    {t(
+                      "বিশ্লেষণ চালু করতে আপনার ডেটা আপলোড করুন / Upload data to activate analytics",
+                    )}
                   </CardDescription>
                 </div>
                 <Button asChild size="sm">
@@ -224,25 +281,36 @@ function DashboardPage() {
             <CardHeader>
               <div className="flex flex-wrap items-center gap-2">
                 <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
-                  {searchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  {searchLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Search className="h-4 w-4" />
+                  )}
                 </div>
                 <div>
                   <CardTitle className="text-base">
                     {t("সার্চ ফলাফল / Search results")}
-                    {search.q ? <span className="ml-2 text-muted-foreground">“{search.q}”</span> : null}
+                    {search.q ? (
+                      <span className="ml-2 text-muted-foreground">“{search.q}”</span>
+                    ) : null}
                   </CardTitle>
                   <CardDescription>
                     {searchLoading
                       ? t("ড্যাশবোর্ড আপডেট হচ্ছে... / Updating dashboard...")
                       : searchResult
-                      ? searchResult.hasData
-                        ? `${searchResult.matchedProducts.length} ${t("ম্যাচ পাওয়া গেছে / matches found")}`
-                        : t("কোনও ডেটা নেই / No data available")
-                      : searchError ?? t("সার্চ ক্লিয়ার করা হয়েছে / Search cleared")}
+                        ? searchResult.hasData
+                          ? `${searchResult.matchedProducts.length} ${t("ম্যাচ পাওয়া গেছে / matches found")}`
+                          : t("কোনও ডেটা নেই / No data available")
+                        : (searchError ?? t("সার্চ ক্লিয়ার করা হয়েছে / Search cleared"))}
                   </CardDescription>
                 </div>
                 {(search.q || searchResult || searchError) && (
-                  <Button variant="outline" size="sm" onClick={clearSearch} className="ml-auto gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearSearch}
+                    className="ml-auto gap-1"
+                  >
                     <X className="h-3.5 w-3.5" />
                     {t("ক্লিয়ার / Clear")}
                   </Button>
@@ -253,21 +321,30 @@ function DashboardPage() {
               <CardContent className="space-y-4">
                 <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
                   <div className="space-y-3">
-                    <div className="text-sm font-medium">{t("ম্যাচিং পণ্য / Matching products")}</div>
+                    <div className="text-sm font-medium">
+                      {t("ম্যাচিং পণ্য / Matching products")}
+                    </div>
                     <div className="mt-2 space-y-2">
                       {searchResult.matchedProducts.length > 0 ? (
                         searchResult.matchedProducts.slice(0, 5).map((item) => (
-                          <div key={`${item.source}-${item.name}`} className="rounded-md border p-3">
+                          <div
+                            key={`${item.source}-${item.name}`}
+                            className="rounded-md border p-3"
+                          >
                             <div className="flex items-center justify-between gap-2">
                               <div className="text-sm font-medium">{item.name}</div>
-                              <Badge variant="secondary" className="text-xs">{item.source}</Badge>
+                              <Badge variant="secondary" className="text-xs">
+                                {item.source}
+                              </Badge>
                             </div>
                             <div className="mt-1 text-xs text-muted-foreground">{item.detail}</div>
                           </div>
                         ))
                       ) : (
                         <div className="rounded-md border p-3 text-sm text-muted-foreground">
-                          {t("কোনও সরাসরি পণ্য ম্যাচ পাওয়া যায়নি / No direct product matches found")}
+                          {t(
+                            "কোনও সরাসরি পণ্য ম্যাচ পাওয়া যায়নি / No direct product matches found",
+                          )}
                         </div>
                       )}
                     </div>
@@ -319,7 +396,7 @@ function DashboardPage() {
             },
           ];
           return (
-            <Card className="border-success/30 bg-gradient-to-br from-success/[0.06] to-primary/[0.04]">
+            <Card className="border-success/30 bg-card">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <div className="flex h-7 w-7 items-center justify-center rounded-md bg-success/15 text-success">
@@ -327,7 +404,9 @@ function DashboardPage() {
                   </div>
                   <div>
                     <CardTitle className="text-base">
-                      {t("ইজিবিজনেস এআই এই মাসে যে মূল্য তৈরি করেছে / Value EasyBusiness AI Generated This Month")}
+                      {t(
+                        "ইজিবিজনেস এআই এই মাসে যে মূল্য তৈরি করেছে / Value EasyBusiness AI Generated This Month",
+                      )}
                     </CardTitle>
                     <CardDescription>
                       {t("আপনার আপলোডকৃত ডেটা থেকে গণনা করা / Computed from your uploaded data")}
@@ -361,19 +440,29 @@ function DashboardPage() {
           {summaryCards.length === 0 ? (
             <Card className="sm:col-span-2 lg:col-span-4">
               <CardContent className="py-8 text-center text-sm text-muted-foreground">
-                {loadingAnalytics ? t("লোড হচ্ছে... / Loading...") : t("কোনও সারাংশ মেট্রিক নেই: ডেটা আপলোড করুন / No summary metrics: upload data")}
+                {loadingAnalytics
+                  ? t("লোড হচ্ছে... / Loading...")
+                  : t("কোনও সারাংশ মেট্রিক নেই: ডেটা আপলোড করুন / No summary metrics: upload data")}
               </CardContent>
             </Card>
           ) : (
             summaryCards.map((c) => (
               <Card key={c.label}>
                 <CardHeader className="pb-2">
-                  <CardDescription className="text-xs uppercase tracking-wide">{t(c.label)}</CardDescription>
+                  <CardDescription className="text-xs uppercase tracking-wide">
+                    {t(c.label)}
+                  </CardDescription>
                   <CardTitle className="text-2xl">{c.value}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`flex items-center gap-1 text-xs ${c.positive ? "text-success" : "text-muted-foreground"}`}>
-                    {c.positive ? <TrendingUp className="h-3.5 w-3.5" /> : <AlertTriangle className="h-3.5 w-3.5 text-warning" />}
+                  <div
+                    className={`flex items-center gap-1 text-xs ${c.positive ? "text-success" : "text-muted-foreground"}`}
+                  >
+                    {c.positive ? (
+                      <TrendingUp className="h-3.5 w-3.5" />
+                    ) : (
+                      <AlertTriangle className="h-3.5 w-3.5 text-warning" />
+                    )}
                     {t(c.delta)}
                   </div>
                 </CardContent>
@@ -390,20 +479,26 @@ function DashboardPage() {
             conf === "high"
               ? "bg-success/15 text-success border-success/30"
               : conf === "medium"
-              ? "bg-warning/15 text-warning-foreground border-warning/30"
-              : "bg-destructive/10 text-destructive border-destructive/30";
+                ? "bg-warning/15 text-warning-foreground border-warning/30"
+                : "bg-destructive/10 text-destructive border-destructive/30";
           const confLabel =
             conf === "high"
               ? t("উচ্চ / High")
               : conf === "medium"
-              ? t("মাঝারি / Medium")
-              : t("নিম্ন / Low");
+                ? t("মাঝারি / Medium")
+                : t("নিম্ন / Low");
           const confExplain =
             conf === "high"
-              ? t("ব্যাপক ডেটা ও ধারাবাহিক সংকেতের ভিত্তিতে উচ্চ নির্ভরতা। / High confidence: based on broad data and consistent signals.")
+              ? t(
+                  "ব্যাপক ডেটা ও ধারাবাহিক সংকেতের ভিত্তিতে উচ্চ নির্ভরতা। / High confidence: based on broad data and consistent signals.",
+                )
               : conf === "medium"
-              ? t("পর্যাপ্ত ডেটা, তবে আরও আপলোডে নির্ভরতা বাড়বে। / Medium confidence: enough data, more uploads will improve reliability.")
-              : t("সীমিত ডেটা: নির্ভরতা বাড়াতে আরও ডেটা আপলোড করুন। / Low confidence: limited data. Upload more for stronger reliability.");
+                ? t(
+                    "পর্যাপ্ত ডেটা, তবে আরও আপলোডে নির্ভরতা বাড়বে। / Medium confidence: enough data, more uploads will improve reliability.",
+                  )
+                : t(
+                    "সীমিত ডেটা: নির্ভরতা বাড়াতে আরও ডেটা আপলোড করুন। / Low confidence: limited data. Upload more for stronger reliability.",
+                  );
           return (
             <Card className="border-primary/20 bg-primary/[0.03]">
               <CardHeader>
@@ -411,12 +506,17 @@ function DashboardPage() {
                   <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
                     <Brain className="h-4 w-4" />
                   </div>
-                  <CardTitle className="text-base">{t("এআই বিজনেস সারাংশ / AI business summary")}</CardTitle>
+                  <CardTitle className="text-base">
+                    {t("এআই বিজনেস সারাংশ / AI business summary")}
+                  </CardTitle>
                   <div className="ml-auto flex items-center gap-2">
                     <TooltipProvider delayDuration={150}>
                       <UITooltip>
                         <TooltipTrigger asChild>
-                          <Badge variant="outline" className={`text-xs gap-1 cursor-help ${confClass}`}>
+                          <Badge
+                            variant="outline"
+                            className={`text-xs gap-1 cursor-help ${confClass}`}
+                          >
                             <Info className="h-3 w-3" />
                             {t("আত্মবিশ্বাস / Confidence")}: {confLabel}
                           </Badge>
@@ -432,7 +532,11 @@ function DashboardPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
-                  {visibleAiSummary ? t(visibleAiSummary) : t("বিশ্লেষণ পেতে আপনার বিক্রয়/ইনভেন্টরি/রিভিউ ডেটা আপলোড করুন / Upload your sales/inventory/review data to see analytics.")}
+                  {visibleAiSummary
+                    ? t(visibleAiSummary)
+                    : t(
+                        "বিশ্লেষণ পেতে আপনার বিক্রয়/ইনভেন্টরি/রিভিউ ডেটা আপলোড করুন / Upload your sales/inventory/review data to see analytics.",
+                      )}
                 </p>
                 {reasoning && reasoning.bullets.length > 0 && (
                   <Accordion type="single" collapsible>
@@ -480,8 +584,21 @@ function DashboardPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                       <XAxis dataKey="month" stroke="var(--color-muted-foreground)" fontSize={12} />
                       <YAxis stroke="var(--color-muted-foreground)" fontSize={12} />
-                      <Tooltip contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 8, fontSize: 12 }} />
-                      <Area type="monotone" dataKey="sales" stroke="var(--color-chart-1)" strokeWidth={2} fill="url(#g1)" />
+                      <Tooltip
+                        contentStyle={{
+                          background: "var(--color-card)",
+                          border: "1px solid var(--color-border)",
+                          borderRadius: 8,
+                          fontSize: 12,
+                        }}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="sales"
+                        stroke="var(--color-chart-1)"
+                        strokeWidth={2}
+                        fill="url(#g1)"
+                      />
                     </AreaChart>
                   </ResponsiveContainer>
                 )}
@@ -496,13 +613,17 @@ function DashboardPage() {
             </CardHeader>
             <CardContent>
               {trendingProducts.length === 0 ? (
-                <div className="py-8 text-center text-sm text-muted-foreground">{t("কোনও ডেটা নেই / No data")}</div>
+                <div className="py-8 text-center text-sm text-muted-foreground">
+                  {t("কোনও ডেটা নেই / No data")}
+                </div>
               ) : (
                 <ul className="space-y-3">
                   {trendingProducts.slice(0, 5).map((p) => (
                     <li key={p.name} className="flex items-center justify-between">
                       <span className="text-sm">{p.name}</span>
-                      <Badge variant="secondary" className="text-success bg-success/10">{p.growth}</Badge>
+                      <Badge variant="secondary" className="text-success bg-success/10">
+                        {p.growth}
+                      </Badge>
                     </li>
                   ))}
                 </ul>
@@ -530,10 +651,28 @@ function DashboardPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                       <XAxis dataKey="week" stroke="var(--color-muted-foreground)" fontSize={12} />
                       <YAxis stroke="var(--color-muted-foreground)" fontSize={12} />
-                      <Tooltip contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 8, fontSize: 12 }} />
+                      <Tooltip
+                        contentStyle={{
+                          background: "var(--color-card)",
+                          border: "1px solid var(--color-border)",
+                          borderRadius: 8,
+                          fontSize: 12,
+                        }}
+                      />
                       <Legend wrapperStyle={{ fontSize: 12 }} />
-                      <Line type="monotone" dataKey="actual" stroke="var(--color-chart-1)" strokeWidth={2} />
-                      <Line type="monotone" dataKey="forecast" stroke="var(--color-chart-2)" strokeDasharray="4 4" strokeWidth={2} />
+                      <Line
+                        type="monotone"
+                        dataKey="actual"
+                        stroke="var(--color-chart-1)"
+                        strokeWidth={2}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="forecast"
+                        stroke="var(--color-chart-2)"
+                        strokeDasharray="4 4"
+                        strokeWidth={2}
+                      />
                     </LineChart>
                   </ResponsiveContainer>
                 )}
@@ -543,7 +682,9 @@ function DashboardPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{t("গ্রাহক সন্তুষ্টি / Customer sentiment")}</CardTitle>
+              <CardTitle className="text-base">
+                {t("গ্রাহক সন্তুষ্টি / Customer sentiment")}
+              </CardTitle>
               <CardDescription>{t("রিভিউ থেকে / From reviews")}</CardDescription>
             </CardHeader>
             <CardContent>
@@ -555,12 +696,26 @@ function DashboardPage() {
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={sentimentBreakdown} dataKey="value" nameKey="name" innerRadius={45} outerRadius={75} paddingAngle={2}>
+                      <Pie
+                        data={sentimentBreakdown}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={45}
+                        outerRadius={75}
+                        paddingAngle={2}
+                      >
                         {sentimentBreakdown.map((e) => (
                           <Cell key={e.name} fill={e.color} />
                         ))}
                       </Pie>
-                      <Tooltip contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 8, fontSize: 12 }} />
+                      <Tooltip
+                        contentStyle={{
+                          background: "var(--color-card)",
+                          border: "1px solid var(--color-border)",
+                          borderRadius: 8,
+                          fontSize: 12,
+                        }}
+                      />
                       <Legend wrapperStyle={{ fontSize: 12 }} />
                     </PieChart>
                   </ResponsiveContainer>
@@ -574,7 +729,9 @@ function DashboardPage() {
         <div className="grid gap-4 lg:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{t("ইনভেন্টরি সতর্কতা / Inventory alerts")}</CardTitle>
+              <CardTitle className="text-base">
+                {t("ইনভেন্টরি সতর্কতা / Inventory alerts")}
+              </CardTitle>
               <CardDescription>{t("মনোযোগ প্রয়োজন / Items needing attention")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -584,17 +741,32 @@ function DashboardPage() {
                 </div>
               ) : (
                 inventoryAlerts.map((i) => (
-                  <div key={`${i.sku}-${i.status}`} className="flex items-center justify-between rounded-md border p-3">
+                  <div
+                    key={`${i.sku}-${i.status}`}
+                    className="flex items-center justify-between rounded-md border p-3"
+                  >
                     <div>
                       <div className="text-sm font-medium">{i.name}</div>
-                      <div className="text-xs text-muted-foreground">SKU {i.sku} · {i.stock} {t("স্টকে / in stock")}</div>
+                      <div className="text-xs text-muted-foreground">
+                        SKU {i.sku} · {i.stock} {t("স্টকে / in stock")}
+                      </div>
                     </div>
                     <Badge
                       variant="secondary"
-                      className={i.status === "low" ? "bg-destructive/10 text-destructive" : "bg-warning/15 text-warning-foreground"}
+                      className={
+                        i.status === "low"
+                          ? "bg-destructive/10 text-destructive"
+                          : "bg-warning/15 text-warning-foreground"
+                      }
                     >
-                      {i.status === "low" ? <TrendingDown className="mr-1 h-3 w-3" /> : <AlertTriangle className="mr-1 h-3 w-3" />}
-                      {i.status === "low" ? t("কম স্টক / Low stock") : t("অতিরিক্ত স্টক / Overstock")}
+                      {i.status === "low" ? (
+                        <TrendingDown className="mr-1 h-3 w-3" />
+                      ) : (
+                        <AlertTriangle className="mr-1 h-3 w-3" />
+                      )}
+                      {i.status === "low"
+                        ? t("কম স্টক / Low stock")
+                        : t("অতিরিক্ত স্টক / Overstock")}
                     </Badge>
                   </div>
                 ))
